@@ -20,7 +20,9 @@ Akun contoh (tersimpan di browser):
 - Bandung: `laras@riasaja.id` / `laras123`
 - Surabaya: `nadya@riasaja.id` / `suro123`
 
-Ini login lokal dulu. Supabase Auth bisa disambung setelah anon key tersedia.
+Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog.
+
+Ini login lokal dulu. Google OAuth penuh / Supabase Auth bisa diaktifkan setelah Client ID atau anon key tersedia.
 
 ## Yang bisa dicoba
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
+import { GoogleAuthButton } from "@/components/google-auth-button"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -61,7 +62,20 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <form onSubmit={submit} className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+      <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <GoogleAuthButton
+          mode="daftar"
+          onSuccess={(nextUser) => {
+            setCity(nextUser.city)
+            router.replace("/studio")
+          }}
+        />
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          atau daftar dengan email
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      <form onSubmit={submit} className="grid gap-3">
         <div className="grid gap-1.5">
           <Label htmlFor="name">Nama pemilik</Label>
           <Input id="name" value={name} onChange={(event) => setName(event.target.value)} className="h-10" required />
@@ -129,6 +143,7 @@ export default function RegisterPage() {
           {pending ? "Menyimpan…" : "Buat akun"}
         </Button>
       </form>
+      </div>
 
       <p className="text-sm text-muted-foreground">
         Sudah punya akun?{" "}

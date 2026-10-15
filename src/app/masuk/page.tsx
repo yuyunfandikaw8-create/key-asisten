@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
+import { GoogleAuthButton } from "@/components/google-auth-button"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -57,36 +58,50 @@ function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={submit} className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <div className="grid gap-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="h-10"
-            required
-          />
+      <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <GoogleAuthButton
+          mode="masuk"
+          onSuccess={(nextUser) => {
+            setCity(nextUser.city)
+            router.replace(nextPath)
+          }}
+        />
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          atau masuk dengan email
+          <span className="h-px flex-1 bg-border" />
         </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="password">Kata sandi</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="h-10"
-            required
-          />
-        </div>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Button type="submit" className="h-10" disabled={pending || !ready}>
-          {pending ? "Masuk…" : "Masuk"}
-        </Button>
-      </form>
+        <form onSubmit={submit} className="grid gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="h-10"
+              required
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="password">Kata sandi</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="h-10"
+              required
+            />
+          </div>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Button type="submit" className="h-10" disabled={pending || !ready}>
+            {pending ? "Masuk…" : "Masuk"}
+          </Button>
+        </form>
+      </div>
 
       <div className="rounded-2xl bg-accent/60 px-4 py-3 text-sm">
         <p className="font-medium">Akun contoh</p>

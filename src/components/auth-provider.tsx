@@ -16,16 +16,16 @@ import {
   normalizeEmail,
   toPublicUser,
   type AuthUser,
+  type GoogleChoice,
   type StoredAccount,
 } from "@/lib/auth"
+
+type AuthResult = { ok: true; user: AuthUser } | { ok: false; error: string }
 
 type AuthContextValue = {
   ready: boolean
   user: AuthUser | null
-  login: (
-    email: string,
-    password: string
-  ) => { ok: true; user: AuthUser } | { ok: false; error: string }
+  login: (email: string, password: string) => AuthResult
   register: (input: {
     name: string
     email: string
@@ -33,7 +33,8 @@ type AuthContextValue = {
     city: string
     studioName: string
     password: string
-  }) => { ok: true; user: AuthUser } | { ok: false; error: string }
+  }) => AuthResult
+  continueWithGoogle: (choice: GoogleChoice) => AuthResult
   logout: () => void
 }
 
@@ -71,7 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const raw = localStorage.getItem(AUTH_STORAGE_KEY)
         if (raw) {
           const parsed = JSON.parse(raw) as AuthUser
-          if (parsed?.email && parsed?.id) setUser(parsed)
+          if (parsed?.email && parsed?.id) {
+            setUser({
+              ...parsed,
+              provider: parsed.provider ?? "password",
+            })
+          }
         }
       } catch {
         localStorage.removeItem(AUTH_STORAGE_KEY)
@@ -121,6 +127,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           city: input.city.trim() || "Bandung",
           studioName: input.studioName.trim() || input.name.trim(),
           password: input.password.trim(),
+          provider: "password",
+        }
+        writeAccounts([...accounts, account])
+        const publicUser = toPublicUser(account)
+        setUser(publicUser)
+        return { ok: true, user: publicUser }
+      },
+      continueWithGoogle: (choice) => {
+        const email = normalizeEmail(choice.email)
+        const accounts = readAccounts()
+        const existing = accounts.find((item) => item.email === email)
+        if (existing) {
+          const publicUser = toPublicUser({
+            ...existing,
+            provider: "google",
+            name: existing.name || choice.name,
+          })
+          setUser(publicUser)
+          return { ok: true, user: publicUser }
+        }
+        const account: StoredAccount = {
+          id: crypto.randomUUID(),
+          name: choice.name,
+          email,
+          phone: choice.phone,
+          city: choice.city,
+          studioName: choice.studioName,
+          password: `google:${email}`,
+          provider: "google",
+          avatar: choice.initial,
         }
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)
