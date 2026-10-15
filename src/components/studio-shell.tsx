@@ -172,8 +172,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               variant="outline"
               size="sm"
               onClick={() => {
-                logout()
-                router.replace("/masuk")
+                void logout().then(() => router.replace("/masuk"))
               }}
             >
               <LogOut />

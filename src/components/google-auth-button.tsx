@@ -39,20 +39,25 @@ function GoogleMark({ className }: { className?: string }) {
 
 export function GoogleAuthButton({
   mode,
+  nextPath = "/studio",
   onSuccess,
   className,
 }: {
   mode: "masuk" | "daftar"
+  nextPath?: string
   onSuccess: (user: AuthUser) => void
   className?: string
 }) {
-  const { continueWithGoogle } = useAuth()
+  const { continueWithGoogle, startGoogleOAuth, googleEnabled, supabaseReady } = useAuth()
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
+  const [pending, setPending] = useState(false)
 
-  function pick(choice: GoogleChoice) {
+  async function pick(choice: GoogleChoice) {
     setError("")
-    const result = continueWithGoogle(choice)
+    setPending(true)
+    const result = await continueWithGoogle(choice)
+    setPending(false)
     if (!result.ok) {
       setError(result.error)
       return
@@ -61,16 +66,37 @@ export function GoogleAuthButton({
     onSuccess(result.user)
   }
 
+  async function openPicker() {
+    setError("")
+    if (googleEnabled) {
+      setPending(true)
+      const result = await startGoogleOAuth(nextPath)
+      setPending(false)
+      if (result.ok) {
+        onSuccess(result.user)
+        return
+      }
+      if (result.error.includes("Mengalihkan")) return
+      setError(result.error)
+    }
+    setOpen(true)
+  }
+
   return (
     <>
       <Button
         type="button"
         variant="outline"
         className={cn("h-10 w-full bg-white", className)}
-        onClick={() => setOpen(true)}
+        onClick={() => void openPicker()}
+        disabled={pending}
       >
         <GoogleMark className="size-4" />
-        {mode === "masuk" ? "Lanjutkan dengan Google" : "Daftar dengan Google"}
+        {pending
+          ? "Menyiapkan Google…"
+          : mode === "masuk"
+            ? "Lanjutkan dengan Google"
+            : "Daftar dengan Google"}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -81,9 +107,9 @@ export function GoogleAuthButton({
               <DialogTitle className="text-base font-medium">Pilih akun</DialogTitle>
             </div>
             <DialogDescription>
-              {mode === "masuk"
-                ? "Masuk ke Riasaja dengan akun Gmail."
-                : "Daftar studio Riasaja dengan akun Gmail."}
+              {googleEnabled
+                ? "Pilih Gmail untuk masuk ke Riasaja."
+                : "Google OAuth di Supabase belum aktif. Pakai pilihan Gmail demo di bawah, atau nyalakan provider Google di dashboard."}
             </DialogDescription>
           </DialogHeader>
 
@@ -92,7 +118,7 @@ export function GoogleAuthButton({
               <button
                 key={choice.id}
                 type="button"
-                onClick={() => pick(choice)}
+                onClick={() => void pick(choice)}
                 className="flex items-center gap-3 px-5 py-3 text-left transition hover:bg-muted/70"
               >
                 <span
@@ -112,27 +138,13 @@ export function GoogleAuthButton({
                 </span>
               </button>
             ))}
-            <button
-              type="button"
-              className="flex items-center gap-3 border-t px-5 py-3 text-left text-sm text-muted-foreground transition hover:bg-muted/70"
-              onClick={() =>
-                setError(
-                  "Tambah akun Google asli menyusul setelah Client ID / Supabase Google OAuth diisi."
-                )
-              }
-            >
-              <span className="flex size-10 items-center justify-center rounded-full bg-muted text-lg">
-                +
-              </span>
-              Pakai akun Google lain
-            </button>
           </div>
 
           {error ? <p className="border-t px-5 py-3 text-sm text-destructive">{error}</p> : null}
 
           <p className="border-t bg-muted/40 px-5 py-3 text-xs text-muted-foreground">
-            Demo menampilkan pilihan Gmail di browser ini. OAuth Google penuh bisa diaktifkan dengan
-            `NEXT_PUBLIC_GOOGLE_CLIENT_ID` atau Supabase Auth.
+            Supabase: {supabaseReady ? "terhubung" : "belum"}. Google provider:{" "}
+            {googleEnabled ? "aktif" : "nonaktif"}. Secret key tidak dipakai di aplikasi ini.
           </p>
         </DialogContent>
       </Dialog>

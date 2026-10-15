@@ -15,7 +15,7 @@ import { DEMO_ACCOUNTS } from "@/lib/auth"
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const { ready, user, login } = useAuth()
+  const { ready, user, login, supabaseReady } = useAuth()
   const { setCity } = useStudio()
   const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email)
   const [password, setPassword] = useState(DEMO_ACCOUNTS[0].password)
@@ -31,11 +31,11 @@ function LoginForm() {
     if (ready && user) router.replace(nextPath)
   }, [nextPath, ready, router, user])
 
-  function submit(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault()
     setPending(true)
     setError("")
-    const result = login(email, password)
+    const result = await login(email, password)
     if (!result.ok) {
       setError(result.error)
       setPending(false)
@@ -53,14 +53,17 @@ function LoginForm() {
         </Link>
         <h1 className="mt-4 text-4xl">Masuk studio</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Masuk untuk membuka jadwal, inbox partner, invoice, dan kombo. Data demo tersimpan di
-          browser ini.
+          Masuk untuk membuka jadwal, inbox partner, invoice, dan kombo.
+          {supabaseReady
+            ? " Email baru lewat Supabase. Akun contoh tetap bisa dipakai lokal."
+            : " Data demo tersimpan di browser ini."}
         </p>
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
           mode="masuk"
+          nextPath={nextPath}
           onSuccess={(nextUser) => {
             setCity(nextUser.city)
             router.replace(nextPath)

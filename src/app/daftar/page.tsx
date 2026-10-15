@@ -21,7 +21,7 @@ import { CITIES } from "@/lib/cities"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { ready, user, register } = useAuth()
+  const { ready, user, register, supabaseReady } = useAuth()
   const { setCity } = useStudio()
   const [name, setName] = useState("")
   const [studioName, setStudioName] = useState("")
@@ -30,19 +30,22 @@ export default function RegisterPage() {
   const [city, setCityField] = useState("Bandung")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [info, setInfo] = useState("")
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
     if (ready && user) router.replace("/studio")
   }, [ready, router, user])
 
-  function submit(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault()
     setPending(true)
     setError("")
-    const result = register({ name, email, phone, city, studioName, password })
+    setInfo("")
+    const result = await register({ name, email, phone, city, studioName, password })
     if (!result.ok) {
-      setError(result.error)
+      if (result.error.includes("konfirmasi")) setInfo(result.error)
+      else setError(result.error)
       setPending(false)
       return
     }
@@ -58,7 +61,9 @@ export default function RegisterPage() {
         </Link>
         <h1 className="mt-4 text-4xl">Daftar studio</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Buat akun di browser ini. Nanti bisa diganti ke login Supabase setelah anon key tersedia.
+          {supabaseReady
+            ? "Daftar lewat Supabase. Setelah daftar, cek email untuk konfirmasi jika diminta."
+            : "Buat akun di browser ini dulu."}
         </p>
       </div>
 
@@ -139,6 +144,7 @@ export default function RegisterPage() {
           />
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {info ? <p className="text-sm text-primary">{info}</p> : null}
         <Button type="submit" className="h-10" disabled={pending || !ready}>
           {pending ? "Menyimpan…" : "Buat akun"}
         </Button>

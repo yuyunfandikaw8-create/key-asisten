@@ -22,7 +22,13 @@ Akun contoh (tersimpan di browser):
 
 Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog.
 
-Ini login lokal dulu. Google OAuth penuh / Supabase Auth bisa diaktifkan setelah Client ID atau anon key tersedia.
+Supabase sudah tersambung lewat publishable key (`NEXT_PUBLIC_SUPABASE_ANON_KEY` di `.env.local`).
+
+- Email/password baru → Auth Supabase (biasanya perlu konfirmasi email).
+- Akun contoh `@riasaja.id` dan pilihan Gmail demo → tetap lokal untuk coba cepat.
+- Google OAuth asli: aktifkan provider Google di Supabase Authentication, lalu tombol Google akan mengalihkan ke Google.
+- Jangan taruh `sb_secret_` / service_role di frontend.
+- SQL awal tabel studio ada di `supabase/schema.sql` (jalankan di SQL Editor).
 
 ## Yang bisa dicoba
 
