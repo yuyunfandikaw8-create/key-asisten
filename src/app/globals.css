@@ -127,9 +127,7 @@
   html {
     @apply font-sans;
   }
-  h1,
-  h2,
-  .font-display {
+  html :is(h1, h2, .font-display) {
     font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
