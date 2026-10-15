@@ -176,6 +176,36 @@ export default function HomePage() {
           </aside>
         </section>
 
+        <section className="mx-auto max-w-6xl px-4 pb-16">
+          <p className="text-sm font-medium tracking-wide text-primary uppercase">
+            Kerja sama
+          </p>
+          <h2 className="mt-2 max-w-2xl text-4xl text-balance">
+            Makeup, dekor, dan sewa baju ketemu di satu tanggal.
+          </h2>
+          <p className="mt-3 max-w-2xl text-muted-foreground">
+            Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat tiga tempat.
+          </p>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {[
+              ["Makeup", "Rias pengantin dan keluarga, jadi inti jadwal."],
+              ["Dekor", "Pelaminan dan gapura yang ikut di tanggal yang sama."],
+              ["Sewa baju", "Kebaya, gaun, dan beskap yang tidak bentrok."],
+            ].map(([title, body]) => (
+              <article key={title} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+                <h3 className="font-display text-2xl">{title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+              </article>
+            ))}
+          </div>
+          <Link
+            href="/studio/partner"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-6 h-10 bg-card px-4")}
+          >
+            Cari partner
+          </Link>
+        </section>
+
         <section className="mx-auto grid max-w-6xl gap-3 px-4 pb-16 sm:grid-cols-2">
           {features.map((feature) => {
             const Icon = feature.icon

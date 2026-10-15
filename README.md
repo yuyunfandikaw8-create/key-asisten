@@ -1,6 +1,6 @@
 # Riasaja
 
-Meja kerja untuk studio MUA. Alurnya mengikuti kebutuhan yang sama dengan [AsistenMUA](https://asistenmua.com/): jadwal, DP, invoice, gaun, dan pricelist untuk bio Instagram. Merek, teks, dan studio di aplikasi ini milik Riasaja, dengan data contoh **Laras Bridal** di Bandung.
+Meja kerja untuk vendor pernikahan. Makeup, dekor, dan sewa baju bisa saling menemukan partner lalu menjual satu harga kombo. Studio demo-nya **Laras Bridal** di Bandung, dengan jadwal, DP, invoice, dan pricelist.
 
 ## Menjalankan
 
@@ -17,7 +17,8 @@ Buka [http://127.0.0.1:43123](http://127.0.0.1:43123).
 - Booking baru di `/studio/jadwal/baru`. Tombol **Isi contoh chat** membaca nama, tanggal, jam, lokasi, paket, dan nomor.
 - Invoice di `/studio/invoice`: catat DP, tandai lunas, atau buka WhatsApp dengan pesan tagihan.
 - Gaun di `/studio/gaun`.
-- Pricelist publik di `/p/laras`. Pengajuan tanggal masuk ke jadwal studio sebagai belum DP.
+- Pricelist publik di `/p/laras`. Pengajuan tanggal dan kombo masuk ke jadwal studio sebagai belum DP.
+- Partner di `/studio/partner`. Saring dekor, makeup, atau sewa baju, ajak kerja sama, lalu susun kombo.
 
 Data tersimpan di browser (`localStorage`). Tombol **Data contoh** mengembalikan studio Laras Bridal.
 

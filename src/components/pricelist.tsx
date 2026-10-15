@@ -18,7 +18,138 @@ import {
 import { attires, packageById, packages, studio } from "@/lib/catalog"
 import { dpFor, EVENT_LABEL, formatDate, rupiah, waLink } from "@/lib/format"
 import { attireStatus, conflictsFor } from "@/lib/metrics"
+import { comboTotal, partnerById, TRADE_LABEL } from "@/lib/partners"
 import type { EventType } from "@/lib/types"
+
+function ComboSection() {
+  const { ready, combos, addBooking } = useStudio()
+  const published = combos.filter((combo) => combo.published)
+  const [comboId, setComboId] = useState(published[0]?.id ?? "")
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [date, setDate] = useState("")
+  const [error, setError] = useState("")
+  const [sent, setSent] = useState("")
+  const selected = published.find((combo) => combo.id === comboId) ?? published[0]
+
+  if (!ready) {
+    return <p className="text-sm text-muted-foreground">Memuat kombo…</p>
+  }
+
+  if (!published.length) {
+    return (
+      <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+        <h2 className="text-3xl">Kombo bersama partner</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Belum ada paket gabungan yang ditampilkan. Studio masih menyusun kerja sama dengan dekor dan sewa baju.
+        </p>
+      </section>
+    )
+  }
+
+  const price = selected
+    ? comboTotal(packageById(selected.packageId)?.price ?? 0, selected.partnerIds, selected.discount)
+    : 0
+
+  return (
+    <section className="grid gap-3">
+      <h2 className="text-3xl">Kombo bersama partner</h2>
+      <p className="text-sm text-muted-foreground">
+        Satu harga untuk rias dan partner yang sudah setuju. Jam sementara 08.00, studio yang mengunci.
+      </p>
+      {published.map((combo) => {
+        const pkg = packageById(combo.packageId)
+        const total = comboTotal(pkg?.price ?? 0, combo.partnerIds, combo.discount)
+        return (
+          <article key={combo.id} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-display text-2xl">{combo.name}</h3>
+              <p className="font-medium">{rupiah(total)}</p>
+            </div>
+            <ul className="mt-2 grid gap-1 text-sm text-muted-foreground">
+              <li>Rias {pkg?.name}</li>
+              {combo.partnerIds.map((id) => {
+                const partner = partnerById(id)
+                return partner ? (
+                  <li key={id}>
+                    {TRADE_LABEL[partner.trade]} · {partner.name}
+                  </li>
+                ) : null
+              })}
+            </ul>
+            {combo.note ? <p className="mt-2 text-sm">{combo.note}</p> : null}
+          </article>
+        )
+      })}
+      {sent ? (
+        <p className="rounded-xl bg-accent px-4 py-3 text-sm">{sent}</p>
+      ) : (
+        <form
+          className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!ready || !selected) return
+            if (!name.trim() || !phone.trim() || !date) {
+              setError("Nama, WhatsApp, dan tanggal wajib diisi.")
+              return
+            }
+            addBooking({
+              clientName: name.trim(),
+              phone: phone.trim(),
+              eventType: "pengantin",
+              date,
+              time: "08:00",
+              location: "Dari pricelist kombo, lokasi menyusul",
+              packageId: selected.packageId,
+              attireId: null,
+              price,
+              dp: dpFor(price),
+              paid: 0,
+              notes: `Kombo ${selected.name}`,
+              source: "pricelist",
+              attireReturned: false,
+            })
+            setSent(`Pengajuan kombo ${selected.name} untuk ${formatDate(date)} sudah masuk ke studio.`)
+            setError("")
+          }}
+        >
+          <h3 className="font-display text-2xl">Ajukan kombo</h3>
+          <div className="grid gap-1.5">
+            <Label>Kombo</Label>
+            <Select value={selected?.id ?? comboId} onValueChange={(value) => setComboId(value ?? published[0].id)}>
+              <SelectTrigger className="h-10 w-full">
+                <SelectValue>{() => selected?.name ?? "Pilih kombo"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {published.map((combo) => (
+                  <SelectItem key={combo.id} value={combo.id}>
+                    {combo.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="nama-kombo-klien">Nama</Label>
+            <Input id="nama-kombo-klien" value={name} onChange={(event) => setName(event.target.value)} className="h-10" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="wa-kombo">WhatsApp</Label>
+            <Input id="wa-kombo" value={phone} onChange={(event) => setPhone(event.target.value)} className="h-10" placeholder="08…" />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="tanggal-kombo">Tanggal</Label>
+            <Input id="tanggal-kombo" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="h-10" />
+          </div>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          <Button type="submit" disabled={!ready} className="h-10">
+            Kirim pengajuan kombo
+          </Button>
+        </form>
+      )}
+    </section>
+  )
+}
 
 export function Pricelist({ slug }: { slug: string }) {
   const { ready, bookings, addBooking } = useStudio()
@@ -101,6 +232,8 @@ export function Pricelist({ slug }: { slug: string }) {
             </article>
           ))}
         </section>
+
+        <ComboSection />
 
         <section className="grid gap-3">
           <h2 className="text-3xl">Gaun yang bisa ditahan</h2>

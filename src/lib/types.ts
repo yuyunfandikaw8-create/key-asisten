@@ -52,9 +52,33 @@ export type Expense = {
   date: string
 }
 
+export type Trade = "makeup" | "dekor" | "baju"
+
+export type PartnershipStatus = "diminta" | "diterima"
+
+export type Partnership = {
+  partnerId: string
+  status: PartnershipStatus
+  note: string
+  createdAt: string
+}
+
+export type Combo = {
+  id: string
+  name: string
+  packageId: string
+  partnerIds: string[]
+  discount: number
+  note: string
+  published: boolean
+  createdAt: string
+}
+
 export type StudioState = {
   bookings: Booking[]
   expenses: Expense[]
+  partnerships: Partnership[]
+  combos: Combo[]
 }
 
 export type NewBooking = Omit<Booking, "id" | "createdAt">

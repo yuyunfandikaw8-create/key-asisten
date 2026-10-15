@@ -1,4 +1,5 @@
 import { addDays, dpFor, todayISO } from "@/lib/format"
+import { initialCollaboration } from "@/lib/partners"
 import type { Attire, Booking, Expense, Package, StudioState } from "@/lib/types"
 
 export const studio = {
@@ -322,7 +323,7 @@ export function createSeed(): StudioState {
     },
   ]
 
-  return { bookings, expenses }
+  return { bookings, expenses, ...initialCollaboration() }
 }
 
 export function packageById(id: string) {

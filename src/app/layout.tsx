@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s · Riasaja",
   },
   description:
-    "Meja kerja untuk studio MUA: jadwal anti-bentrok, invoice, DP, gaun, dan pricelist bio Instagram.",
+    "Makeup, dekor, dan sewa baju menemukan partner, lalu menjual jadwal dan harga kombo dalam satu tempat.",
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

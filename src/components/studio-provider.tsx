@@ -10,9 +10,9 @@ import {
 } from "react"
 
 import { createSeed } from "@/lib/catalog"
-import type { Booking, Expense, NewBooking, StudioState } from "@/lib/types"
+import type { Booking, Combo, Expense, NewBooking, Partnership, StudioState } from "@/lib/types"
 
-const STORAGE_KEY = "riasaja.laras.v1"
+const STORAGE_KEY = "riasaja.laras.v2"
 
 type StudioContextValue = {
   ready: boolean
@@ -20,10 +20,16 @@ type StudioContextValue = {
   dismissNotice: () => void
   bookings: Booking[]
   expenses: Expense[]
+  partnerships: Partnership[]
+  combos: Combo[]
   addBooking: (input: NewBooking) => Booking
   updateBooking: (id: string, patch: Partial<Booking>) => void
   removeBooking: (id: string) => void
   addExpense: (input: Omit<Expense, "id">) => void
+  invitePartner: (partnerId: string, note: string, accepted: boolean) => void
+  acceptPartner: (partnerId: string) => void
+  addCombo: (input: Omit<Combo, "id" | "createdAt">) => Combo
+  removeCombo: (id: string) => void
   reset: () => void
 }
 
@@ -41,11 +47,17 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         if (!raw) {
           setState(createSeed())
         } else {
-          const parsed = JSON.parse(raw) as StudioState
-          if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
-            throw new Error("Data studio tidak lengkap")
-          }
-          setState(parsed)
+        const parsed = JSON.parse(raw) as Partial<StudioState>
+        if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
+          throw new Error("Data studio tidak lengkap")
+        }
+        const seed = createSeed()
+        setState({
+          bookings: parsed.bookings,
+          expenses: parsed.expenses,
+          partnerships: Array.isArray(parsed.partnerships) ? parsed.partnerships : seed.partnerships,
+          combos: Array.isArray(parsed.combos) ? parsed.combos : seed.combos,
+        })
         }
       } catch {
         setState(createSeed())
@@ -68,6 +80,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       dismissNotice: () => setNotice(null),
       bookings: state?.bookings ?? [],
       expenses: state?.expenses ?? [],
+      partnerships: state?.partnerships ?? [],
+      combos: state?.combos ?? [],
       addBooking: (input) => {
         const booking: Booking = {
           ...input,
@@ -105,6 +119,49 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         const expense: Expense = { ...input, id: crypto.randomUUID() }
         setState((current) =>
           current ? { ...current, expenses: [expense, ...current.expenses] } : current
+        )
+      },
+      invitePartner: (partnerId, note, accepted) => {
+        const next: Partnership = {
+          partnerId,
+          status: accepted ? "diterima" : "diminta",
+          note,
+          createdAt: new Date().toISOString(),
+        }
+        setState((current) => {
+          if (!current) return current
+          const rest = current.partnerships.filter((item) => item.partnerId !== partnerId)
+          return { ...current, partnerships: [next, ...rest] }
+        })
+      },
+      acceptPartner: (partnerId) => {
+        setState((current) =>
+          current
+            ? {
+                ...current,
+                partnerships: current.partnerships.map((item) =>
+                  item.partnerId === partnerId ? { ...item, status: "diterima" } : item
+                ),
+              }
+            : current
+        )
+      },
+      addCombo: (input) => {
+        const combo: Combo = {
+          ...input,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        }
+        setState((current) =>
+          current ? { ...current, combos: [combo, ...current.combos] } : current
+        )
+        return combo
+      },
+      removeCombo: (id) => {
+        setState((current) =>
+          current
+            ? { ...current, combos: current.combos.filter((combo) => combo.id !== id) }
+            : current
         )
       },
       reset: () => {

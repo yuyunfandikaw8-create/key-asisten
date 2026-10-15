@@ -6,6 +6,7 @@ import { Suspense } from "react"
 import {
   CalendarDays,
   FileText,
+  Handshake,
   LayoutDashboard,
   RotateCcw,
   Shirt,
@@ -23,6 +24,7 @@ const links = [
   { href: "/studio/invoice", label: "Invoice", icon: FileText },
   { href: "/studio/keuangan", label: "Keuangan", icon: Wallet },
   { href: "/studio/gaun", label: "Gaun", icon: Shirt },
+  { href: "/studio/partner", label: "Partner", icon: Handshake },
 ]
 
 function isActive(pathname: string, href: string, exact?: boolean) {
@@ -59,7 +61,7 @@ function MobileNav() {
   const pathname = usePathname()
   return (
     <nav className="studio-chrome fixed inset-x-0 bottom-0 z-30 border-t bg-card md:hidden">
-      <div className="grid grid-cols-5">
+      <div className="grid grid-cols-6">
         {links.map((link) => {
           const Icon = link.icon
           const active = isActive(pathname, link.href, link.exact)

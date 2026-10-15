@@ -27,7 +27,7 @@ import {
 import { cn } from "@/lib/utils"
 
 export default function StudioHomePage() {
-  const { ready, bookings, expenses } = useStudio()
+  const { ready, bookings, expenses, partnerships, combos } = useStudio()
   if (!ready) return <StudioLoading />
 
   const money = financeSummary(bookings, expenses)
@@ -66,6 +66,21 @@ export default function StudioHomePage() {
           Buat booking
         </Link>
       </div>
+
+      <Link
+        href="/studio/partner"
+        className="grid gap-1 rounded-2xl bg-card px-4 py-4 ring-1 ring-foreground/10 sm:grid-cols-[1fr_auto] sm:items-center"
+      >
+        <span>
+          <span className="block font-display text-2xl">Partner dan kombo</span>
+          <span className="text-sm text-muted-foreground">
+            {partnerships.filter((item) => item.status === "diterima").length} kerja sama ·{" "}
+            {partnerships.filter((item) => item.status === "diminta").length} menunggu ·{" "}
+            {combos.filter((combo) => combo.published).length} kombo di pricelist
+          </span>
+        </span>
+        <span className="text-sm font-medium text-primary">Cari dekor, makeup, atau sewa baju</span>
+      </Link>
 
       <section className="grid gap-3 lg:grid-cols-[1.3fr_1fr]">
         <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
