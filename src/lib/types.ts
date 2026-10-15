@@ -74,11 +74,25 @@ export type Combo = {
   createdAt: string
 }
 
+export type InboxSender = "studio" | "partner"
+
+export type InboxMessage = {
+  id: string
+  partnerId: string
+  city: string
+  sender: InboxSender
+  body: string
+  createdAt: string
+  read: boolean
+}
+
 export type StudioState = {
+  city: string
   bookings: Booking[]
   expenses: Expense[]
   partnerships: Partnership[]
   combos: Combo[]
+  messages: InboxMessage[]
 }
 
 export type NewBooking = Omit<Booking, "id" | "createdAt">

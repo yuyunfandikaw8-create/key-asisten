@@ -323,7 +323,12 @@ export function createSeed(): StudioState {
     },
   ]
 
-  return { bookings, expenses, ...initialCollaboration() }
+  return {
+    city: studio.city,
+    bookings,
+    expenses,
+    ...initialCollaboration(),
+  }
 }
 
 export function packageById(id: string) {

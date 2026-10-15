@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronRight,
   Handshake,
+  Inbox,
   Plus,
   Receipt,
   Shirt,
@@ -37,6 +38,7 @@ import {
   paymentStatus,
   sortBookings,
 } from "@/lib/metrics"
+import { partners } from "@/lib/partners"
 import { cn } from "@/lib/utils"
 
 function ProfitSparkline({ values }: { values: number[] }) {
@@ -72,10 +74,13 @@ function ProfitSparkline({ values }: { values: number[] }) {
 }
 
 export default function StudioHomePage() {
-  const { ready, bookings, expenses, partnerships, combos } = useStudio()
+  const { ready, city, bookings, expenses, partnerships, combos, messages } = useStudio()
   if (!ready) return <StudioLoading />
 
   const money = financeSummary(bookings, expenses)
+  const unreadInbox = messages.filter(
+    (message) => message.city === city && message.sender === "partner" && !message.read
+  ).length
   const series = monthlyIncomeSeries(bookings, 6, todayISO())
   const today = bookings.filter((booking) => daysUntil(booking.date) === 0)
   const tomorrow = bookings.filter((booking) => daysUntil(booking.date) === 1)
@@ -95,9 +100,17 @@ export default function StudioHomePage() {
   )
   const heldAttire = attires.filter((attire) => attireStatus(attire.id, bookings).tone !== "free")
     .length
-  const acceptedPartners = partnerships.filter((item) => item.status === "diterima").length
-  const waitingPartners = partnerships.filter((item) => item.status === "diminta").length
-  const publishedCombos = combos.filter((combo) => combo.published).length
+  const acceptedPartners = partnerships.filter((item) => {
+    const partner = partners.find((entry) => entry.id === item.partnerId)
+    return item.status === "diterima" && partner?.city === city
+  }).length
+  const waitingPartners = partnerships.filter((item) => {
+    const partner = partners.find((entry) => entry.id === item.partnerId)
+    return item.status === "diminta" && partner?.city === city
+  }).length
+  const publishedCombos = combos.filter((combo) =>
+    combo.published && combo.partnerIds.some((id) => partners.find((entry) => entry.id === id)?.city === city)
+  ).length
 
   const dayKpis = [
     {
@@ -246,8 +259,16 @@ export default function StudioHomePage() {
 
       <section className="grid gap-3">
         <h2 className="text-2xl">Akses cepat</h2>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
+            {
+              href: "/studio/inbox",
+              title: "Inbox partner",
+              body: unreadInbox
+                ? `${unreadInbox} pesan baru di ${city}`
+                : `Chat partner di ${city}`,
+              Icon: Inbox,
+            },
             {
               href: "/studio/partner",
               title: "Partner & kombo",

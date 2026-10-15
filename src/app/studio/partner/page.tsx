@@ -1,10 +1,11 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -23,12 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { packageById, packages, studio } from "@/lib/catalog"
+import { packageById, packages } from "@/lib/catalog"
 import { addDays, formatShortDate, rupiah, todayISO } from "@/lib/format"
 import {
   comboTotal,
   partnerById,
-  partners,
+  partnersInCity,
   sharesOf,
   TRADE_LABEL,
   type Partner,
@@ -42,7 +43,6 @@ const filters: { id: string; label: string }[] = [
   { id: "makeup", label: "Makeup" },
   { id: "baju", label: "Sewa baju" },
   { id: "hair", label: "Hairdo" },
-  { id: "kota", label: "Satu kota" },
   { id: "kosong", label: "Tanggal kosong" },
 ]
 
@@ -52,8 +52,16 @@ function isBusy(partner: Partner, date: string, anchor: string) {
 }
 
 export default function PartnerPage() {
-  const { ready, partnerships, combos, invitePartner, acceptPartner, addCombo, removeCombo } =
-    useStudio()
+  const {
+    ready,
+    city,
+    partnerships,
+    combos,
+    invitePartner,
+    acceptPartner,
+    addCombo,
+    removeCombo,
+  } = useStudio()
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState("semua")
   const [anchor, setAnchor] = useState("")
@@ -69,33 +77,49 @@ export default function PartnerPage() {
   const [inviteMessage, setInviteMessage] = useState("")
   const [comboName, setComboName] = useState("")
   const [packageId, setPackageId] = useState("adat")
-  const [picked, setPicked] = useState<string[]>(["dekor-rumah-bunga"])
+  const [picked, setPicked] = useState<string[]>([])
   const [discount, setDiscount] = useState("500000")
   const [comboNote, setComboNote] = useState("")
   const [comboError, setComboError] = useState("")
 
+  const localPartners = useMemo(() => partnersInCity(city), [city])
   const statusOf = (id: string) => partnerships.find((item) => item.partnerId === id)?.status
-  const accepted = partnerships.filter((item) => item.status === "diterima")
+  const accepted = useMemo(
+    () =>
+      partnerships.filter((item) => {
+        const partner = partnerById(item.partnerId)
+        return item.status === "diterima" && partner?.city === city
+      }),
+    [city, partnerships]
+  )
+  const acceptedIds = accepted.map((item) => item.partnerId).join("|")
   const selectedPackage = packageById(packageId) ?? packages[1]
   const discountValue = Number(discount.replace(/\D/g, "")) || 0
   const preview = comboTotal(selectedPackage.price, picked, discountValue)
 
+  useEffect(() => {
+    const ids = acceptedIds ? acceptedIds.split("|") : []
+    setPicked((current) => {
+      const stillValid = current.filter((id) => ids.includes(id))
+      if (stillValid.length) return stillValid
+      return ids[0] ? [ids[0]] : []
+    })
+  }, [acceptedIds])
+
   const visible = useMemo(() => {
-    return partners.filter((partner) => {
+    return localPartners.filter((partner) => {
       const haystack = `${partner.name} ${partner.area} ${partner.offer}`.toLowerCase()
       if (query && !haystack.includes(query.toLowerCase())) return false
       if (filter === "dekor" || filter === "makeup" || filter === "baju" || filter === "hair") {
         return partner.trade === (filter as Trade)
       }
-      if (filter === "kota") return partner.city === studio.city
-      if (filter === "kosong") return partner.city === studio.city && !isBusy(partner, freeDate, anchor)
+      if (filter === "kosong") return !isBusy(partner, freeDate, anchor)
       return true
     })
-  }, [anchor, filter, freeDate, query])
+  }, [anchor, filter, freeDate, localPartners, query])
 
-  const suggestions = partners.filter(
-    (partner) =>
-      partner.city === studio.city && partner.repliesFast && !statusOf(partner.id)
+  const suggestions = localPartners.filter(
+    (partner) => partner.repliesFast && !statusOf(partner.id)
   )
 
   if (!ready) return <StudioLoading />
@@ -119,7 +143,8 @@ export default function PartnerPage() {
       <div>
         <h1 className="text-4xl">Cari partner</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Makeup, hairdo, dekor, dan sewa baju di kota yang sama bisa diajak satu tanggal. Setelah mereka setuju, susun kombo supaya klien melihat satu harga.
+          Hanya partner di {city} yang tampil di sini. Ganti lokasi di menu atas untuk Surabaya,
+          Jakarta, dan kota lain. Setelah setuju, susun kombo atau chat di Inbox.
         </p>
       </div>
 
@@ -128,7 +153,7 @@ export default function PartnerPage() {
       ) : null}
 
       <section className="grid gap-3">
-        <h2 className="text-2xl">Siap diajak di {studio.city}</h2>
+        <h2 className="text-2xl">Siap diajak di {city}</h2>
         {suggestions.length === 0 ? (
           <EmptyState
             title="Tidak ada saran baru"
@@ -144,9 +169,15 @@ export default function PartnerPage() {
                 <h3 className="mt-1 font-display text-2xl">{partner.name}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{partner.offer}</p>
                 <p className="mt-2 text-sm">Bagian mereka {rupiah(partner.share)}</p>
-                <Button className="mt-3" onClick={() => setInviteId(partner.id)}>
-                  Ajak kerja sama
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button onClick={() => setInviteId(partner.id)}>Ajak kerja sama</Button>
+                  <Link
+                    href={`/studio/inbox?partner=${partner.id}`}
+                    className={cn(buttonVariants({ variant: "outline" }), "h-8")}
+                  >
+                    Inbox
+                  </Link>
+                </div>
               </article>
             ))}
           </div>
@@ -197,7 +228,7 @@ export default function PartnerPage() {
             body={
               query
                 ? `Tidak ada nama atau jasa yang memuat “${query}”.`
-                : "Ubah peran, kota, atau tanggal. Partner di luar kota tetap ada di saringan Semua."
+                : `Belum ada partner untuk saringan ini di ${city}. Ganti lokasi atau peran.`
             }
           />
         ) : (
@@ -235,8 +266,14 @@ export default function PartnerPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/studio/inbox?partner=${partner.id}`}
+                      className={cn(buttonVariants({ variant: "outline" }))}
+                    >
+                      Inbox
+                    </Link>
                     {status === "diterima" ? (
-                      <p className="text-sm text-muted-foreground">Sudah bisa masuk kombo.</p>
+                      <p className="self-center text-sm text-muted-foreground">Sudah bisa masuk kombo.</p>
                     ) : null}
                     {status === "diminta" ? (
                       <Button variant="outline" onClick={() => acceptPartner(partner.id)}>
@@ -376,14 +413,18 @@ export default function PartnerPage() {
           </form>
         )}
 
-        {combos.length === 0 ? (
+        {combos.filter((combo) =>
+          combo.partnerIds.some((id) => partnerById(id)?.city === city)
+        ).length === 0 ? (
           <EmptyState
             title="Belum ada kombo"
-            body="Susun satu paket bersama partner yang sudah setuju. Klien nanti melihatnya di pricelist."
+            body={`Susun satu paket bersama partner di ${city} yang sudah setuju. Klien nanti melihatnya di pricelist.`}
           />
         ) : (
           <div className="grid gap-3">
-            {combos.map((combo) => {
+            {combos
+              .filter((combo) => combo.partnerIds.some((id) => partnerById(id)?.city === city))
+              .map((combo) => {
               const pkg = packageById(combo.packageId)
               const names = combo.partnerIds
                 .map((id) => partnerById(id))

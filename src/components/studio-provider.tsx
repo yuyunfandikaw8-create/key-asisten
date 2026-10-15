@@ -10,18 +10,30 @@ import {
 } from "react"
 
 import { createSeed } from "@/lib/catalog"
-import type { Booking, Combo, Expense, NewBooking, Partnership, StudioState } from "@/lib/types"
+import { partnerById } from "@/lib/partners"
+import type {
+  Booking,
+  Combo,
+  Expense,
+  InboxMessage,
+  NewBooking,
+  Partnership,
+  StudioState,
+} from "@/lib/types"
 
-const STORAGE_KEY = "riasaja.laras.v2"
+const STORAGE_KEY = "riasaja.laras.v3"
 
 type StudioContextValue = {
   ready: boolean
   notice: string | null
   dismissNotice: () => void
+  city: string
+  setCity: (city: string) => void
   bookings: Booking[]
   expenses: Expense[]
   partnerships: Partnership[]
   combos: Combo[]
+  messages: InboxMessage[]
   addBooking: (input: NewBooking) => Booking
   updateBooking: (id: string, patch: Partial<Booking>) => void
   removeBooking: (id: string) => void
@@ -30,10 +42,24 @@ type StudioContextValue = {
   acceptPartner: (partnerId: string) => void
   addCombo: (input: Omit<Combo, "id" | "createdAt">) => Combo
   removeCombo: (id: string) => void
+  sendMessage: (partnerId: string, body: string) => void
+  markThreadRead: (partnerId: string) => void
   reset: () => void
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null)
+
+function normalizeState(parsed: Partial<StudioState>): StudioState {
+  const seed = createSeed()
+  return {
+    city: typeof parsed.city === "string" && parsed.city ? parsed.city : seed.city,
+    bookings: Array.isArray(parsed.bookings) ? parsed.bookings : seed.bookings,
+    expenses: Array.isArray(parsed.expenses) ? parsed.expenses : seed.expenses,
+    partnerships: Array.isArray(parsed.partnerships) ? parsed.partnerships : seed.partnerships,
+    combos: Array.isArray(parsed.combos) ? parsed.combos : seed.combos,
+    messages: Array.isArray(parsed.messages) ? parsed.messages : seed.messages,
+  }
+}
 
 export function StudioProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StudioState | null>(null)
@@ -43,21 +69,15 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY)
+        const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("riasaja.laras.v2")
         if (!raw) {
           setState(createSeed())
         } else {
-        const parsed = JSON.parse(raw) as Partial<StudioState>
-        if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
-          throw new Error("Data studio tidak lengkap")
-        }
-        const seed = createSeed()
-        setState({
-          bookings: parsed.bookings,
-          expenses: parsed.expenses,
-          partnerships: Array.isArray(parsed.partnerships) ? parsed.partnerships : seed.partnerships,
-          combos: Array.isArray(parsed.combos) ? parsed.combos : seed.combos,
-        })
+          const parsed = JSON.parse(raw) as Partial<StudioState>
+          if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
+            throw new Error("Data studio tidak lengkap")
+          }
+          setState(normalizeState(parsed))
         }
       } catch {
         setState(createSeed())
@@ -78,10 +98,16 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       ready,
       notice,
       dismissNotice: () => setNotice(null),
+      city: state?.city ?? "Bandung",
+      setCity: (city) => {
+        setState((current) => (current ? { ...current, city } : current))
+        setNotice(`Lokasi aktif diganti ke ${city}. Partner dan inbox hanya menampilkan kota ini.`)
+      },
       bookings: state?.bookings ?? [],
       expenses: state?.expenses ?? [],
       partnerships: state?.partnerships ?? [],
       combos: state?.combos ?? [],
+      messages: state?.messages ?? [],
       addBooking: (input) => {
         const booking: Booking = {
           ...input,
@@ -163,6 +189,57 @@ export function StudioProvider({ children }: { children: ReactNode }) {
             ? { ...current, combos: current.combos.filter((combo) => combo.id !== id) }
             : current
         )
+      },
+      sendMessage: (partnerId, body) => {
+        const partner = partnerById(partnerId)
+        if (!partner || !body.trim()) return
+        const outbound: InboxMessage = {
+          id: crypto.randomUUID(),
+          partnerId,
+          city: partner.city,
+          sender: "studio",
+          body: body.trim(),
+          createdAt: new Date().toISOString(),
+          read: true,
+        }
+        setState((current) =>
+          current ? { ...current, messages: [...current.messages, outbound] } : current
+        )
+
+        if (partner.repliesFast) {
+          window.setTimeout(() => {
+            const reply: InboxMessage = {
+              id: crypto.randomUUID(),
+              partnerId,
+              city: partner.city,
+              sender: "partner",
+              body: `Siap, ${partner.name} sudah baca. Kita cocokkan tanggal di ${partner.city} ya.`,
+              createdAt: new Date().toISOString(),
+              read: false,
+            }
+            setState((current) =>
+              current ? { ...current, messages: [...current.messages, reply] } : current
+            )
+          }, 700)
+        }
+      },
+      markThreadRead: (partnerId) => {
+        setState((current) => {
+          if (!current) return current
+          const needsUpdate = current.messages.some(
+            (message) =>
+              message.partnerId === partnerId && message.sender === "partner" && !message.read
+          )
+          if (!needsUpdate) return current
+          return {
+            ...current,
+            messages: current.messages.map((message) =>
+              message.partnerId === partnerId && message.sender === "partner"
+                ? { ...message, read: true }
+                : message
+            ),
+          }
+        })
       },
       reset: () => {
         setState(createSeed())
