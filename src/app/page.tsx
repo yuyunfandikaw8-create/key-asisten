@@ -55,7 +55,7 @@ const beforeAfter = [
 const roles = [
   "Make Up Artist",
   "Hijab & Hair Stylist",
-  "Decosets",
+  "Decoration",
   "Attire",
   "Fotografer",
   "Event & Wedding Content Creator",
@@ -191,7 +191,7 @@ export default function HomePage() {
             Kerja sama
           </p>
           <h2 className="mt-2 max-w-2xl text-4xl text-balance">
-            Make Up Artist, hair, dekor, attire, foto, dan konten ketemu di satu tanggal.
+            Make Up Artist, hair, decoration, attire, foto, dan konten ketemu di satu tanggal.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat ke banyak tempat.
@@ -200,7 +200,7 @@ export default function HomePage() {
             {[
               ["Make Up Artist", "Rias pengantin dan keluarga, jadi inti jadwal."],
               ["Hijab & Hair Stylist", "Hijab do, sanggul, updo, dan penataan rambut di jam yang sama."],
-              ["Decosets", "Pelaminan, gapura, dan set dekor yang ikut di tanggal yang sama."],
+              ["Decoration", "Pelaminan, gapura, dan set dekor yang ikut di tanggal yang sama."],
               ["Attire", "Kebaya, gaun, dan beskap yang tidak bentrok."],
               ["Fotografer", "Dokumentasi akad dan resepsi dalam satu timeline."],
               ["Event & Wedding Content Creator", "Konten reels dan highlight untuk hari H."],

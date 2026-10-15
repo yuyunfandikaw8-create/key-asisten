@@ -41,7 +41,7 @@ const filters: { id: string; label: string }[] = [
   { id: "semua", label: "Semua" },
   { id: "makeup", label: "Make Up Artist" },
   { id: "hair", label: "Hijab & Hair" },
-  { id: "dekor", label: "Decosets" },
+  { id: "dekor", label: "Decoration" },
   { id: "baju", label: "Attire" },
   { id: "foto", label: "Fotografer" },
   { id: "content", label: "Content Creator" },

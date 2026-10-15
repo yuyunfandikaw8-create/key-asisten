@@ -3,7 +3,7 @@ import type { Combo, InboxMessage, Partnership, Trade } from "@/lib/types"
 export const TRADE_LABEL: Record<Trade, string> = {
   makeup: "Make Up Artist",
   hair: "Hijab & Hair Stylist",
-  dekor: "Decosets",
+  dekor: "Decoration",
   baju: "Attire",
   foto: "Fotografer",
   content: "Event & Wedding Content Creator",
