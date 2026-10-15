@@ -20,6 +20,7 @@ Buka [http://127.0.0.1:43123](http://127.0.0.1:43123).
 - Pricelist publik di `/p/laras`. Pengajuan tanggal dan kombo masuk ke jadwal studio sebagai belum DP.
 - Partner di `/studio/partner`. Saring dekor, makeup, hairdo, atau sewa baju di kota aktif, ajak kerja sama, lalu susun kombo.
 - Inbox di `/studio/inbox`. Chat partner sesuai lokasi aktif (contoh: pilih Surabaya untuk melihat partner Surabaya saja).
+- Menu di `/studio/menu`. Pintasan ke jadwal, partner, invoice, aset, lokasi, dan identitas studio.
 
 Data tersimpan di browser (`localStorage`). Tombol **Data contoh** mengembalikan studio Laras Bridal.
 

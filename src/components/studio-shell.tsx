@@ -9,6 +9,7 @@ import {
   Handshake,
   Inbox,
   LayoutDashboard,
+  LayoutGrid,
   RotateCcw,
   Shirt,
   Wallet,
@@ -35,6 +36,7 @@ const links = [
   { href: "/studio/keuangan", label: "Keuangan", icon: Wallet },
   { href: "/studio/gaun", label: "Gaun", icon: Shirt },
   { href: "/studio/partner", label: "Partner", icon: Handshake },
+  { href: "/studio/menu", label: "Menu", icon: LayoutGrid },
 ]
 
 function isActive(pathname: string, href: string, exact?: boolean) {
