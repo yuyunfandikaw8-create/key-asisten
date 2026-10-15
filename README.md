@@ -1,6 +1,6 @@
 # Key Assistant
 
-Meja kerja untuk vendor pernikahan. Make Up Artist, Hijab & Hair Stylist, Decsets, Attire, Fotografer, dan Event & Wedding Content Creator bisa saling menemukan partner lalu menjual satu harga kombo. Lokasi bisa diganti (Bandung, Surabaya, Jakarta, …) supaya partner dan inbox hanya menampilkan kota itu. Studio demo-nya **Laras Bridal**, dengan jadwal, DP, invoice, dan pricelist.
+Meja kerja untuk vendor pernikahan. Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Fotografer, dan Event & Wedding Content Creator bisa saling menemukan partner lalu menjual satu harga kombo. Lokasi bisa diganti (Bandung, Surabaya, Jakarta, …) supaya partner dan inbox hanya menampilkan kota itu. Studio demo-nya **Laras Bridal**, dengan jadwal, DP, invoice, dan pricelist.
 
 ## Menjalankan
 
