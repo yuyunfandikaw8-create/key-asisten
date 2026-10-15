@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type { ReactNode } from "react"
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google"
 
+import { AuthProvider } from "@/components/auth-provider"
 import { StudioProvider } from "@/components/studio-provider"
 import "./globals.css"
 
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${jakarta.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className={`${jakarta.className} min-h-full bg-background text-foreground`}>
-        <StudioProvider>{children}</StudioProvider>
+        <AuthProvider>
+          <StudioProvider>{children}</StudioProvider>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -11,9 +11,20 @@ npm run dev -- --port 43123
 
 Buka [http://127.0.0.1:43123](http://127.0.0.1:43123).
 
+## Login
+
+Studio dilindungi login. Coba di `/masuk` atau daftar di `/daftar`.
+
+Akun contoh (tersimpan di browser):
+
+- Bandung: `laras@riasaja.id` / `laras123`
+- Surabaya: `nadya@riasaja.id` / `suro123`
+
+Ini login lokal dulu. Supabase Auth bisa disambung setelah anon key tersedia.
+
 ## Yang bisa dicoba
 
-- Studio demo di `/studio`: laba, DP, bentrok jadwal, dan gaun yang telat kembali.
+- Studio demo di `/studio` (setelah masuk): laba, DP, bentrok jadwal, dan gaun yang telat kembali.
 - Booking baru di `/studio/jadwal/baru`. Tombol **Isi contoh chat** membaca nama, tanggal, jam, lokasi, paket, dan nomor.
 - Invoice di `/studio/invoice`: catat DP, tandai lunas, atau buka WhatsApp dengan pesan tagihan.
 - Gaun di `/studio/gaun`.

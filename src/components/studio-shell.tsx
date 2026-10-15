@@ -10,13 +10,16 @@ import {
   Inbox,
   LayoutDashboard,
   LayoutGrid,
+  LogOut,
   RotateCcw,
   Shirt,
   Wallet,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { studio } from "@/lib/catalog"
 import { CITIES } from "@/lib/cities"
+import { useAuth } from "@/components/auth-provider"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -138,6 +141,8 @@ function CityPicker() {
 }
 
 export function StudioShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const { user, logout } = useAuth()
   const { reset, notice, dismissNotice, city } = useStudio()
 
   return (
@@ -147,8 +152,9 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="font-display text-xl leading-none">
             Riasaja
           </Link>
-          <span className="hidden text-sm text-muted-foreground lg:inline">
-            {studio.name}
+          <span className="hidden min-w-0 truncate text-sm text-muted-foreground lg:inline">
+            {user?.studioName ?? studio.name}
+            {user ? ` · ${user.name}` : null}
           </span>
           <div className="ml-auto flex items-center gap-2">
             <CityPicker />
@@ -161,6 +167,17 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             <Button variant="outline" size="sm" onClick={reset}>
               <RotateCcw />
               <span className="hidden sm:inline">Data contoh</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                logout()
+                router.replace("/masuk")
+              }}
+            >
+              <LogOut />
+              <span className="hidden sm:inline">Keluar</span>
             </Button>
           </div>
         </div>

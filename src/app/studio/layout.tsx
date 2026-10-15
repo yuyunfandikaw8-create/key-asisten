@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
+import { Suspense } from "react"
 
+import { AuthGate } from "@/components/auth-gate"
+import { StudioLoading } from "@/components/studio-bits"
 import { StudioShell } from "@/components/studio-shell"
 
 export const metadata: Metadata = {
@@ -8,5 +11,11 @@ export const metadata: Metadata = {
 }
 
 export default function StudioLayout({ children }: { children: ReactNode }) {
-  return <StudioShell>{children}</StudioShell>
+  return (
+    <Suspense fallback={<StudioLoading />}>
+      <AuthGate>
+        <StudioShell>{children}</StudioShell>
+      </AuthGate>
+    </Suspense>
+  )
 }

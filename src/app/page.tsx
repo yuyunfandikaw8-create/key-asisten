@@ -97,8 +97,11 @@ export default function HomePage() {
             <Link href={`/p/${studio.slug}`} className="text-sm font-medium">
               Pricelist
             </Link>
+            <Link href="/masuk" className="hidden text-sm font-medium sm:inline">
+              Masuk
+            </Link>
             <Link
-              href="/studio"
+              href="/masuk"
               className={cn(buttonVariants({ size: "lg" }), "h-10 px-4")}
             >
               Buka studio
@@ -122,10 +125,10 @@ export default function HomePage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/studio"
+                href="/masuk"
                 className={cn(buttonVariants({ size: "lg" }), "h-11 px-5")}
               >
-                Buka studio demo
+                Masuk studio demo
               </Link>
               <Link
                 href={`/p/${studio.slug}`}
@@ -137,6 +140,12 @@ export default function HomePage() {
                 Lihat pricelist {studio.name}
               </Link>
             </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Belum punya akun?{" "}
+              <Link href="/daftar" className="font-medium text-primary hover:underline">
+                Daftar studio
+              </Link>
+            </p>
           </div>
 
           <aside className="rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/10">
@@ -201,7 +210,7 @@ export default function HomePage() {
             ))}
           </div>
           <Link
-            href="/studio/partner"
+            href="/masuk?next=/studio/partner"
             className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-6 h-10 bg-card px-4")}
           >
             Cari partner
@@ -306,7 +315,7 @@ export default function HomePage() {
             </h2>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/studio"
+                href="/masuk"
                 className={cn(
                   buttonVariants({ size: "lg", variant: "secondary" }),
                   "h-11 px-5"
@@ -332,7 +341,7 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 Riasaja · Meja kerja untuk MUA Indonesia</p>
           <div className="flex gap-4">
-            <Link href="/studio">Studio</Link>
+            <Link href="/masuk">Masuk</Link>
             <Link href={`/p/${studio.slug}`}>Pricelist</Link>
           </div>
         </div>
