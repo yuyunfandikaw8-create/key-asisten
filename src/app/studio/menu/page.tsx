@@ -77,7 +77,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/inbox",
         title: "Inbox partner",
-        body: "Chat dekor, makeup, hairdo, dan sewa baju",
+        body: "Chat Make Up Artist, hair, Decsets, Attire, foto, dan konten",
         Icon: Inbox,
         tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
       },
@@ -96,8 +96,8 @@ const sections: MenuSection[] = [
       },
       {
         href: "/studio/partner",
-        title: "Hairdo & makeup",
-        body: "Saring penata rambut dan asisten rias lokal",
+        title: "Make Up & Hair Stylist",
+        body: "Saring Make Up Artist serta Hijab & Hair Stylist lokal",
         Icon: Scissors,
         tone: "bg-[oklch(0.94_0.03_320)] text-[oklch(0.45_0.1_320)]",
       },
@@ -313,7 +313,9 @@ export default function MenuPage() {
           </div>
           <div>
             <dt className="text-muted-foreground">Mode bisnis</dt>
-            <dd className="font-medium">Makeup · Hairdo · Dekor · Sewa baju</dd>
+            <dd className="font-medium">
+              Make Up Artist · Hijab & Hair · Decsets · Attire · Foto · Content
+            </dd>
             <dd>Kombo partner per kota</dd>
           </div>
         </dl>

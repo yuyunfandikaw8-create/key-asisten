@@ -39,10 +39,12 @@ import { cn } from "@/lib/utils"
 
 const filters: { id: string; label: string }[] = [
   { id: "semua", label: "Semua" },
-  { id: "dekor", label: "Dekor" },
-  { id: "makeup", label: "Makeup" },
-  { id: "baju", label: "Sewa baju" },
-  { id: "hair", label: "Hairdo" },
+  { id: "makeup", label: "Make Up Artist" },
+  { id: "hair", label: "Hijab & Hair" },
+  { id: "dekor", label: "Decosets" },
+  { id: "baju", label: "Attire" },
+  { id: "foto", label: "Fotografer" },
+  { id: "content", label: "Content Creator" },
   { id: "kosong", label: "Tanggal kosong" },
 ]
 
@@ -110,7 +112,14 @@ export default function PartnerPage() {
     return localPartners.filter((partner) => {
       const haystack = `${partner.name} ${partner.area} ${partner.offer}`.toLowerCase()
       if (query && !haystack.includes(query.toLowerCase())) return false
-      if (filter === "dekor" || filter === "makeup" || filter === "baju" || filter === "hair") {
+      if (
+        filter === "dekor" ||
+        filter === "makeup" ||
+        filter === "baju" ||
+        filter === "hair" ||
+        filter === "foto" ||
+        filter === "content"
+      ) {
         return partner.trade === (filter as Trade)
       }
       if (filter === "kosong") return !isBusy(partner, freeDate, anchor)
@@ -143,8 +152,8 @@ export default function PartnerPage() {
       <div>
         <h1 className="text-4xl">Cari partner</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Hanya partner di {city} yang tampil di sini. Ganti lokasi di menu atas untuk Surabaya,
-          Jakarta, dan kota lain. Setelah setuju, susun kombo atau chat di Inbox.
+          Hanya partner di {city} yang tampil di sini: Make Up Artist, Hijab & Hair Stylist,
+          Decsets, Attire, Fotografer, dan Content Creator. Ganti lokasi di menu atas untuk kota lain.
         </p>
       </div>
 
@@ -302,7 +311,7 @@ export default function PartnerPage() {
         {accepted.length === 0 ? (
           <EmptyState
             title="Belum ada partner yang setuju"
-            body="Ajak dekor, makeup, hairdo, atau sewa baju dulu. Kombo hanya bisa disusun dengan partner yang sudah menerima."
+            body="Ajak Make Up Artist, hair stylist, Decsets, Attire, fotografer, atau content creator dulu. Kombo hanya bisa disusun dengan partner yang sudah menerima."
           />
         ) : (
           <form

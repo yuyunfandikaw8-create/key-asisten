@@ -53,13 +53,12 @@ const beforeAfter = [
 ]
 
 const roles = [
-  "Makeup artist",
-  "Hairdo",
-  "Bridal",
-  "Penyewaan gaun",
-  "Asisten studio",
+  "Make Up Artist",
+  "Hijab & Hair Stylist",
+  "Decosets",
+  "Attire",
   "Fotografer",
-  "Wedding organizer",
+  "Event & Wedding Content Creator",
 ]
 
 const faqs = [
@@ -192,17 +191,19 @@ export default function HomePage() {
             Kerja sama
           </p>
           <h2 className="mt-2 max-w-2xl text-4xl text-balance">
-            Makeup, hairdo, dekor, dan sewa baju ketemu di satu tanggal.
+            Make Up Artist, hair, dekor, attire, foto, dan konten ketemu di satu tanggal.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat ke empat tempat.
+            Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat ke banyak tempat.
           </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["Makeup", "Rias pengantin dan keluarga, jadi inti jadwal."],
-              ["Hairdo", "Sanggul, updo, dan penataan rambut di jam yang sama."],
-              ["Dekor", "Pelaminan dan gapura yang ikut di tanggal yang sama."],
-              ["Sewa baju", "Kebaya, gaun, dan beskap yang tidak bentrok."],
+              ["Make Up Artist", "Rias pengantin dan keluarga, jadi inti jadwal."],
+              ["Hijab & Hair Stylist", "Hijab do, sanggul, updo, dan penataan rambut di jam yang sama."],
+              ["Decosets", "Pelaminan, gapura, dan set dekor yang ikut di tanggal yang sama."],
+              ["Attire", "Kebaya, gaun, dan beskap yang tidak bentrok."],
+              ["Fotografer", "Dokumentasi akad dan resepsi dalam satu timeline."],
+              ["Event & Wedding Content Creator", "Konten reels dan highlight untuk hari H."],
             ].map(([title, body]) => (
               <article key={title} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
                 <h3 className="font-display text-2xl">{title}</h3>

@@ -41,7 +41,7 @@ function ComboSection() {
       <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
         <h2 className="text-3xl">Kombo bersama partner</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Belum ada paket gabungan yang ditampilkan. Studio masih menyusun kerja sama dengan dekor, hairdo, dan sewa baju.
+          Belum ada paket gabungan yang ditampilkan. Studio masih menyusun kerja sama dengan Decsets, Attire, foto, dan partner lain.
         </p>
       </section>
     )
