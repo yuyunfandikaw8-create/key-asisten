@@ -153,7 +153,7 @@ export default function PartnerPage() {
         <h1 className="text-4xl">Cari partner</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           Hanya partner di {city} yang tampil di sini: Make Up Artist, Hijab & Hair Stylist,
-          Decsets, Attire, Fotografer, dan Content Creator. Ganti lokasi di menu atas untuk kota lain.
+          Decoration, Attire, Fotografer, dan Content Creator. Ganti lokasi di menu atas untuk kota lain.
         </p>
       </div>
 
@@ -311,7 +311,7 @@ export default function PartnerPage() {
         {accepted.length === 0 ? (
           <EmptyState
             title="Belum ada partner yang setuju"
-            body="Ajak Make Up Artist, hair stylist, Decsets, Attire, fotografer, atau content creator dulu. Kombo hanya bisa disusun dengan partner yang sudah menerima."
+            body="Ajak Make Up Artist, hair stylist, Decoration, Attire, fotografer, atau content creator dulu. Kombo hanya bisa disusun dengan partner yang sudah menerima."
           />
         ) : (
           <form
