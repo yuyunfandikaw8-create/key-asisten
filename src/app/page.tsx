@@ -114,14 +114,15 @@ export default function HomePage() {
         <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
           <div>
             <p className="text-sm font-medium tracking-wide text-primary uppercase">
-              Meja kerja studio MUA
+              Key Assistant
             </p>
             <h1 className="mt-3 max-w-xl text-4xl leading-tight text-balance sm:text-6xl">
-              Hasil rias sudah rapi. Jadwal dan tagihannya harus ikut rapi.
+              Satu aplikasi untuk waktu yang teratur dan keuangan yang terstruktur.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Tempel chat WhatsApp, kunci jadwal yang tidak bentrok, catat DP,
-              dan taruh pricelist di bio Instagram. Satu studio, satu tempat.
+              Jadwal, DP, invoice, partner, dan arus kas dalam satu meja kerja.
+              Tempel chat WhatsApp, kunci tanggal yang tidak bentrok, lalu pantau
+              pemasukan tanpa catatan berceceran.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
