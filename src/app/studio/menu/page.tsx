@@ -77,7 +77,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/inbox",
         title: "Inbox partner",
-        body: "Chat Make Up Artist, hair, Decsets, Attire, foto, dan konten",
+        body: "Chat Make Up Artist, hair, Decoration, Attire, foto, dan konten",
         Icon: Inbox,
         tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
       },
