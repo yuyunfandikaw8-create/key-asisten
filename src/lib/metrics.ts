@@ -135,9 +135,9 @@ export function monthKey(iso: string) {
   return iso.slice(0, 7)
 }
 
-export function recentMonths(count = 4) {
+export function recentMonths(count = 4, anchor = todayISO()) {
   const keys: string[] = []
-  const cursor = new Date(`${todayISO()}T12:00:00`)
+  const cursor = new Date(`${anchor}T12:00:00`)
   cursor.setDate(1)
   for (let index = count - 1; index >= 0; index -= 1) {
     const date = new Date(cursor)
@@ -146,4 +146,15 @@ export function recentMonths(count = 4) {
     keys.push(`${date.getFullYear()}-${month}`)
   }
   return keys
+}
+
+export function monthlyIncomeSeries(bookings: Booking[], count = 6, anchor = todayISO()) {
+  const keys = recentMonths(count, anchor)
+  return keys.map((key) => ({
+    key,
+    label: key.slice(5),
+    value: bookings
+      .filter((booking) => monthKey(booking.date) === key)
+      .reduce((sum, booking) => sum + booking.paid, 0),
+  }))
 }
