@@ -190,8 +190,9 @@ export default function HomePage() {
           <p className="text-sm font-medium tracking-wide text-primary uppercase">
             Kerja sama
           </p>
-          <h2 className="mt-2 max-w-2xl text-4xl text-balance">
-            Make Up Artist, hair, decoration, attire, foto, dan konten ketemu di satu tanggal.
+          <h2 className="mt-2 max-w-3xl text-4xl text-balance">
+            Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Fotografer, dan Event & Wedding
+            Content Creator ketemu di satu tanggal.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat ke banyak tempat.
