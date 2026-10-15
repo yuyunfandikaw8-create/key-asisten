@@ -54,6 +54,7 @@ const beforeAfter = [
 
 const roles = [
   "Makeup artist",
+  "Hairdo",
   "Bridal",
   "Penyewaan gaun",
   "Asisten studio",
@@ -181,14 +182,15 @@ export default function HomePage() {
             Kerja sama
           </p>
           <h2 className="mt-2 max-w-2xl text-4xl text-balance">
-            Makeup, dekor, dan sewa baju ketemu di satu tanggal.
+            Makeup, hairdo, dekor, dan sewa baju ketemu di satu tanggal.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat tiga tempat.
+            Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat ke empat tempat.
           </p>
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["Makeup", "Rias pengantin dan keluarga, jadi inti jadwal."],
+              ["Hairdo", "Sanggul, updo, dan penataan rambut di jam yang sama."],
               ["Dekor", "Pelaminan dan gapura yang ikut di tanggal yang sama."],
               ["Sewa baju", "Kebaya, gaun, dan beskap yang tidak bentrok."],
             ].map(([title, body]) => (

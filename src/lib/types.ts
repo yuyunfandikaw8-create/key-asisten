@@ -52,7 +52,7 @@ export type Expense = {
   date: string
 }
 
-export type Trade = "makeup" | "dekor" | "baju"
+export type Trade = "makeup" | "dekor" | "baju" | "hair"
 
 export type PartnershipStatus = "diminta" | "diterima"
 

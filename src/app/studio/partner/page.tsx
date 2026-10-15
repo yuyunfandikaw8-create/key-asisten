@@ -41,6 +41,7 @@ const filters: { id: string; label: string }[] = [
   { id: "dekor", label: "Dekor" },
   { id: "makeup", label: "Makeup" },
   { id: "baju", label: "Sewa baju" },
+  { id: "hair", label: "Hairdo" },
   { id: "kota", label: "Satu kota" },
   { id: "kosong", label: "Tanggal kosong" },
 ]
@@ -83,7 +84,7 @@ export default function PartnerPage() {
     return partners.filter((partner) => {
       const haystack = `${partner.name} ${partner.area} ${partner.offer}`.toLowerCase()
       if (query && !haystack.includes(query.toLowerCase())) return false
-      if (filter === "dekor" || filter === "makeup" || filter === "baju") {
+      if (filter === "dekor" || filter === "makeup" || filter === "baju" || filter === "hair") {
         return partner.trade === (filter as Trade)
       }
       if (filter === "kota") return partner.city === studio.city
@@ -118,7 +119,7 @@ export default function PartnerPage() {
       <div>
         <h1 className="text-4xl">Cari partner</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Makeup, dekor, dan sewa baju di kota yang sama bisa diajak satu tanggal. Setelah mereka setuju, susun kombo supaya klien melihat satu harga.
+          Makeup, hairdo, dekor, dan sewa baju di kota yang sama bisa diajak satu tanggal. Setelah mereka setuju, susun kombo supaya klien melihat satu harga.
         </p>
       </div>
 
@@ -264,7 +265,7 @@ export default function PartnerPage() {
         {accepted.length === 0 ? (
           <EmptyState
             title="Belum ada partner yang setuju"
-            body="Ajak dekor, makeup, atau sewa baju dulu. Kombo hanya bisa disusun dengan partner yang sudah menerima."
+            body="Ajak dekor, makeup, hairdo, atau sewa baju dulu. Kombo hanya bisa disusun dengan partner yang sudah menerima."
           />
         ) : (
           <form

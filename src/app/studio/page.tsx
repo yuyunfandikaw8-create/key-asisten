@@ -79,7 +79,7 @@ export default function StudioHomePage() {
             {combos.filter((combo) => combo.published).length} kombo di pricelist
           </span>
         </span>
-        <span className="text-sm font-medium text-primary">Cari dekor, makeup, atau sewa baju</span>
+        <span className="text-sm font-medium text-primary">Cari dekor, makeup, hairdo, atau sewa baju</span>
       </Link>
 
       <section className="grid gap-3 lg:grid-cols-[1.3fr_1fr]">
