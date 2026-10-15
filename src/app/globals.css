@@ -154,13 +154,20 @@
 }
 
 @media print {
-  .studio-chrome {
+  .studio-chrome,
+  .no-print {
     display: none !important;
   }
   .studio-main {
     padding: 0 !important;
+    max-width: none !important;
   }
   body {
     background: white;
+  }
+  .invoice-sheet {
+    max-width: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
   }
 }

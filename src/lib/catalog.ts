@@ -11,6 +11,9 @@ export const studio = {
   instagram: "@laras.bridal",
   address: "Jl. Ir. H. Juanda No. 18, Bandung",
   bio: "Rias pengantin, adat, dan wisuda. Jadwal dikunci supaya gaun dan jam tidak bentrok.",
+  bank: "Bank Central Asia",
+  accountName: "Laras Ayu",
+  accountNumber: "8822100345",
 }
 
 export const packages: Package[] = [
