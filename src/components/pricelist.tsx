@@ -192,7 +192,7 @@ export function Pricelist({ slug }: { slug: string }) {
       <header className="border-b">
         <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
           <Link href="/" className="text-sm text-muted-foreground">
-            Riasaja
+            Key Assistant
           </Link>
           <Link href="/studio" className="ml-auto text-sm font-medium">
             Masuk studio

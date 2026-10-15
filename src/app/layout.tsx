@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Riasaja",
-    template: "%s · Riasaja",
+    default: "Key Assistant",
+    template: "%s · Key Assistant",
   },
   description:
     "Makeup, hairdo, dekor, dan sewa baju menemukan partner, lalu menjual jadwal dan harga kombo dalam satu tempat.",

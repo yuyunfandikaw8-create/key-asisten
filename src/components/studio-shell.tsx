@@ -150,7 +150,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
       <header className="studio-chrome sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-3">
           <Link href="/" className="font-display text-xl leading-none">
-            Riasaja
+            Key Assistant
           </Link>
           <span className="hidden min-w-0 truncate text-sm text-muted-foreground lg:inline">
             {user?.studioName ?? studio.name}

@@ -108,7 +108,7 @@ export function GoogleAuthButton({
             </div>
             <DialogDescription>
               {googleEnabled
-                ? "Pilih Gmail untuk masuk ke Riasaja."
+                ? "Pilih Gmail untuk masuk ke Key Assistant."
                 : "Google OAuth di Supabase belum aktif. Pakai pilihan Gmail demo di bawah, atau nyalakan provider Google di dashboard."}
             </DialogDescription>
           </DialogHeader>

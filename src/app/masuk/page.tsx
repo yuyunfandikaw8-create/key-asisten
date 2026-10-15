@@ -49,7 +49,7 @@ function LoginForm() {
     <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
       <div>
         <Link href="/" className="font-display text-2xl">
-          Riasaja
+          Key Assistant
         </Link>
         <h1 className="mt-4 text-4xl">Masuk studio</h1>
         <p className="mt-2 text-sm text-muted-foreground">

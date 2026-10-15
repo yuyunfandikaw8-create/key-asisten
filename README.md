@@ -1,4 +1,4 @@
-# Riasaja
+# Key Assistant
 
 Meja kerja untuk vendor pernikahan. Makeup, hairdo, dekor, dan sewa baju bisa saling menemukan partner lalu menjual satu harga kombo. Lokasi bisa diganti (Bandung, Surabaya, Jakarta, …) supaya partner dan inbox hanya menampilkan kota itu. Studio demo-nya **Laras Bridal**, dengan jadwal, DP, invoice, dan pricelist.
 

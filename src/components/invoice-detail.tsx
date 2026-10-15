@@ -133,7 +133,7 @@ export function InvoiceDetail() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.06]"
           >
             <div className="flex size-52 items-center justify-center rounded-full border-[10px] border-[oklch(0.72_0.06_15)] font-display text-7xl font-semibold tracking-tight text-[oklch(0.48_0.1_15)]">
-              R
+              K
             </div>
           </div>
 

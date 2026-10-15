@@ -69,7 +69,7 @@ const faqs = [
   },
   {
     q: "Bagaimana tempel chat bekerja?",
-    a: "Salin percakapan klien ke kolom chat. Riasaja membaca nama, nomor, tanggal, jam, lokasi, jenis acara, dan paket. Kamu tetap yang menekan simpan.",
+    a: "Salin percakapan klien ke kolom chat. Key Assistant membaca nama, nomor, tanggal, jam, lokasi, jenis acara, dan paket. Kamu tetap yang menekan simpan.",
   },
   {
     q: "Apakah invoice terkirim sendiri?",
@@ -91,7 +91,7 @@ export default function HomePage() {
       <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
           <Link href="/" className="font-display text-2xl">
-            Riasaja
+            Key Assistant
           </Link>
           <nav className="ml-auto flex items-center gap-2 sm:gap-4">
             <Link href={`/p/${studio.slug}`} className="text-sm font-medium">
@@ -339,7 +339,7 @@ export default function HomePage() {
 
       <footer className="border-t px-4 py-8 text-sm text-muted-foreground">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 Riasaja · Meja kerja untuk MUA Indonesia</p>
+          <p>© 2026 Key Assistant · Meja kerja untuk MUA Indonesia</p>
           <div className="flex gap-4">
             <Link href="/masuk">Masuk</Link>
             <Link href={`/p/${studio.slug}`}>Pricelist</Link>
