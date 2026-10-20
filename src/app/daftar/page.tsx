@@ -144,9 +144,6 @@ export default function RegisterPage() {
                 <option key={item} value={item} />
               ))}
             </datalist>
-            <p className="text-xs text-muted-foreground">
-              514 kabupaten/kota tersedia. Pilih dari daftar, atau ketik manual.
-            </p>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="password">Kata sandi</Label>
