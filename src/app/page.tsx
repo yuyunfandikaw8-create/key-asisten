@@ -199,7 +199,7 @@ export default function HomePage() {
               ["Make Up Artist", "Brides & Groom, Reguler, Graduation, Family of Bride, Bridesmaid, etc"],
               ["Hijab & Hair Stylist", "Traditional & Modern Hijabdo, Traditional & Modern Hairdo, Simple Hijabdo & Hairdo"],
               ["Decoration", "Traditional & Modern Decoration, Decoration Setup based on client's request"],
-              ["Attire", "Kebaya, gaun, dan beskap yang tidak bentrok."],
+              ["Attire", "Kebaya, Dress, Jas, etc"],
               ["Fotografer", "Dokumentasi akad dan resepsi dalam satu timeline."],
               ["Event & Wedding Content Creator", "Konten reels dan highlight untuk hari H."],
             ].map(([title, body]) => (
