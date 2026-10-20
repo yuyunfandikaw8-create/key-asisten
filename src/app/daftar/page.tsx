@@ -173,7 +173,7 @@ export default function RegisterPage() {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {info ? <p className="text-sm text-primary">{info}</p> : null}
-          <Button type="submit" className="h-10" disabled={pending || !ready}>
+          <Button type="submit" className="h-10" disabled={pending}>
             {pending ? "Menyimpan…" : "Buat Akun"}
           </Button>
         </form>

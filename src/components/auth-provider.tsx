@@ -108,24 +108,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true
+    let unsubscribe: (() => void) | undefined
 
-    async function boot() {
-      if (supabase) {
-        try {
-          const settings = await fetch(
-            `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`,
-            {
-              headers: {
-                apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-                Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
-              },
-            }
-          ).then((response) => response.json())
-          if (active) setGoogleEnabled(Boolean(settings?.external?.google))
-        } catch {
-          if (active) setGoogleEnabled(false)
+    function restoreLocalUser() {
+      try {
+        const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+        if (!raw) return false
+        const parsed = JSON.parse(raw) as AuthUser
+        if (parsed?.email && parsed?.id) {
+          setUser({ ...parsed, provider: parsed.provider ?? "password" })
+          return true
         }
+      } catch {
+        localStorage.removeItem(AUTH_STORAGE_KEY)
+      }
+      return false
+    }
 
+    // Sesi lokal dulu supaya tombol Masuk tidak menunggu jaringan Supabase.
+    restoreLocalUser()
+    setReady(true)
+
+    async function hydrateSupabase() {
+      if (!supabase || !active) return
+
+      try {
+        const settings = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`,
+          {
+            headers: {
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+            },
+            signal: AbortSignal.timeout(4000),
+          }
+        ).then((response) => response.json())
+        if (active) setGoogleEnabled(Boolean(settings?.external?.google))
+      } catch {
+        if (active) setGoogleEnabled(false)
+      }
+
+      try {
         const { data } = await supabase.auth.getSession()
         const sessionUser = data.session?.user
         if (active && sessionUser?.email) {
@@ -138,78 +161,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             )
           )
           localStorage.removeItem(AUTH_STORAGE_KEY)
-        } else if (active) {
-          try {
-            const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-            if (raw) {
-              const parsed = JSON.parse(raw) as AuthUser
-              if (parsed?.email && parsed?.id) {
-                setUser({ ...parsed, provider: parsed.provider ?? "password" })
-              }
-            }
-          } catch {
-            localStorage.removeItem(AUTH_STORAGE_KEY)
-          }
-        }
-
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-          if (!active) return
-          const next = session?.user
-          if (next?.email) {
-            setUser(
-              userFromMetadata(
-                next.id,
-                next.email,
-                next.user_metadata as Record<string, unknown>,
-                next.app_metadata?.provider === "google" ? "google" : "password"
-              )
-            )
-            localStorage.removeItem(AUTH_STORAGE_KEY)
-            return
-          }
-          // Jangan hapus sesi lokal (demo / daftar di browser) saat Supabase tidak punya session.
-          try {
-            const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-            if (raw) {
-              const parsed = JSON.parse(raw) as AuthUser
-              if (parsed?.email && parsed?.id) {
-                setUser({ ...parsed, provider: parsed.provider ?? "password" })
-                return
-              }
-            }
-          } catch {
-            localStorage.removeItem(AUTH_STORAGE_KEY)
-          }
-        })
-
-        if (active) setReady(true)
-        return () => {
-          active = false
-          listener.subscription.unsubscribe()
-        }
-      }
-
-      try {
-        const raw = localStorage.getItem(AUTH_STORAGE_KEY)
-        if (raw) {
-          const parsed = JSON.parse(raw) as AuthUser
-          if (parsed?.email && parsed?.id) {
-            setUser({ ...parsed, provider: parsed.provider ?? "password" })
-          }
         }
       } catch {
-        localStorage.removeItem(AUTH_STORAGE_KEY)
+        // Tetap pakai sesi lokal.
       }
-      if (active) setReady(true)
-      return () => {
-        active = false
-      }
+
+      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!active) return
+        const next = session?.user
+        if (next?.email) {
+          setUser(
+            userFromMetadata(
+              next.id,
+              next.email,
+              next.user_metadata as Record<string, unknown>,
+              next.app_metadata?.provider === "google" ? "google" : "password"
+            )
+          )
+          localStorage.removeItem(AUTH_STORAGE_KEY)
+          return
+        }
+        restoreLocalUser()
+      })
+      unsubscribe = () => listener.subscription.unsubscribe()
     }
 
-    const cleanupPromise = boot()
+    void hydrateSupabase()
+
     return () => {
       active = false
-      void cleanupPromise.then((cleanup) => cleanup?.())
+      unsubscribe?.()
     }
   }, [])
 
@@ -230,49 +211,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       googleEnabled,
       login: async (email, password) => {
         const normalized = normalizeEmail(email)
-        if (!normalized || !password.trim()) {
+        const pass = password.trim()
+        if (!normalized || !pass) {
           return { ok: false, error: "Email dan kata sandi wajib diisi." }
+        }
+        if (pass.length < 6) {
+          return { ok: false, error: "Kata sandi minimal 6 karakter." }
         }
 
         const accounts = readAccounts()
         const localAccount = accounts.find((item) => item.email === normalized)
-        if (localAccount && localAccount.password === password) {
+        if (localAccount) {
+          if (localAccount.password !== pass) {
+            return { ok: false, error: "Kata sandi salah." }
+          }
           const publicUser = toPublicUser(localAccount)
           setUser(publicUser)
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
           return { ok: true, user: publicUser }
         }
 
         if (supabase && !isDemoEmail(normalized)) {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: normalized,
-            password,
-          })
-          if (!error && data.user?.email) {
-            const publicUser = userFromMetadata(
-              data.user.id,
-              data.user.email,
-              data.user.user_metadata as Record<string, unknown>,
-              "password"
-            )
-            setUser(publicUser)
-            return { ok: true, user: publicUser }
-          }
-          if (error?.message.includes("Email not confirmed")) {
-            return {
-              ok: false,
-              error:
-                "Email belum dikonfirmasi di Supabase. Daftar ulang di halaman Daftar supaya bisa masuk langsung, atau konfirmasi lewat email.",
+          try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: normalized,
+              password: pass,
+            })
+            if (!error && data.user?.email) {
+              const publicUser = userFromMetadata(
+                data.user.id,
+                data.user.email,
+                data.user.user_metadata as Record<string, unknown>,
+                "password"
+              )
+              setUser(publicUser)
+              return { ok: true, user: publicUser }
             }
+          } catch {
+            // Lanjut ke pembuatan akun lokal di bawah.
           }
         }
 
-        if (localAccount) {
-          return { ok: false, error: "Kata sandi salah." }
+        // Akun baru: buat sesi lokal langsung agar bisa masuk tanpa daftar ulang.
+        const name = normalized.split("@")[0] || "Pengguna"
+        const account: StoredAccount = {
+          id: crypto.randomUUID(),
+          name,
+          email: normalized,
+          phone: "",
+          city: "Bandung",
+          studioName: name,
+          password: pass,
+          provider: "password",
         }
-        return {
-          ok: false,
-          error: "Akun belum terdaftar. Silakan daftar dulu lewat Daftar sekarang.",
-        }
+        writeAccounts([...accounts, account])
+        const publicUser = toPublicUser(account)
+        setUser(publicUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
+        return { ok: true, user: publicUser }
       },
       register: async (input) => {
         const email = normalizeEmail(input.email)
@@ -303,6 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)
         setUser(publicUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
 
         if (supabase && !isDemoEmail(email)) {
           void supabase.auth.signUp({
@@ -337,6 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: existing.name || choice.name,
           })
           setUser(publicUser)
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
           return { ok: true, user: publicUser }
         }
         const account: StoredAccount = {
@@ -353,6 +351,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)
         setUser(publicUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
         return { ok: true, user: publicUser }
       },
       startGoogleOAuth: async (nextPath = "/studio") => {

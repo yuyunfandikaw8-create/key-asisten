@@ -98,7 +98,7 @@ function LoginForm() {
             />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button type="submit" className="h-10" disabled={pending || !ready}>
+          <Button type="submit" className="h-10" disabled={pending}>
             {pending ? "Masuk…" : "Masuk ke Key Assistant"}
           </Button>
         </form>
