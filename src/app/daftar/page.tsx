@@ -128,21 +128,23 @@ export default function RegisterPage() {
             />
           </div>
           <div className="grid gap-1.5">
-            <Label>Kota</Label>
-            <Select value={city || undefined} onValueChange={(value) => value && setCityField(value)}>
-              <SelectTrigger className="h-10 w-full">
-                <SelectValue placeholder="Pilih kota">
-                  {(value) => String(value ?? (city || "Pilih kota"))}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {CITIES.map((item) => (
-                  <SelectItem key={item} value={item}>
-                    {item}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="city">Kota</Label>
+            <select
+              id="city"
+              value={city}
+              onChange={(event) => setCityField(event.target.value)}
+              required
+              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="" disabled>
+                Pilih kota
+              </option>
+              {CITIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="password">Kata sandi</Label>
