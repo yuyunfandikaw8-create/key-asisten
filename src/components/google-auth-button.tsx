@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { GOOGLE_CHOICES, type AuthUser, type GoogleChoice } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
@@ -37,6 +38,24 @@ function GoogleMark({ className }: { className?: string }) {
   )
 }
 
+function choiceFromEmail(email: string): GoogleChoice {
+  const normalized = email.trim().toLowerCase()
+  const local = normalized.split("@")[0] || "Pengguna"
+  const name = local
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+  return {
+    id: `gmail-custom-${normalized}`,
+    name,
+    email: normalized,
+    city: "Bandung",
+    studioName: name,
+    phone: "",
+    initial: name.charAt(0).toUpperCase() || "G",
+    tone: "bg-[oklch(0.55_0.12_25)] text-white",
+  }
+}
+
 export function GoogleAuthButton({
   mode,
   nextPath = "/studio",
@@ -48,10 +67,11 @@ export function GoogleAuthButton({
   onSuccess: (user: AuthUser) => void
   className?: string
 }) {
-  const { continueWithGoogle, startGoogleOAuth, googleEnabled, supabaseReady } = useAuth()
+  const { continueWithGoogle, startGoogleOAuth, googleEnabled } = useAuth()
   const [open, setOpen] = useState(false)
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
+  const [customEmail, setCustomEmail] = useState("")
 
   async function pick(choice: GoogleChoice) {
     setError("")
@@ -77,9 +97,19 @@ export function GoogleAuthButton({
         return
       }
       if (result.error.includes("Mengalihkan")) return
+      // OAuth gagal → tetap tampilkan pilihan lokal.
       setError(result.error)
     }
     setOpen(true)
+  }
+
+  async function continueCustomEmail() {
+    const email = customEmail.trim().toLowerCase()
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Masukkan alamat Gmail yang valid.")
+      return
+    }
+    await pick(choiceFromEmail(email))
   }
 
   return (
@@ -109,7 +139,7 @@ export function GoogleAuthButton({
             <DialogDescription>
               {googleEnabled
                 ? "Pilih Gmail untuk masuk ke Key Assistant."
-                : "Google OAuth di Supabase belum aktif. Pakai pilihan Gmail demo di bawah, atau nyalakan provider Google di dashboard."}
+                : "Google OAuth di Supabase belum aktif. Pilih akun contoh, atau masukkan Gmail kamu untuk lanjut di browser ini."}
             </DialogDescription>
           </DialogHeader>
 
@@ -140,12 +170,30 @@ export function GoogleAuthButton({
             ))}
           </div>
 
-          {error ? <p className="border-t px-5 py-3 text-sm text-destructive">{error}</p> : null}
+          <div className="grid gap-2 border-t px-5 py-4">
+            <p className="text-xs font-medium text-muted-foreground">
+              Atau lanjut dengan Gmail kamu
+            </p>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                value={customEmail}
+                onChange={(event) => setCustomEmail(event.target.value)}
+                placeholder="nama@gmail.com"
+                className="h-10"
+              />
+              <Button
+                type="button"
+                className="h-10 shrink-0"
+                disabled={pending}
+                onClick={() => void continueCustomEmail()}
+              >
+                Lanjut
+              </Button>
+            </div>
+          </div>
 
-          <p className="border-t bg-muted/40 px-5 py-3 text-xs text-muted-foreground">
-            Supabase: {supabaseReady ? "terhubung" : "belum"}. Google provider:{" "}
-            {googleEnabled ? "aktif" : "nonaktif"}. Secret key tidak dipakai di aplikasi ini.
-          </p>
+          {error ? <p className="border-t px-5 py-3 text-sm text-destructive">{error}</p> : null}
         </DialogContent>
       </Dialog>
     </>

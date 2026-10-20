@@ -165,8 +165,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               )
             )
             localStorage.removeItem(AUTH_STORAGE_KEY)
-          } else {
-            setUser((current) => (current?.provider === "password" && isDemoEmail(current.email) ? current : null))
+            return
+          }
+          // Jangan hapus sesi lokal (demo / daftar di browser) saat Supabase tidak punya session.
+          try {
+            const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+            if (raw) {
+              const parsed = JSON.parse(raw) as AuthUser
+              if (parsed?.email && parsed?.id) {
+                setUser({ ...parsed, provider: parsed.provider ?? "password" })
+                return
+              }
+            }
+          } catch {
+            localStorage.removeItem(AUTH_STORAGE_KEY)
           }
         })
 
@@ -203,10 +215,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!ready) return
-    if (user && !supabaseConfigured) {
+    if (user) {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user))
+    } else {
+      localStorage.removeItem(AUTH_STORAGE_KEY)
     }
-    if (!user) localStorage.removeItem(AUTH_STORAGE_KEY)
   }, [ready, user])
 
   const value = useMemo<AuthContextValue>(
@@ -217,40 +230,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       googleEnabled,
       login: async (email, password) => {
         const normalized = normalizeEmail(email)
+        if (!normalized || !password.trim()) {
+          return { ok: false, error: "Email dan kata sandi wajib diisi." }
+        }
+
+        const accounts = readAccounts()
+        const localAccount = accounts.find((item) => item.email === normalized)
+        if (localAccount && localAccount.password === password) {
+          const publicUser = toPublicUser(localAccount)
+          setUser(publicUser)
+          return { ok: true, user: publicUser }
+        }
 
         if (supabase && !isDemoEmail(normalized)) {
           const { data, error } = await supabase.auth.signInWithPassword({
             email: normalized,
             password,
           })
-          if (error) {
+          if (!error && data.user?.email) {
+            const publicUser = userFromMetadata(
+              data.user.id,
+              data.user.email,
+              data.user.user_metadata as Record<string, unknown>,
+              "password"
+            )
+            setUser(publicUser)
+            return { ok: true, user: publicUser }
+          }
+          if (error?.message.includes("Email not confirmed")) {
             return {
               ok: false,
               error:
-                error.message.includes("Email not confirmed")
-                  ? "Email belum dikonfirmasi. Cek kotak masuk Gmail/email kamu."
-                  : "Email atau kata sandi salah.",
+                "Email belum dikonfirmasi di Supabase. Daftar ulang di halaman Daftar supaya bisa masuk langsung, atau konfirmasi lewat email.",
             }
           }
-          if (!data.user?.email) return { ok: false, error: "Login Supabase gagal." }
-          const publicUser = userFromMetadata(
-            data.user.id,
-            data.user.email,
-            data.user.user_metadata as Record<string, unknown>,
-            "password"
-          )
-          setUser(publicUser)
-          return { ok: true, user: publicUser }
         }
 
-        const accounts = readAccounts()
-        const account = accounts.find((item) => item.email === normalized)
-        if (!account || account.password !== password) {
-          return { ok: false, error: "Email atau kata sandi salah." }
+        if (localAccount) {
+          return { ok: false, error: "Kata sandi salah." }
         }
-        const publicUser = toPublicUser(account)
-        setUser(publicUser)
-        return { ok: true, user: publicUser }
+        return {
+          ok: false,
+          error: "Akun belum terdaftar. Silakan daftar dulu lewat Daftar sekarang.",
+        }
       },
       register: async (input) => {
         const email = normalizeEmail(input.email)
@@ -261,8 +283,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, error: "Kata sandi minimal 6 karakter." }
         }
 
+        const accounts = readAccounts()
+        if (accounts.some((item) => item.email === email)) {
+          return { ok: false, error: "Email ini sudah terdaftar. Silakan masuk." }
+        }
+
+        const account: StoredAccount = {
+          id: crypto.randomUUID(),
+          name: input.name.trim(),
+          email,
+          phone: input.phone.trim(),
+          city: input.city.trim() || "Bandung",
+          studioName: input.studioName.trim() || input.name.trim(),
+          password: input.password.trim(),
+          provider: "password",
+        }
+
+        // Langsung aktif di browser supaya tidak menunggu konfirmasi email Supabase.
+        writeAccounts([...accounts, account])
+        const publicUser = toPublicUser(account)
+        setUser(publicUser)
+
         if (supabase && !isDemoEmail(email)) {
-          const { data, error } = await supabase.auth.signUp({
+          void supabase.auth.signUp({
             email,
             password: input.password.trim(),
             options: {
@@ -276,47 +319,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 typeof window !== "undefined" ? `${window.location.origin}/masuk` : undefined,
             },
           })
-          if (error) return { ok: false, error: error.message }
-
-          if (data.session && data.user?.email) {
-            const publicUser = userFromMetadata(
-              data.user.id,
-              data.user.email,
-              data.user.user_metadata as Record<string, unknown>,
-              "password"
-            )
-            setUser(publicUser)
-            return { ok: true, user: publicUser }
-          }
-
-          return {
-            ok: false,
-            error:
-              "Akun dibuat di Supabase. Cek email untuk konfirmasi, lalu masuk lagi.",
-          }
         }
 
-        const accounts = readAccounts()
-        if (accounts.some((item) => item.email === email)) {
-          return { ok: false, error: "Email ini sudah terdaftar di browser ini." }
-        }
-        const account: StoredAccount = {
-          id: crypto.randomUUID(),
-          name: input.name.trim(),
-          email,
-          phone: input.phone.trim(),
-          city: input.city.trim() || "Bandung",
-          studioName: input.studioName.trim() || input.name.trim(),
-          password: input.password.trim(),
-          provider: "password",
-        }
-        writeAccounts([...accounts, account])
-        const publicUser = toPublicUser(account)
-        setUser(publicUser)
         return { ok: true, user: publicUser }
       },
       continueWithGoogle: async (choice) => {
         const email = normalizeEmail(choice.email)
+        if (!email) {
+          return { ok: false, error: "Email Google tidak valid." }
+        }
         const accounts = readAccounts()
         const existing = accounts.find((item) => item.email === email)
         if (existing) {
@@ -352,7 +363,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return {
             ok: false,
             error:
-              "Provider Google belum diaktifkan di Supabase Authentication. Pakai pilihan Gmail demo dulu, atau nyalakan Google di dashboard.",
+              "Provider Google belum aktif di Supabase. Pilih Gmail di daftar, atau masukkan Gmail kamu di bawah.",
           }
         }
         const redirectTo =
