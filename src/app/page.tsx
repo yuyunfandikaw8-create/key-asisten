@@ -258,7 +258,7 @@ export default function HomePage() {
             return (
               <article
                 key={feature.title}
-                className="flex gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+                className="flex gap-4 rounded-3xl bg-card/90 p-4 shadow-sm ring-1 ring-primary/10 backdrop-blur-sm"
               >
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
                   <Icon className="size-5" />
@@ -332,7 +332,7 @@ export default function HomePage() {
 
         <section className="mx-auto max-w-3xl px-4 pb-16">
           <h2 className="text-4xl">Pertanyaan yang biasanya muncul</h2>
-          <div className="mt-6 divide-y rounded-2xl bg-card ring-1 ring-foreground/10">
+          <div className="mt-6 divide-y rounded-3xl bg-card/90 shadow-sm ring-1 ring-primary/10 backdrop-blur-sm">
             {faqs.map((faq) => (
               <details key={faq.q} className="group px-4 py-3">
                 <summary className="cursor-pointer list-none font-medium">
