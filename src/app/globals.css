@@ -202,7 +202,7 @@
   box-shadow:
     0 1px 0 oklch(0.88 0.04 85 / 0.8),
     0 14px 28px oklch(0.4 0.05 20 / 0.12);
-  transform: rotate(4deg);
+  transform: rotate(-3deg);
   animation: note-bob 5.5s ease-in-out infinite;
 }
 
