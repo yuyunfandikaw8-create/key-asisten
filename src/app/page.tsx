@@ -376,7 +376,6 @@ export default function HomePage() {
           <p>© 2026 Key Assistant · Kelola bisnis lebih rapi, dalam satu tempat.</p>
           <div className="flex gap-4">
             <Link href="/masuk">Masuk</Link>
-            <Link href={`/p/${studio.slug}`}>Pricelist</Link>
           </div>
         </div>
       </footer>
