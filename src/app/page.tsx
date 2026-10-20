@@ -47,7 +47,7 @@ const features = [
 
 const beforeAfter = [
   ["Chat dan jadwal masih berantakan", "Chat dan jadwal lebih terorganisir"],
-  ["Sering lupa follow-up pembayaran", "Tagihan otomatis terpantau"],
+  ["Sering lupa follow-up pembayaran", "Pengingat tagihan muncul tepat waktu"],
   ["Invoice dibuat secara manual", "Invoice siap dikirim kapan saja"],
   ["Risiko jadwal atau pesanan bertabrakan", "Bentrok jadwal terdeteksi lebih awal"],
 ]
