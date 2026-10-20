@@ -3,14 +3,7 @@
 import { useState } from "react"
 
 import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { GOOGLE_CHOICES, type AuthUser, type GoogleChoice } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -76,29 +69,34 @@ export function GoogleAuthButton({
   async function pick(choice: GoogleChoice) {
     setError("")
     setPending(true)
-    const result = await continueWithGoogle(choice)
-    setPending(false)
-    if (!result.ok) {
-      setError(result.error)
-      return
+    try {
+      const result = await continueWithGoogle(choice)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      setOpen(false)
+      onSuccess(result.user)
+    } finally {
+      setPending(false)
     }
-    setOpen(false)
-    onSuccess(result.user)
   }
 
   async function openPicker() {
     setError("")
     if (googleEnabled) {
       setPending(true)
-      const result = await startGoogleOAuth(nextPath)
-      setPending(false)
-      if (result.ok) {
-        onSuccess(result.user)
-        return
+      try {
+        const result = await startGoogleOAuth(nextPath)
+        if (result.ok) {
+          onSuccess(result.user)
+          return
+        }
+        if (result.error.includes("Mengalihkan")) return
+        setError(result.error)
+      } finally {
+        setPending(false)
       }
-      if (result.error.includes("Mengalihkan")) return
-      // OAuth gagal → tetap tampilkan pilihan lokal.
-      setError(result.error)
     }
     setOpen(true)
   }
@@ -113,11 +111,10 @@ export function GoogleAuthButton({
   }
 
   return (
-    <>
-      <Button
+    <div className="grid gap-2">
+      <button
         type="button"
-        variant="outline"
-        className={cn("h-10 w-full bg-white", className)}
+        className={cn(buttonVariants({ variant: "outline" }), "h-10 w-full bg-white", className)}
         onClick={() => void openPicker()}
         disabled={pending}
       >
@@ -127,29 +124,27 @@ export function GoogleAuthButton({
           : mode === "masuk"
             ? "Lanjutkan dengan Google"
             : "Daftar dengan Google"}
-      </Button>
+      </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md gap-0 overflow-hidden p-0 sm:max-w-md">
-          <DialogHeader className="gap-1 border-b px-5 py-4 text-left">
-            <div className="flex items-center gap-2">
-              <GoogleMark className="size-5" />
-              <DialogTitle className="text-base font-medium">Pilih akun</DialogTitle>
-            </div>
-            <DialogDescription>
+      {open ? (
+        <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
+          <div className="border-b px-4 py-3">
+            <p className="text-sm font-medium">Pilih akun</p>
+            <p className="mt-1 text-xs text-muted-foreground">
               {googleEnabled
                 ? "Pilih Gmail untuk masuk ke Key Assistant."
-                : "Google OAuth di Supabase belum aktif. Pilih akun contoh, atau masukkan Gmail kamu untuk lanjut di browser ini."}
-            </DialogDescription>
-          </DialogHeader>
+                : "Google OAuth di Supabase belum aktif. Pilih akun contoh, atau masukkan Gmail kamu."}
+            </p>
+          </div>
 
           <div className="grid">
             {GOOGLE_CHOICES.map((choice) => (
               <button
                 key={choice.id}
                 type="button"
+                disabled={pending}
                 onClick={() => void pick(choice)}
-                className="flex items-center gap-3 px-5 py-3 text-left transition hover:bg-muted/70"
+                className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/70 disabled:opacity-50"
               >
                 <span
                   className={cn(
@@ -170,7 +165,7 @@ export function GoogleAuthButton({
             ))}
           </div>
 
-          <div className="grid gap-2 border-t px-5 py-4">
+          <div className="grid gap-2 border-t px-4 py-3">
             <p className="text-xs font-medium text-muted-foreground">
               Atau lanjut dengan Gmail kamu
             </p>
@@ -182,20 +177,30 @@ export function GoogleAuthButton({
                 placeholder="nama@gmail.com"
                 className="h-10"
               />
-              <Button
+              <button
                 type="button"
-                className="h-10 shrink-0"
+                className={cn(buttonVariants(), "h-10 shrink-0")}
                 disabled={pending}
                 onClick={() => void continueCustomEmail()}
               >
                 Lanjut
-              </Button>
+              </button>
             </div>
           </div>
 
-          {error ? <p className="border-t px-5 py-3 text-sm text-destructive">{error}</p> : null}
-        </DialogContent>
-      </Dialog>
-    </>
+          {error ? <p className="border-t px-4 py-3 text-sm text-destructive">{error}</p> : null}
+
+          <div className="border-t px-4 py-2">
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setOpen(false)}
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
   )
 }

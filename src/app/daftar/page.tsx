@@ -7,10 +7,11 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { GoogleAuthButton } from "@/components/google-auth-button"
 import { useStudio } from "@/components/studio-provider"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CITIES } from "@/lib/cities"
+import { cn } from "@/lib/utils"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -173,9 +174,13 @@ export default function RegisterPage() {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {info ? <p className="text-sm text-primary">{info}</p> : null}
-          <Button type="submit" className="h-10" disabled={pending}>
+          <button
+            type="submit"
+            className={cn(buttonVariants(), "h-10 w-full")}
+            disabled={pending}
+          >
             {pending ? "Menyimpan…" : "Buat Akun"}
-          </Button>
+          </button>
         </form>
       </div>
 

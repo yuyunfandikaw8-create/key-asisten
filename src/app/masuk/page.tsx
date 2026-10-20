@@ -7,9 +7,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { GoogleAuthButton } from "@/components/google-auth-button"
 import { useStudio } from "@/components/studio-provider"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
@@ -98,9 +99,13 @@ function LoginForm() {
             />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button type="submit" className="h-10" disabled={pending}>
+          <button
+            type="submit"
+            className={cn(buttonVariants(), "h-10 w-full")}
+            disabled={pending}
+          >
             {pending ? "Masuk…" : "Masuk ke Key Assistant"}
-          </Button>
+          </button>
         </form>
       </div>
 
