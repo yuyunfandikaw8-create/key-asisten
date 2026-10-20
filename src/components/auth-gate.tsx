@@ -19,7 +19,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, ready, router, user])
 
-  if (!ready) return <StudioLoading />
-  if (!user) return <StudioLoading />
+  // Keep children mounted so Next.js instant-nav validation does not drop
+  // the studio page segment (which previously blocked clicks with an overlay).
+  if (!ready || !user) {
+    return (
+      <>
+        <StudioLoading />
+        <div className="hidden" aria-hidden>
+          {children}
+        </div>
+      </>
+    )
+  }
+
   return <>{children}</>
 }

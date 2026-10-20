@@ -6,6 +6,9 @@ import { AuthGate } from "@/components/auth-gate"
 import { StudioLoading } from "@/components/studio-bits"
 import { StudioShell } from "@/components/studio-shell"
 
+// AuthGate is client-gated; keep studio out of instant-nav validation.
+export const instant = false
+
 export const metadata: Metadata = {
   title: "Studio",
 }
