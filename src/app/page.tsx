@@ -356,24 +356,15 @@ export default function HomePage() {
               Coba Key Assistant dan lihat bagaimana jadwal, invoice, keuangan,
               serta kebutuhan klien bisa dikelola dalam satu tempat.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6">
               <Link
                 href="/masuk"
                 className={cn(
                   buttonVariants({ size: "lg", variant: "secondary" }),
-                  "h-11 px-5"
+                  "h-11 rounded-2xl px-5"
                 )}
               >
-                Masuk ke studio
-              </Link>
-              <Link
-                href={`/p/${studio.slug}`}
-                className={cn(
-                  buttonVariants({ size: "lg", variant: "outline" }),
-                  "h-11 border-primary-foreground/30 bg-transparent px-5 text-primary-foreground hover:bg-primary-foreground/10"
-                )}
-              >
-                Buka pricelist
+                Coba Key Assistant
               </Link>
             </div>
           </div>
