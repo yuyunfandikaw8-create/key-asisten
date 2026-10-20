@@ -139,7 +139,7 @@ export default function RegisterPage() {
             <Select value={city || undefined} onValueChange={(value) => value && setCityField(value)}>
               <SelectTrigger className="h-10 w-full">
                 <SelectValue placeholder="Pilih kota">
-                  {(value) => String(value ?? city || "Pilih kota")}
+                  {(value) => String(value ?? (city || "Pilih kota"))}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
