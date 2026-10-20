@@ -221,10 +221,10 @@
 @keyframes note-bob {
   0%,
   100% {
-    transform: rotate(4deg) translateY(0);
+    transform: rotate(-3deg) translateY(0);
   }
   50% {
-    transform: rotate(2.5deg) translateY(-4px);
+    transform: rotate(-4.5deg) translateY(-4px);
   }
 }
 
