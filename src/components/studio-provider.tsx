@@ -81,7 +81,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         setState(createSeed())
-        setNotice("Data di browser ini tidak bisa dibaca. Contoh studio Laras Bridal dikembalikan.")
+        setNotice("Data di browser ini tidak bisa dibaca. Contoh studio BrushbyLaras dikembalikan.")
       }
       setReady(true)
     }, 0)
@@ -243,7 +243,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       },
       reset: () => {
         setState(createSeed())
-        setNotice("Data contoh Laras Bridal sudah dikembalikan.")
+        setNotice("Data contoh BrushbyLaras sudah dikembalikan.")
       },
     }
   }, [notice, ready, state])

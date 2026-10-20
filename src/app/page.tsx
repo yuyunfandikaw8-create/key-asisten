@@ -64,7 +64,7 @@ const roles = [
 const faqs = [
   {
     q: "Apa yang bisa dicoba sekarang?",
-    a: "Studio demo Laras Bridal di Bandung. Jadwal, invoice, gaun, dan pricelist-nya sudah terisi supaya alurnya langsung kelihatan.",
+    a: "Studio demo BrushbyLaras di Bandung. Jadwal, invoice, gaun, dan pricelist-nya sudah terisi supaya alurnya langsung kelihatan.",
   },
   {
     q: "Bagaimana tempel chat bekerja?",
@@ -76,11 +76,11 @@ const faqs = [
   },
   {
     q: "Di mana datanya disimpan?",
-    a: "Di browser ini. Tombol data contoh mengembalikan studio Laras Bridal. Sambungan ke Supabase menyusul setelah anon key tersedia.",
+    a: "Di browser ini. Tombol data contoh mengembalikan studio BrushbyLaras. Sambungan ke Supabase menyusul setelah anon key tersedia.",
   },
   {
     q: "Bisakah klien melihat harga?",
-    a: "Bisa. Halaman pricelist Laras Bridal bisa dipasang di bio Instagram. Pengajuan tanggal dari halaman itu masuk ke jadwal studio sebagai belum DP.",
+    a: "Bisa. Halaman pricelist BrushbyLaras bisa dipasang di bio Instagram. Pengajuan tanggal dari halaman itu masuk ke jadwal studio sebagai belum DP.",
   },
 ]
 
@@ -152,7 +152,7 @@ export default function HomePage() {
               <p className="text-sm">Selamat sore</p>
               <p className="font-display text-3xl">{studio.name}</p>
               <p className="mt-4 text-xs tracking-wide uppercase opacity-80">
-                Laba bersih tahun ini
+                Laba bersih bulan ini
               </p>
               <p className="font-display text-4xl">Rp31.650.000</p>
             </div>
@@ -310,7 +310,7 @@ export default function HomePage() {
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-6xl rounded-3xl bg-primary px-6 py-12 text-primary-foreground sm:px-10">
             <h2 className="max-w-xl text-4xl text-balance">
-              Coba meja kerja Laras Bridal, lalu lihat pricelist-nya seperti klien.
+              Coba meja kerja BrushbyLaras, lalu lihat pricelist-nya seperti klien.
             </h2>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link

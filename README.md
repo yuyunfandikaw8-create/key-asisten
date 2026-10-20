@@ -1,6 +1,6 @@
 # Key Assistant
 
-Meja kerja untuk vendor pernikahan. Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Fotografer, dan Event & Wedding Content Creator bisa saling menemukan partner lalu menjual satu harga kombo. Lokasi bisa diganti (Bandung, Surabaya, Jakarta, …) supaya partner dan inbox hanya menampilkan kota itu. Studio demo-nya **Laras Bridal**, dengan jadwal, DP, invoice, dan pricelist.
+Meja kerja untuk vendor pernikahan. Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Fotografer, dan Event & Wedding Content Creator bisa saling menemukan partner lalu menjual satu harga kombo. Lokasi bisa diganti (Bandung, Surabaya, Jakarta, …) supaya partner dan inbox hanya menampilkan kota itu. Studio demo-nya **BrushbyLaras**, dengan jadwal, DP, invoice, dan pricelist.
 
 ## Menjalankan
 
@@ -41,6 +41,6 @@ Supabase sudah tersambung lewat publishable key (`NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Inbox di `/studio/inbox`. Chat partner sesuai lokasi aktif (contoh: pilih Surabaya untuk melihat partner Surabaya saja).
 - Menu di `/studio/menu`. Pintasan ke jadwal, partner, invoice, aset, lokasi, dan identitas studio.
 
-Data tersimpan di browser (`localStorage`). Tombol **Data contoh** mengembalikan studio Laras Bridal.
+Data tersimpan di browser (`localStorage`). Tombol **Data contoh** mengembalikan studio BrushbyLaras.
 
 Supabase project `iukerqusjdlkkoyxvgjs` belum disambungkan. Endpoint `/rest/v1/` menolak request tanpa anon key. Jangan menaruh service role key di aplikasi ini.

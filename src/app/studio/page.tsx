@@ -194,7 +194,7 @@ export default function StudioHomePage() {
         <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_auto] lg:items-end">
           <div>
             <p className="text-xs font-medium tracking-wide uppercase opacity-80">
-              KPI studio · Laba bersih tahun ini
+              KPI studio · Laba bersih bulan ini
             </p>
             <p className="mt-2 font-display text-4xl sm:text-5xl">{rupiah(money.profit)}</p>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:max-w-md">
