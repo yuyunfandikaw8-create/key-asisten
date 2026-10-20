@@ -36,7 +36,7 @@ const features = [
   {
     icon: Shirt,
     title: "Gaun tidak dobel",
-    body: "Setiap kebaya punya pemakai dan tanggal kembali. Yang telat dikembalikan naik ke atas.",
+    body: "Jadwal pengambilan, pemakaian, dan pengembalian tersusun rapi berdasarkan urutan tanggal",
   },
   {
     icon: Globe,
