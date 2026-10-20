@@ -10,8 +10,6 @@ import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DEMO_ACCOUNTS } from "@/lib/auth"
-
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
