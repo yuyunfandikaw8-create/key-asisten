@@ -350,8 +350,12 @@ export default function HomePage() {
         <section className="px-4 pb-16">
           <div className="mx-auto max-w-6xl rounded-3xl bg-primary px-6 py-12 text-primary-foreground sm:px-10">
             <h2 className="max-w-xl text-4xl text-balance">
-              Coba meja kerja BrushbyLaras, lalu lihat pricelist-nya seperti klien.
+              Siap membuat pekerjaan jadi lebih rapi?
             </h2>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-primary-foreground/85 sm:text-lg">
+              Coba Key Assistant dan lihat bagaimana jadwal, invoice, keuangan,
+              serta kebutuhan klien bisa dikelola dalam satu tempat.
+            </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/masuk"
