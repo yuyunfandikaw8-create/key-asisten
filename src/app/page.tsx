@@ -128,7 +128,7 @@ export default function HomePage() {
                 href="/masuk"
                 className={cn(buttonVariants({ size: "lg" }), "h-11 px-5")}
               >
-                Masuk studio demo
+                MASUK
               </Link>
               <Link
                 href={`/p/${studio.slug}`}
@@ -137,7 +137,7 @@ export default function HomePage() {
                   "h-11 bg-card px-5"
                 )}
               >
-                Lihat pricelist {studio.name}
+                PRICE LIST
               </Link>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
