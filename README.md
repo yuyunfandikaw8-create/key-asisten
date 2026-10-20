@@ -6,10 +6,10 @@ Meja kerja untuk vendor pernikahan. Make Up Artist, Hijab & Hair Stylist, Decora
 
 ```bash
 npm install
-npm run dev -- --port 43123
+npm run dev
 ```
 
-Buka [http://127.0.0.1:43123](http://127.0.0.1:43123).
+Buka [http://127.0.0.1:43123](http://127.0.0.1:43123) (server listen di `0.0.0.0:43123` supaya preview Cursor bisa menjangkau).
 
 ## Login
 
