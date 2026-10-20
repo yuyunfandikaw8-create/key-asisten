@@ -143,7 +143,7 @@ export default function HomePage() {
             <p className="mt-3 text-sm text-muted-foreground">
               Belum punya akun?{" "}
               <Link href="/daftar" className="font-medium text-primary hover:underline">
-                DAFTAR
+                Daftar
               </Link>
             </p>
           </div>
