@@ -191,7 +191,8 @@ export default function HomePage() {
             Content Creator.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            Vendor di kota yang sama saling mengajak partner, lalu menjual satu harga kombo. Klien tidak perlu chat ke banyak tempat.
+            Kolaborasi dan kirim pesan dengan vendor & client di satu kota yang
+            sama dan membuat Best Price Bundling di 1 app.
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
