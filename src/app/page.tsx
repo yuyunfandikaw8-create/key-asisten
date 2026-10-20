@@ -201,7 +201,7 @@ export default function HomePage() {
               ["Decoration", "Traditional & Modern Decoration, Decoration Setup based on client's request"],
               ["Attire", "Kebaya, Dress, Jas, etc"],
               ["Photografer & Videografer", "Photo and Video documentation for your spesial day"],
-              ["Event & Wedding Content Creator", "Konten reels dan highlight untuk hari H."],
+              ["Event & Wedding Content Creator", "Content reels & highlight realtime for your special day"],
             ].map(([title, body]) => (
               <article key={title} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
                 <h3 className="font-display text-2xl">{title}</h3>
