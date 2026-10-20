@@ -15,7 +15,7 @@ import { DEMO_ACCOUNTS } from "@/lib/auth"
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const { ready, user, login, supabaseReady } = useAuth()
+  const { ready, user, login } = useAuth()
   const { setCity } = useStudio()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -112,16 +112,6 @@ function LoginForm() {
           Daftar sekarang
         </Link>
       </p>
-
-      <div className="rounded-2xl bg-accent/60 px-4 py-3 text-sm">
-        <p className="font-medium">Akun contoh</p>
-        <p className="mt-1 text-muted-foreground">
-          Bandung: {DEMO_ACCOUNTS[0].email} / {DEMO_ACCOUNTS[0].password}
-        </p>
-        <p className="text-muted-foreground">
-          Surabaya: {DEMO_ACCOUNTS[1].email} / {DEMO_ACCOUNTS[1].password}
-        </p>
-      </div>
     </div>
   )
 }
