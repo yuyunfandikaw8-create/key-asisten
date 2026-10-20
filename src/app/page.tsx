@@ -209,7 +209,7 @@ export default function HomePage() {
                 ))}
               </div>
             </aside>
-            <div className="sticky-note absolute -bottom-5 -left-2 z-10 max-w-[13rem] rounded-xl px-3 py-3 sm:-left-6 sm:max-w-[14rem]">
+            <div className="sticky-note absolute -top-3 -right-1 z-10 max-w-[13rem] rounded-xl px-3 py-3 sm:-right-4 sm:max-w-[14rem]">
               <p className="font-script text-lg leading-snug text-primary sm:text-xl">
                 Semua lebih mudah dalam satu tempat.
               </p>
