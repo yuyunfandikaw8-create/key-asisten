@@ -96,14 +96,11 @@ export default function HomePage() {
             <Link href={`/p/${studio.slug}`} className="text-sm font-medium">
               Pricelist
             </Link>
-            <Link href="/masuk" className="hidden text-sm font-medium sm:inline">
-              Masuk
-            </Link>
             <Link
               href="/masuk"
               className={cn(buttonVariants({ size: "lg" }), "h-10 px-4")}
             >
-              Buka studio
+              Masuk
             </Link>
           </nav>
         </div>
