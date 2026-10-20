@@ -46,10 +46,10 @@ const features = [
 ]
 
 const beforeAfter = [
-  ["Chat klien numpuk dan tanggalnya ditebak", "Chat ditempel, tanggalnya terbaca"],
-  ["DP baru diingat pas minggu acara", "Yang belum lunas muncul H-7"],
-  ["Invoice diketik ulang di notes", "Tagihan siap dikirim lewat WhatsApp"],
-  ["Gaun yang sama dijanjikan dua klien", "Bentrok gaun ketahuan sebelum disimpan"],
+  ["Chat dan jadwal masih berantakan", "Chat ditempel, tanggalnya terbaca"],
+  ["Sering lupa follow-up pembayaran", "Yang belum lunas muncul H-7"],
+  ["Invoice dibuat secara manual", "Tagihan siap dikirim lewat WhatsApp"],
+  ["Risiko jadwal atau pesanan bertabrakan", "Bentrok gaun ketahuan sebelum disimpan"],
 ]
 
 const roles = [
