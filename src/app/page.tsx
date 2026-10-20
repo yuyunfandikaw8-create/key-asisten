@@ -63,24 +63,24 @@ const roles = [
 
 const faqs = [
   {
-    q: "Apa yang bisa dicoba sekarang?",
-    a: "Studio demo BrushbyLaras di Bandung. Jadwal, invoice, gaun, dan pricelist-nya sudah terisi supaya alurnya langsung kelihatan.",
+    q: "💬 Apa yang bisa saya coba sekarang?",
+    a: "Langsung coba tanpa harus mulai dari nol. Key Assistant sudah dilengkapi data seperti jadwal, data klien, koleksi gaun, invoice, dan pricelist. Kamu bisa langsung mencoba alurnya dan melihat bagaimana pekerjaan administrasi menjadi lebih cepat dan rapi.",
   },
   {
-    q: "Bagaimana tempel chat bekerja?",
-    a: "Salin percakapan klien ke kolom chat. Key Assistant membaca nama, nomor, tanggal, jam, lokasi, jenis acara, dan paket. Kamu tetap yang menekan simpan.",
+    q: "📋 Bagaimana cara kerja fitur Tempel Chat?",
+    a: "Cukup salin chat dari klien, lalu tempel. Key Assistant akan membantu membaca informasi penting dari percakapan, seperti nama, nomor WhatsApp, tanggal, jam, lokasi, jenis acara, dan paket yang dipilih. Kamu tinggal mengecek hasilnya, memperbaikinya jika diperlukan, lalu menyimpan.",
   },
   {
-    q: "Apakah invoice terkirim sendiri?",
-    a: "Belum. Aplikasi menyusun isi tagihan dan membuka WhatsApp dengan pesan yang sudah terisi. Tombol kirim tetap di tanganmu.",
+    q: "🧾 Apakah invoice langsung terkirim ke klien?",
+    a: "Kamu tetap memegang kendali. Key Assistant membantu menyiapkan invoice dan pesan WhatsApp berdasarkan data yang sudah tersimpan. Sebelum dikirim, kamu bisa mengecek kembali detailnya. Tidak ada pesan yang terkirim tanpa tindakan dari kamu.",
   },
   {
-    q: "Di mana datanya disimpan?",
-    a: "Di browser ini. Tombol data contoh mengembalikan studio BrushbyLaras. Sambungan ke Supabase menyusul setelah anon key tersedia.",
+    q: "🔐 Di mana data saya disimpan?",
+    a: "Data kamu tetap berada di lingkungan yang kamu gunakan. Untuk penggunaan lokal, data dapat disimpan di browser sehingga kamu bisa mengelolanya langsung dari perangkatmu. Jika penyimpanan online tersedia dan diaktifkan, data dapat disimpan melalui layanan cloud yang terhubung dengan Key Assistant.",
   },
   {
-    q: "Bisakah klien melihat harga?",
-    a: "Bisa. Halaman pricelist BrushbyLaras bisa dipasang di bio Instagram. Pengajuan tanggal dari halaman itu masuk ke jadwal studio sebagai belum DP.",
+    q: "💰 Apakah klien bisa melihat pricelist?",
+    a: "Tentu. Bagikan pricelist dan biarkan klien memilih dengan mudah. Kamu bisa membagikan halaman pricelist melalui link, misalnya dari bio Instagram atau WhatsApp. Klien dapat melihat layanan dan harga, lalu mengajukan tanggal sesuai kebutuhannya. Data pengajuan kemudian bisa kamu gunakan untuk menindaklanjuti jadwal dan pembayaran.",
   },
 ]
 
