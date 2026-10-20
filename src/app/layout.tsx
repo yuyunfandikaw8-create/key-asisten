@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { ReactNode } from "react"
-import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google"
+import { Caveat, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google"
 
 import { AuthProvider } from "@/components/auth-provider"
 import { StudioProvider } from "@/components/studio-provider"
@@ -9,7 +9,13 @@ import "./globals.css"
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-jakarta",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
+})
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  variable: "--font-caveat",
+  weight: ["500", "600", "700"],
 })
 
 const geistMono = Geist_Mono({
@@ -30,7 +36,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="id"
-      className={`${jakarta.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${caveat.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className={`${jakarta.className} min-h-full bg-background text-foreground`}>
         <AuthProvider>

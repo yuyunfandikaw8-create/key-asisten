@@ -10,6 +10,7 @@
   --font-sans: var(--font-jakarta);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-jakarta);
+  --font-script: var(--font-caveat);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,30 +50,30 @@
 }
 
 :root {
-  --background: oklch(0.972 0.012 78);
-  --foreground: oklch(0.27 0.03 25);
-  --card: oklch(0.995 0.006 85);
-  --card-foreground: oklch(0.27 0.03 25);
-  --popover: oklch(0.995 0.006 85);
-  --popover-foreground: oklch(0.27 0.03 25);
-  --primary: oklch(0.48 0.14 15);
-  --primary-foreground: oklch(0.985 0.01 85);
-  --secondary: oklch(0.94 0.02 72);
-  --secondary-foreground: oklch(0.32 0.04 20);
-  --muted: oklch(0.945 0.014 75);
-  --muted-foreground: oklch(0.48 0.03 30);
-  --accent: oklch(0.93 0.03 15);
-  --accent-foreground: oklch(0.32 0.06 15);
+  --background: oklch(0.975 0.014 25);
+  --foreground: oklch(0.3 0.045 18);
+  --card: oklch(0.995 0.008 20);
+  --card-foreground: oklch(0.3 0.045 18);
+  --popover: oklch(0.995 0.008 20);
+  --popover-foreground: oklch(0.3 0.045 18);
+  --primary: oklch(0.45 0.13 18);
+  --primary-foreground: oklch(0.985 0.01 20);
+  --secondary: oklch(0.94 0.025 20);
+  --secondary-foreground: oklch(0.34 0.05 18);
+  --muted: oklch(0.95 0.02 20);
+  --muted-foreground: oklch(0.5 0.035 20);
+  --accent: oklch(0.93 0.035 18);
+  --accent-foreground: oklch(0.34 0.07 18);
   --destructive: oklch(0.55 0.18 25);
-  --border: oklch(0.88 0.02 60);
-  --input: oklch(0.88 0.02 60);
-  --ring: oklch(0.48 0.14 15);
+  --border: oklch(0.88 0.025 20);
+  --input: oklch(0.88 0.025 20);
+  --ring: oklch(0.45 0.13 18);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.9rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -129,8 +130,101 @@
   }
   html :is(h1, h2, .font-display) {
     font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+}
+
+.font-script {
+  font-family: var(--font-caveat), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.landing-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background:
+    radial-gradient(ellipse 70% 55% at 12% 8%, oklch(0.92 0.05 18 / 0.9), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 88% 18%, oklch(0.93 0.04 30 / 0.75), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 70% 85%, oklch(0.94 0.03 55 / 0.55), transparent 70%),
+    var(--background);
+}
+
+.landing-shell::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(circle at 18% 22%, oklch(0.86 0.06 18 / 0.35), transparent 28%),
+    radial-gradient(circle at 82% 30%, oklch(0.9 0.05 25 / 0.28), transparent 32%),
+    radial-gradient(circle at 60% 78%, oklch(0.92 0.04 40 / 0.22), transparent 30%);
+}
+
+.hero-stage {
+  position: relative;
+}
+
+.hero-stage::before {
+  content: "";
+  position: absolute;
+  inset: -8% -4% auto;
+  height: min(72vh, 40rem);
+  z-index: -1;
+  border-radius: 0 0 3rem 3rem;
+  background:
+    linear-gradient(
+      115deg,
+      oklch(0.975 0.015 25 / 0.92) 0%,
+      oklch(0.96 0.03 20 / 0.72) 42%,
+      oklch(0.94 0.04 18 / 0.45) 100%
+    ),
+    url("/hero-desk-backdrop.jpg") center / cover no-repeat;
+  filter: saturate(0.95) contrast(0.98);
+  opacity: 0.9;
+}
+
+.hero-spark {
+  position: absolute;
+  color: var(--primary);
+  opacity: 0.55;
+  animation: spark-float 4.8s ease-in-out infinite;
+}
+
+.hero-spark--delay {
+  animation-delay: 1.4s;
+}
+
+.sticky-note {
+  background: linear-gradient(160deg, oklch(0.97 0.04 95), oklch(0.94 0.05 85));
+  box-shadow:
+    0 1px 0 oklch(0.88 0.04 85 / 0.8),
+    0 14px 28px oklch(0.4 0.05 20 / 0.12);
+  transform: rotate(4deg);
+  animation: note-bob 5.5s ease-in-out infinite;
+}
+
+@keyframes spark-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(-6px) scale(1.08);
+    opacity: 0.75;
+  }
+}
+
+@keyframes note-bob {
+  0%,
+  100% {
+    transform: rotate(4deg) translateY(0);
+  }
+  50% {
+    transform: rotate(2.5deg) translateY(-4px);
   }
 }
 
@@ -148,7 +242,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track {
+  .marquee-track,
+  .hero-spark,
+  .sticky-note {
     animation: none;
   }
 }

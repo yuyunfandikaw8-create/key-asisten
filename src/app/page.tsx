@@ -4,6 +4,7 @@ import {
   FileText,
   MessageSquareText,
   Shirt,
+  Sparkles,
   Wallet,
   Globe,
 } from "lucide-react"
@@ -11,6 +12,19 @@ import {
 import { buttonVariants } from "@/components/ui/button"
 import { studio } from "@/lib/catalog"
 import { cn } from "@/lib/utils"
+
+function SparkMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M12 1.5 13.4 8.2 20 12l-6.6 3.8L12 22.5l-1.4-6.7L4 12l6.6-3.8L12 1.5Z" />
+    </svg>
+  )
+}
 
 const features = [
   {
@@ -91,10 +105,11 @@ const faqs = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur">
+    <div className="landing-shell min-h-screen">
+      <header className="sticky top-0 z-20 border-b border-primary/10 bg-background/75 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center px-4">
-          <Link href="/" className="font-display text-2xl">
+          <Link href="/" className="inline-flex items-center gap-2 font-display text-2xl text-primary">
+            <Sparkles className="size-5 text-primary" aria-hidden="true" />
             Key Assistant
           </Link>
           <nav className="ml-auto flex items-center gap-2 sm:gap-4">
@@ -103,7 +118,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/masuk"
-              className={cn(buttonVariants({ size: "lg" }), "h-10 px-4")}
+              className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-2xl px-5")}
             >
               Masuk
             </Link>
@@ -112,12 +127,15 @@ export default function HomePage() {
       </header>
 
       <main>
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
-          <div>
-            <p className="text-sm font-medium tracking-wide text-primary uppercase">
+        <section className="hero-stage mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+          <div className="relative">
+            <SparkMark className="hero-spark absolute -left-2 -top-3 size-5 sm:size-6" />
+            <SparkMark className="hero-spark hero-spark--delay absolute right-8 top-16 hidden size-4 sm:block" />
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold tracking-wide text-primary uppercase">
+              <Sparkles className="size-3.5" aria-hidden="true" />
               Key Assistant
             </p>
-            <h1 className="mt-3 max-w-xl text-4xl leading-tight text-balance sm:text-6xl">
+            <h1 className="mt-4 max-w-xl text-4xl leading-[1.08] text-balance text-primary sm:text-6xl">
               Satu aplikasi untuk jadwal yang teratur dan keuangan yang terstruktur.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
@@ -127,7 +145,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/masuk"
-                className={cn(buttonVariants({ size: "lg" }), "h-11 px-5")}
+                className={cn(buttonVariants({ size: "lg" }), "h-11 rounded-2xl px-5")}
               >
                 MASUK
               </Link>
@@ -135,7 +153,7 @@ export default function HomePage() {
                 href={`/p/${studio.slug}`}
                 className={cn(
                   buttonVariants({ size: "lg", variant: "outline" }),
-                  "h-11 bg-card px-5"
+                  "h-11 rounded-2xl bg-card/90 px-5 backdrop-blur"
                 )}
               >
                 PRICE LIST
@@ -147,44 +165,56 @@ export default function HomePage() {
                 Daftar
               </Link>
             </p>
+            <p className="font-script mt-6 text-2xl text-primary sm:text-3xl">
+              Kerja lebih rapi, bisnis makin maju
+              <span className="mt-1 block h-1 w-40 rounded-full bg-primary/35" />
+            </p>
           </div>
 
-          <aside className="rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/10">
-            <p className="mb-3 text-xs tracking-wide text-muted-foreground uppercase">
-              Ilustrasi Tampilan Aplikasi
-            </p>
-            <div className="rounded-2xl bg-primary px-4 py-4 text-primary-foreground">
-              <p className="text-sm">Selamat sore</p>
-              <p className="font-display text-3xl">{studio.name}</p>
-              <p className="mt-4 text-xs tracking-wide uppercase opacity-80">
-                Laba bersih bulan ini
+          <div className="relative">
+            <SparkMark className="hero-spark absolute -right-1 top-6 z-10 size-5" />
+            <aside className="relative rounded-[1.75rem] bg-card/95 p-4 shadow-[0_24px_50px_oklch(0.4_0.05_18_/0.14)] ring-1 ring-primary/10 backdrop-blur-sm">
+              <p className="mb-3 text-xs tracking-wide text-muted-foreground uppercase">
+                Ilustrasi Tampilan Aplikasi
               </p>
-              <p className="font-display text-4xl">Rp31.650.000</p>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-muted px-3 py-3">
-                <p className="text-muted-foreground">Pemasukan</p>
-                <p className="font-medium">Rp35.950.000</p>
+              <div className="rounded-2xl bg-primary px-4 py-4 text-primary-foreground">
+                <p className="text-sm">Selamat sore</p>
+                <p className="font-display text-3xl">{studio.name}</p>
+                <p className="mt-4 text-xs tracking-wide uppercase opacity-80">
+                  Laba bersih bulan ini
+                </p>
+                <p className="font-display text-4xl">Rp31.650.000</p>
               </div>
-              <div className="rounded-2xl bg-muted px-3 py-3">
-                <p className="text-muted-foreground">Pengeluaran</p>
-                <p className="font-medium">Rp4.300.000</p>
-              </div>
-            </div>
-            <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
-              {[
-                ["12", "Booking"],
-                ["3", "Belum DP"],
-                ["2", "Belum lunas"],
-                ["7", "Lunas"],
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-xl bg-accent px-2 py-3">
-                  <p className="font-display text-2xl text-accent-foreground">{value}</p>
-                  <p className="text-muted-foreground">{label}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-2xl bg-muted px-3 py-3">
+                  <p className="text-muted-foreground">Pemasukan</p>
+                  <p className="font-medium">Rp35.950.000</p>
                 </div>
-              ))}
+                <div className="rounded-2xl bg-muted px-3 py-3">
+                  <p className="text-muted-foreground">Pengeluaran</p>
+                  <p className="font-medium">Rp4.300.000</p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
+                {[
+                  ["12", "Booking"],
+                  ["3", "Belum DP"],
+                  ["2", "Belum lunas"],
+                  ["7", "Lunas"],
+                ].map(([value, label]) => (
+                  <div key={label} className="rounded-xl bg-accent px-2 py-3">
+                    <p className="font-display text-2xl text-accent-foreground">{value}</p>
+                    <p className="text-muted-foreground">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </aside>
+            <div className="sticky-note absolute -bottom-5 -left-2 z-10 max-w-[13rem] rounded-xl px-3 py-3 sm:-left-6 sm:max-w-[14rem]">
+              <p className="font-script text-lg leading-snug text-primary sm:text-xl">
+                Semua lebih mudah dalam satu tempat.
+              </p>
             </div>
-          </aside>
+          </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pb-16">
@@ -208,8 +238,8 @@ export default function HomePage() {
               ["Photografer & Videografer", "Photo and Video documentation for your spesial day"],
               ["Event & Wedding Content Creator", "Content reels & highlight realtime for your special day"],
             ].map(([title, body]) => (
-              <article key={title} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-                <h3 className="font-display text-2xl">{title}</h3>
+              <article key={title} className="rounded-3xl bg-card/90 p-4 shadow-sm ring-1 ring-primary/10 backdrop-blur-sm">
+                <h3 className="font-display text-2xl text-primary">{title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{body}</p>
               </article>
             ))}
