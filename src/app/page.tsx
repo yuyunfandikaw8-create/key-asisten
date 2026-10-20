@@ -116,7 +116,7 @@ export default function HomePage() {
               Key Assistant
             </p>
             <h1 className="mt-3 max-w-xl text-4xl leading-tight text-balance sm:text-6xl">
-              Satu aplikasi untuk waktu yang teratur dan keuangan yang terstruktur.
+              Satu aplikasi untuk jadwal yang teratur dan keuangan yang terstruktur.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
               Jadwal, DP, invoice, partner, dan arus kas dalam satu meja kerja.
