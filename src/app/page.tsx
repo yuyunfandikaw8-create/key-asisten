@@ -200,7 +200,7 @@ export default function HomePage() {
               ["Hijab & Hair Stylist", "Traditional & Modern Hijabdo, Traditional & Modern Hairdo, Simple Hijabdo & Hairdo"],
               ["Decoration", "Traditional & Modern Decoration, Decoration Setup based on client's request"],
               ["Attire", "Kebaya, Dress, Jas, etc"],
-              ["Fotografer", "Dokumentasi akad dan resepsi dalam satu timeline."],
+              ["Fotografer", "Photo and Video documentation for your spesial day"],
               ["Event & Wedding Content Creator", "Konten reels dan highlight untuk hari H."],
             ].map(([title, body]) => (
               <article key={title} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
