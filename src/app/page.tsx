@@ -196,7 +196,7 @@ export default function HomePage() {
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["Make Up Artist", "Schedule, Finance, Note from Client, Invoice"],
+              ["Make Up Artist", "Schedule Make Up, Finance, Note from Client, Invoice"],
               ["Hijab & Hair Stylist", "Hijab do, sanggul, updo, dan penataan rambut di jam yang sama."],
               ["Decoration", "Pelaminan, gapura, dan set dekor yang ikut di tanggal yang sama."],
               ["Attire", "Kebaya, gaun, dan beskap yang tidak bentrok."],
