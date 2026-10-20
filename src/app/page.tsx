@@ -249,9 +249,10 @@ export default function HomePage() {
                 Tiga menit mengetik ulang jadi satu kali tempel.
               </h2>
               <p className="mt-4 text-muted-foreground">
-                Klien mengirim tanggal di WhatsApp. Key Assistant menyimpan
-                jadwal, membuat dan mengirim invoice, mencatat keuangan,
-                kolaborasi dengan vendor lain hanya dengan 1 aplikasi
+                Kirim chat klien lewat WhatsApp, lalu biarkan Key Assistant
+                mencatat jadwal, membuat invoice, memantau pembayaran, dan
+                membantu menghindari bentrok pesanan — semua dalam satu
+                aplikasi.
               </p>
             </div>
             <div className="overflow-hidden rounded-2xl ring-1 ring-foreground/10">
