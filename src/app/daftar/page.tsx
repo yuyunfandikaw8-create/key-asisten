@@ -21,14 +21,15 @@ import { CITIES } from "@/lib/cities"
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { ready, user, register, supabaseReady } = useAuth()
+  const { ready, user, register } = useAuth()
   const { setCity } = useStudio()
   const [name, setName] = useState("")
   const [studioName, setStudioName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  const [city, setCityField] = useState("Bandung")
+  const [city, setCityField] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [info, setInfo] = useState("")
   const [pending, setPending] = useState(false)
@@ -42,6 +43,16 @@ export default function RegisterPage() {
     setPending(true)
     setError("")
     setInfo("")
+    if (!city) {
+      setError("Pilih kota dulu.")
+      setPending(false)
+      return
+    }
+    if (password !== confirmPassword) {
+      setError("Konfirmasi kata sandi belum sama.")
+      setPending(false)
+      return
+    }
     const result = await register({ name, email, phone, city, studioName, password })
     if (!result.ok) {
       if (result.error.includes("konfirmasi")) setInfo(result.error)
@@ -59,11 +70,10 @@ export default function RegisterPage() {
         <Link href="/" className="font-display text-2xl">
           Key Assistant
         </Link>
-        <h1 className="mt-4 text-4xl">Daftar studio</h1>
+        <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {supabaseReady
-            ? "Daftar lewat Supabase. Setelah daftar, cek email untuk konfirmasi jika diminta."
-            : "Buat akun di browser ini dulu."}
+          Mulai kelola jadwal, klien, invoice, dan keuangan bisnis kamu dalam
+          satu tempat.
         </p>
       </div>
 
@@ -80,75 +90,99 @@ export default function RegisterPage() {
           atau daftar dengan email
           <span className="h-px flex-1 bg-border" />
         </div>
-      <form onSubmit={submit} className="grid gap-3">
-        <div className="grid gap-1.5">
-          <Label htmlFor="name">Nama pemilik</Label>
-          <Input id="name" value={name} onChange={(event) => setName(event.target.value)} className="h-10" required />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="studio">Nama studio</Label>
-          <Input
-            id="studio"
-            value={studioName}
-            onChange={(event) => setStudioName(event.target.value)}
-            className="h-10"
-            placeholder="Studio rias kamu"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className="h-10"
-            required
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="phone">WhatsApp</Label>
-          <Input
-            id="phone"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            className="h-10"
-            placeholder="08…"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label>Kota aktif</Label>
-          <Select value={city} onValueChange={(value) => value && setCityField(value)}>
-            <SelectTrigger className="h-10 w-full">
-              <SelectValue>{(value) => String(value ?? city)}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {CITIES.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="password">Kata sandi</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="h-10"
-            required
-            minLength={6}
-          />
-        </div>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {info ? <p className="text-sm text-primary">{info}</p> : null}
-        <Button type="submit" className="h-10" disabled={pending || !ready}>
-          {pending ? "Menyimpan…" : "Buat akun"}
-        </Button>
-      </form>
+        <form onSubmit={submit} className="grid gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="name">Nama pemilik</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="h-10"
+              placeholder="Masukkan nama kamu"
+              required
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="studio">Nama bisnis</Label>
+            <Input
+              id="studio"
+              value={studioName}
+              onChange={(event) => setStudioName(event.target.value)}
+              className="h-10"
+              placeholder="Masukkan nama bisnis kamu"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="h-10"
+              placeholder="Masukkan email kamu"
+              required
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="phone">WhatsApp</Label>
+            <Input
+              id="phone"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              className="h-10"
+              placeholder="Contoh: 0812xxxxxxxx"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label>Kota</Label>
+            <Select value={city || undefined} onValueChange={(value) => value && setCityField(value)}>
+              <SelectTrigger className="h-10 w-full">
+                <SelectValue placeholder="Pilih kota">
+                  {(value) => String(value ?? city || "Pilih kota")}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {CITIES.map((item) => (
+                  <SelectItem key={item} value={item}>
+                    {item}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="password">Kata sandi</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="h-10"
+              placeholder="Buat kata sandi"
+              required
+              minLength={6}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="confirm-password">Konfirmasi kata sandi</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="h-10"
+              placeholder="Ulangi kata sandi"
+              required
+              minLength={6}
+            />
+          </div>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {info ? <p className="text-sm text-primary">{info}</p> : null}
+          <Button type="submit" className="h-10" disabled={pending || !ready}>
+            {pending ? "Menyimpan…" : "Buat Akun"}
+          </Button>
+        </form>
       </div>
 
       <p className="text-sm text-muted-foreground">
