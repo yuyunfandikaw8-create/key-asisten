@@ -17,8 +17,8 @@ function LoginForm() {
   const params = useSearchParams()
   const { ready, user, login, supabaseReady } = useAuth()
   const { setCity } = useStudio()
-  const [email, setEmail] = useState(DEMO_ACCOUNTS[0].email)
-  const [password, setPassword] = useState(DEMO_ACCOUNTS[0].password)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
 
@@ -51,12 +51,10 @@ function LoginForm() {
         <Link href="/" className="font-display text-2xl">
           Key Assistant
         </Link>
-        <h1 className="mt-4 text-4xl">Masuk studio</h1>
+        <h1 className="mt-4 text-4xl">Selamat datang di Key Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Masuk untuk membuka jadwal, inbox partner, invoice, dan kombo.
-          {supabaseReady
-            ? " Email baru lewat Supabase. Akun contoh tetap bisa dipakai lokal."
-            : " Data demo tersimpan di browser ini."}
+          Masuk untuk mengelola jadwal, klien, invoice, keuangan, dan kolaborasi
+          dengan lebih mudah dalam satu tempat.
         </p>
       </div>
 
@@ -81,6 +79,7 @@ function LoginForm() {
               id="email"
               type="email"
               autoComplete="email"
+              placeholder="Masukkan email kamu"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="h-10"
@@ -93,6 +92,7 @@ function LoginForm() {
               id="password"
               type="password"
               autoComplete="current-password"
+              placeholder="Masukkan kata sandi"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="h-10"
@@ -101,10 +101,17 @@ function LoginForm() {
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="h-10" disabled={pending || !ready}>
-            {pending ? "Masuk…" : "Masuk"}
+            {pending ? "Masuk…" : "Masuk ke Key Assistant"}
           </Button>
         </form>
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        Belum punya akun?{" "}
+        <Link href="/daftar" className="font-medium text-primary hover:underline">
+          Daftar sekarang
+        </Link>
+      </p>
 
       <div className="rounded-2xl bg-accent/60 px-4 py-3 text-sm">
         <p className="font-medium">Akun contoh</p>
@@ -115,13 +122,6 @@ function LoginForm() {
           Surabaya: {DEMO_ACCOUNTS[1].email} / {DEMO_ACCOUNTS[1].password}
         </p>
       </div>
-
-      <p className="text-sm text-muted-foreground">
-        Belum punya akun?{" "}
-        <Link href="/daftar" className="font-medium text-primary hover:underline">
-          Daftar studio
-        </Link>
-      </p>
     </div>
   )
 }
