@@ -64,23 +64,28 @@ const roles = [
 const faqs = [
   {
     q: "💬 Apa yang bisa saya coba sekarang?",
-    a: "Langsung coba tanpa harus mulai dari nol. Key Assistant sudah dilengkapi data seperti jadwal, data klien, koleksi gaun, invoice, dan pricelist. Kamu bisa langsung mencoba alurnya dan melihat bagaimana pekerjaan administrasi menjadi lebih cepat dan rapi.",
+    lead: "Langsung coba tanpa harus mulai dari nol.",
+    a: "Key Assistant sudah dilengkapi data seperti jadwal, data klien, koleksi gaun, invoice, dan pricelist. Kamu bisa langsung mencoba alurnya dan melihat bagaimana pekerjaan administrasi menjadi lebih cepat dan rapi.",
   },
   {
     q: "📋 Bagaimana cara kerja fitur Tempel Chat?",
-    a: "Cukup salin chat dari klien, lalu tempel. Key Assistant akan membantu membaca informasi penting dari percakapan, seperti nama, nomor WhatsApp, tanggal, jam, lokasi, jenis acara, dan paket yang dipilih. Kamu tinggal mengecek hasilnya, memperbaikinya jika diperlukan, lalu menyimpan.",
+    lead: "Cukup salin chat dari klien, lalu tempel.",
+    a: "Key Assistant akan membantu membaca informasi penting dari percakapan, seperti nama, nomor WhatsApp, tanggal, jam, lokasi, jenis acara, dan paket yang dipilih. Kamu tinggal mengecek hasilnya, memperbaikinya jika diperlukan, lalu menyimpan.",
   },
   {
     q: "🧾 Apakah invoice langsung terkirim ke klien?",
-    a: "Kamu tetap memegang kendali. Key Assistant membantu menyiapkan invoice dan pesan WhatsApp berdasarkan data yang sudah tersimpan. Sebelum dikirim, kamu bisa mengecek kembali detailnya. Tidak ada pesan yang terkirim tanpa tindakan dari kamu.",
+    lead: "Kamu tetap memegang kendali.",
+    a: "Key Assistant membantu menyiapkan invoice dan pesan WhatsApp berdasarkan data yang sudah tersimpan. Sebelum dikirim, kamu bisa mengecek kembali detailnya. Tidak ada pesan yang terkirim tanpa tindakan dari kamu.",
   },
   {
     q: "🔐 Di mana data saya disimpan?",
-    a: "Data kamu tetap berada di lingkungan yang kamu gunakan. Untuk penggunaan lokal, data dapat disimpan di browser sehingga kamu bisa mengelolanya langsung dari perangkatmu. Jika penyimpanan online tersedia dan diaktifkan, data dapat disimpan melalui layanan cloud yang terhubung dengan Key Assistant.",
+    lead: "Data kamu tetap berada di lingkungan yang kamu gunakan.",
+    a: "Untuk penggunaan lokal, data dapat disimpan di browser sehingga kamu bisa mengelolanya langsung dari perangkatmu. Jika penyimpanan online tersedia dan diaktifkan, data dapat disimpan melalui layanan cloud yang terhubung dengan Key Assistant.",
   },
   {
     q: "💰 Apakah klien bisa melihat pricelist?",
-    a: "Tentu. Bagikan pricelist dan biarkan klien memilih dengan mudah. Kamu bisa membagikan halaman pricelist melalui link, misalnya dari bio Instagram atau WhatsApp. Klien dapat melihat layanan dan harga, lalu mengajukan tanggal sesuai kebutuhannya. Data pengajuan kemudian bisa kamu gunakan untuk menindaklanjuti jadwal dan pembayaran.",
+    lead: "Tentu. Bagikan pricelist dan biarkan klien memilih dengan mudah.",
+    a: "Kamu bisa membagikan halaman pricelist melalui link, misalnya dari bio Instagram atau WhatsApp. Klien dapat melihat layanan dan harga, lalu mengajukan tanggal sesuai kebutuhannya. Data pengajuan kemudian bisa kamu gunakan untuk menindaklanjuti jadwal dan pembayaran.",
   },
 ]
 
