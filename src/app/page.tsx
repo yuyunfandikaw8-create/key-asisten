@@ -280,10 +280,10 @@ export default function HomePage() {
 
         <section className="py-14">
           <div className="mx-auto max-w-6xl px-4">
-            <h2 className="text-center text-4xl">Dipakai di sekeliling hari H</h2>
+            <h2 className="text-center text-4xl">Semua Vendor, Satu Jadwal</h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-              Mejanya untuk MUA. Asisten, bridal, dan vendor yang ikut di hari
-              yang sama tetap butuh satu jadwal yang sama.
+              MUA, asisten, bridal, dan vendor lainnya bisa bekerja lebih rapi
+              dengan jadwal yang terkoordinasi.
             </p>
           </div>
           <div className="mt-8 overflow-hidden">
