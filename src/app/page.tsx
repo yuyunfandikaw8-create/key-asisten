@@ -308,7 +308,10 @@ export default function HomePage() {
                 <summary className="cursor-pointer list-none font-medium">
                   {faq.q}
                 </summary>
-                <p className="pt-2 text-sm leading-6 text-muted-foreground">{faq.a}</p>
+                <div className="pt-2 text-sm leading-6 text-muted-foreground">
+                  <p className="font-semibold text-foreground">{faq.lead}</p>
+                  <p className="mt-1">{faq.a}</p>
+                </div>
               </details>
             ))}
           </div>
