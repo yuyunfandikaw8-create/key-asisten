@@ -129,22 +129,24 @@ export default function RegisterPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="city">Kota</Label>
-            <select
+            <Input
               id="city"
+              list="city-options"
               value={city}
               onChange={(event) => setCityField(event.target.value)}
+              placeholder="Pilih kota"
+              className="h-10"
               required
-              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <option value="" disabled>
-                Pilih kota
-              </option>
+              autoComplete="address-level2"
+            />
+            <datalist id="city-options">
               {CITIES.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
+                <option key={item} value={item} />
               ))}
-            </select>
+            </datalist>
+            <p className="text-xs text-muted-foreground">
+              Pilih dari daftar, atau ketik nama kota secara manual.
+            </p>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="password">Kata sandi</Label>
