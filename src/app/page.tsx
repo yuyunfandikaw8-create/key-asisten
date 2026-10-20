@@ -146,7 +146,7 @@ export default function HomePage() {
 
           <aside className="rounded-3xl bg-card p-4 shadow-sm ring-1 ring-foreground/10">
             <p className="mb-3 text-xs tracking-wide text-muted-foreground uppercase">
-              Ilustrasi tampilan studio
+              Ilustrasi Tampilan Aplikasi
             </p>
             <div className="rounded-2xl bg-primary px-4 py-4 text-primary-foreground">
               <p className="text-sm">Selamat sore</p>
