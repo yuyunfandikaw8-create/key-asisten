@@ -197,7 +197,7 @@ export default function HomePage() {
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Make Up Artist", "Brides & Groom, Reguler, Graduation, Family of Bride, Bridesmaid, etc"],
-              ["Hijab & Hair Stylist", "Schedule Hairdo, Finance, Note from Client, Invoice"],
+              ["Hijab & Hair Stylist", "Traditional & Modern Hijabdo, Traditional & Modern Hairdo, Simple Hijabdo & Hairdo"],
               ["Decoration", "Pelaminan, gapura, dan set dekor yang ikut di tanggal yang sama."],
               ["Attire", "Kebaya, gaun, dan beskap yang tidak bentrok."],
               ["Fotografer", "Dokumentasi akad dan resepsi dalam satu timeline."],
