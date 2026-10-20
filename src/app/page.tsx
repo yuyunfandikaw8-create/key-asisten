@@ -116,9 +116,8 @@ export default function HomePage() {
               Satu aplikasi untuk jadwal yang teratur dan keuangan yang terstruktur.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Jadwal, DP, invoice, partner, dan arus kas dalam satu meja kerja.
-              Tempel chat WhatsApp, kunci tanggal yang tidak bentrok, lalu pantau
-              pemasukan tanpa catatan berceceran.
+              Set your Schedule, Invoice, Finance, Note from Client and
+              Collaborate with Other Vendors on one app only.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
