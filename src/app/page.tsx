@@ -57,7 +57,7 @@ const roles = [
   "Hijab & Hair Stylist",
   "Decoration",
   "Attire",
-  "Fotografer",
+  "Photografer & Videografer",
   "Event & Wedding Content Creator",
 ]
 
@@ -187,7 +187,7 @@ export default function HomePage() {
             Kerja sama
           </p>
           <h2 className="mt-2 max-w-3xl text-4xl text-balance">
-            Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Fotografer, dan Event & Wedding
+            Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Photografer & Videografer, dan Event & Wedding
             Content Creator.
           </h2>
           <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -200,7 +200,7 @@ export default function HomePage() {
               ["Hijab & Hair Stylist", "Traditional & Modern Hijabdo, Traditional & Modern Hairdo, Simple Hijabdo & Hairdo"],
               ["Decoration", "Traditional & Modern Decoration, Decoration Setup based on client's request"],
               ["Attire", "Kebaya, Dress, Jas, etc"],
-              ["Fotografer", "Photo and Video documentation for your spesial day"],
+              ["Photografer & Videografer", "Photo and Video documentation for your spesial day"],
               ["Event & Wedding Content Creator", "Konten reels dan highlight untuk hari H."],
             ].map(([title, body]) => (
               <article key={title} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">

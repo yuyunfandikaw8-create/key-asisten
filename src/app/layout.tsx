@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s · Key Assistant",
   },
   description:
-    "Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Fotografer, dan Content Creator menemukan partner serta jadwal dalam satu tempat.",
+    "Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Photografer & Videografer, dan Content Creator menemukan partner serta jadwal dalam satu tempat.",
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

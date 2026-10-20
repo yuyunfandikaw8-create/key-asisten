@@ -5,7 +5,7 @@ export const TRADE_LABEL: Record<Trade, string> = {
   hair: "Hijab & Hair Stylist",
   dekor: "Decoration",
   baju: "Attire",
-  foto: "Fotografer",
+  foto: "Photografer & Videografer",
   content: "Event & Wedding Content Creator",
 }
 
