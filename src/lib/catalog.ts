@@ -4,7 +4,7 @@ import type { Attire, Booking, Expense, Package, StudioState } from "@/lib/types
 
 export const studio = {
   slug: "laras",
-  name: "BrushbyLaras",
+  name: "Key Partner",
   city: "Bandung",
   owner: "Laras Ayu",
   phone: "081223334455",
