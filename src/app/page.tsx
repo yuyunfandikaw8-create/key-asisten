@@ -117,7 +117,7 @@ export default function HomePage() {
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
               Set your Schedule, Invoice, Finance, Note from Client and
-              Collaborate with Other Vendors on one app only.
+              Collaborate with Other Vendors on 1 app.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
