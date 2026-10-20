@@ -373,7 +373,7 @@ export default function HomePage() {
 
       <footer className="border-t px-4 py-8 text-sm text-muted-foreground">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 Key Assistant · Meja kerja untuk MUA Indonesia</p>
+          <p>© 2026 Key Assistant · Kelola bisnis lebih rapi, dalam satu tempat.</p>
           <div className="flex gap-4">
             <Link href="/masuk">Masuk</Link>
             <Link href={`/p/${studio.slug}`}>Pricelist</Link>
