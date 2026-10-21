@@ -73,7 +73,7 @@ const floatCards: {
     title: "Invoice",
     body: "Kirim invoice dan pantau pembayaran klien.",
     icon: FileText,
-    className: "hero-float hero-float--c left-[36%] bottom-1 z-20 lg:left-[40%] lg:bottom-0",
+    className: "hero-float hero-float--c left-[22%] bottom-1 z-30 lg:left-[24%] lg:bottom-0",
   },
   {
     title: "Keuangan",
