@@ -314,7 +314,7 @@ export default function HomePage() {
                   "h-11 rounded-2xl px-5"
                 )}
               >
-                Mulai trial 14 hari
+                ✨ Coba Gratis 14 Hari
               </Link>
             </div>
           </div>
