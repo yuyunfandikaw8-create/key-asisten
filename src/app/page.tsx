@@ -128,7 +128,7 @@ export default function HomePage() {
       </header>
 
       <main>
-        <section className="hero-stage mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+        <section className="hero-stage mx-auto grid max-w-7xl items-center gap-8 px-4 py-14 lg:grid-cols-[0.92fr_1.18fr] lg:gap-6 lg:py-20">
           <div className="relative">
             <SparkMark className="hero-spark absolute -left-2 -top-3 size-5 sm:size-6" />
             <SparkMark className="hero-spark hero-spark--delay absolute right-8 top-16 hidden size-4 sm:block" />
