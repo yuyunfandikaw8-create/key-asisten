@@ -224,7 +224,7 @@ export default function HomePage() {
             <p className="mt-3 text-sm text-muted-foreground">
               Belum punya akun?{" "}
               <Link href="/daftar" className="font-medium text-primary hover:underline">
-                Daftar — coba gratis 14 hari
+                Daftar — Coba Gratis 14 Hari
               </Link>
             </p>
             <p className="font-script mt-6 text-2xl text-primary sm:text-3xl">
