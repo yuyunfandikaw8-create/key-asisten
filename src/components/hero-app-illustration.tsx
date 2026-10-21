@@ -52,25 +52,25 @@ const floatCards = [
     title: "Jadwal",
     body: "Atur semua agenda dalam satu tempat.",
     accent: "bg-[oklch(0.55_0.14_25)]",
-    className: "hero-float hero-float--a -left-1 top-2 sm:-left-4 sm:top-4",
+    className: "hero-float hero-float--a left-0 top-0 sm:-left-3 sm:top-1",
   },
   {
     title: "Klien",
     body: "Kelola data klien dengan lebih mudah.",
     accent: "bg-[oklch(0.62_0.12_155)]",
-    className: "hero-float hero-float--b right-0 top-0 sm:-right-2 sm:top-2",
+    className: "hero-float hero-float--b right-0 top-1 sm:-right-1 sm:top-0",
   },
   {
     title: "Invoice",
     body: "Kirim invoice dan pantau pembayaran klien.",
     accent: "bg-[oklch(0.58_0.12_245)]",
-    className: "hero-float hero-float--c bottom-16 left-2 sm:bottom-20 sm:left-0",
+    className: "hero-float hero-float--c left-[22%] bottom-1 z-30 sm:left-[26%] sm:bottom-2",
   },
   {
     title: "Keuangan",
     body: "Pantau pemasukan dan pengeluaran bisnis.",
     accent: "bg-[oklch(0.72_0.12_75)]",
-    className: "hero-float hero-float--d -right-1 bottom-8 sm:-right-3 sm:bottom-10",
+    className: "hero-float hero-float--d right-0 bottom-10 sm:-right-2 sm:bottom-12",
   },
 ] as const
 
@@ -232,22 +232,22 @@ function PhoneScreen() {
 export function HeroAppIllustration() {
   return (
     <div
-      className="hero-device-stage relative mx-auto w-full max-w-[34rem] px-2 pt-8 pb-4 sm:px-4 sm:pt-10"
+      className="hero-device-stage relative mx-auto w-full max-w-[34rem] px-1 pt-10 pb-14 sm:px-3 sm:pt-12 sm:pb-16"
       aria-label="Ilustrasi tampilan aplikasi Key Assistant di laptop dan ponsel"
     >
       {floatCards.map((card) => (
         <div
           key={card.title}
           className={cn(
-            "absolute z-20 max-w-[9.5rem] rounded-2xl bg-card/95 px-3 py-2.5 shadow-[0_12px_28px_oklch(0.4_0.05_18_/0.14)] ring-1 ring-primary/10 backdrop-blur-sm sm:max-w-[10.5rem]",
+            "absolute z-20 max-w-[8.75rem] rounded-2xl bg-card/95 px-2.5 py-2 shadow-[0_12px_28px_oklch(0.4_0.05_18_/0.14)] ring-1 ring-primary/10 backdrop-blur-sm sm:max-w-[10.5rem] sm:px-3 sm:py-2.5",
             card.className
           )}
         >
           <div className="flex items-start gap-2">
             <span className={cn("mt-0.5 size-2.5 shrink-0 rounded-full", card.accent)} />
             <div>
-              <p className="text-xs font-semibold text-primary">{card.title}</p>
-              <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground sm:text-[11px]">
+              <p className="text-[11px] font-semibold text-primary sm:text-xs">{card.title}</p>
+              <p className="mt-0.5 text-[9px] leading-snug text-muted-foreground sm:text-[11px]">
                 {card.body}
               </p>
             </div>
@@ -255,7 +255,7 @@ export function HeroAppIllustration() {
         </div>
       ))}
 
-      <div className="hero-laptop relative z-10 mx-auto w-[88%] sm:w-[90%]">
+      <div className="hero-laptop relative z-10 mx-auto w-[86%] sm:w-[88%]">
         <div className="rounded-t-[1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-2.5">
           <div className="relative aspect-[16/10] overflow-hidden rounded-[0.65rem] bg-black/90 ring-1 ring-black/30">
             <div className="absolute inset-[3%] sm:inset-[2.5%]">
@@ -269,7 +269,7 @@ export function HeroAppIllustration() {
         <div className="mx-auto h-1.5 w-[70%] rounded-b-xl bg-[oklch(0.75_0.015_20)]" />
       </div>
 
-      <div className="hero-phone absolute bottom-6 left-1 z-30 w-[30%] max-w-[7.5rem] sm:bottom-8 sm:left-3 sm:w-[28%] sm:max-w-[8.25rem]">
+      <div className="hero-phone absolute bottom-16 left-2 z-30 w-[28%] max-w-[7rem] sm:bottom-[4.5rem] sm:left-4 sm:w-[26%] sm:max-w-[8rem]">
         <div className="rounded-[1.15rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
           <div className="overflow-hidden rounded-[0.85rem] bg-white">
             <div className="aspect-[9/17]">
