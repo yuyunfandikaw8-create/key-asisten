@@ -284,7 +284,7 @@ function FeatureCard({
 export function HeroAppIllustration() {
   return (
     <div
-      className="hero-device-stage relative mx-auto w-full max-w-[42rem] scale-[1.02] px-1 pt-4 pb-2 sm:max-w-none sm:scale-100 sm:px-2 sm:pt-10 sm:pb-14 lg:origin-center lg:scale-[1.08]"
+      className="hero-device-stage relative mx-auto w-full max-w-[36rem] px-1 pt-4 pb-2 sm:px-3 sm:pt-10 sm:pb-14"
       aria-label="Ilustrasi tampilan aplikasi Key Assistant di laptop dan ponsel"
     >
       {floatCards.map((card) => (
@@ -294,30 +294,30 @@ export function HeroAppIllustration() {
           body={card.body}
           icon={card.icon}
           className={cn(
-            "absolute z-20 hidden max-w-[11.5rem] sm:block",
+            "absolute z-20 hidden max-w-[10.5rem] sm:block",
             card.className
           )}
         />
       ))}
 
-      <div className="relative pb-10 sm:pb-10">
-        <div className="hero-laptop relative z-10 mx-auto w-[96%] sm:w-[94%]">
-          <div className="rounded-t-[1.1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2.5 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-3">
-            <div className="relative aspect-[16/10] overflow-hidden rounded-[0.7rem] bg-black/90 ring-1 ring-black/30">
-              <div className="absolute inset-[2.5%] sm:inset-[2%]">
+      <div className="relative pb-10 sm:pb-8">
+        <div className="hero-laptop relative z-10 mx-auto w-[92%] sm:w-[90%]">
+          <div className="rounded-t-[1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-2.5">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[0.65rem] bg-black/90 ring-1 ring-black/30">
+              <div className="absolute inset-[3%] sm:inset-[2.5%]">
                 <LaptopScreen />
               </div>
             </div>
           </div>
-          <div className="relative h-3 rounded-b-[0.95rem] bg-[linear-gradient(180deg,oklch(0.78_0.015_20),oklch(0.7_0.02_20))] shadow-[0_10px_18px_oklch(0.4_0.04_20_/0.18)]">
+          <div className="relative h-2.5 rounded-b-[0.85rem] bg-[linear-gradient(180deg,oklch(0.78_0.015_20),oklch(0.7_0.02_20))] shadow-[0_10px_18px_oklch(0.4_0.04_20_/0.18)]">
             <div className="absolute inset-x-[18%] -top-0.5 h-1 rounded-b-full bg-[oklch(0.62_0.02_20)]" />
           </div>
           <div className="mx-auto h-1.5 w-[70%] rounded-b-xl bg-[oklch(0.75_0.015_20)]" />
         </div>
 
-        <div className="hero-phone absolute -bottom-2 left-0 z-30 w-[32%] max-w-[7.5rem] sm:bottom-0 sm:left-2 sm:w-[28%] sm:max-w-[9.25rem]">
-          <div className="rounded-[1.25rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
-            <div className="overflow-hidden rounded-[0.95rem] bg-white">
+        <div className="hero-phone absolute -bottom-2 left-1 z-30 w-[30%] max-w-[7rem] sm:bottom-1 sm:left-3 sm:w-[26%] sm:max-w-[8.25rem]">
+          <div className="rounded-[1.15rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
+            <div className="overflow-hidden rounded-[0.85rem] bg-white">
               <div className="aspect-[9/17]">
                 <PhoneScreen />
               </div>
