@@ -11,7 +11,6 @@ import {
 
 import { HeroAppIllustration } from "@/components/hero-app-illustration"
 import { buttonVariants } from "@/components/ui/button"
-import { studio } from "@/lib/catalog"
 import { cn } from "@/lib/utils"
 
 function SparkMark({ className }: { className?: string }) {
@@ -114,9 +113,6 @@ export default function HomePage() {
             Key Assistant
           </Link>
           <nav className="ml-auto flex items-center gap-2 sm:gap-4">
-            <Link href={`/p/${studio.slug}`} className="text-sm font-medium">
-              Pricelist
-            </Link>
             <Link
               href="/masuk"
               className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-2xl px-5")}
@@ -149,15 +145,6 @@ export default function HomePage() {
                 className={cn(buttonVariants({ size: "lg" }), "h-11 rounded-2xl px-5")}
               >
                 MASUK
-              </Link>
-              <Link
-                href={`/p/${studio.slug}`}
-                className={cn(
-                  buttonVariants({ size: "lg", variant: "outline" }),
-                  "h-11 rounded-2xl bg-card/90 px-5 backdrop-blur"
-                )}
-              >
-                PRICE LIST
               </Link>
             </div>
             <p className="mt-3 text-sm text-muted-foreground">
