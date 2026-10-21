@@ -117,11 +117,6 @@ const faqs = [
     a: "Key Assistant membantu menyiapkan invoice dan pesan WhatsApp berdasarkan data yang sudah tersimpan. Sebelum dikirim, kamu bisa mengecek kembali detailnya. Tidak ada pesan yang terkirim tanpa tindakan dari kamu.",
   },
   {
-    q: "🔐 Di mana data saya disimpan?",
-    lead: "Data kamu tetap berada di lingkungan yang kamu gunakan.",
-    a: "Untuk penggunaan lokal, data dapat disimpan di browser sehingga kamu bisa mengelolanya langsung dari perangkatmu. Jika penyimpanan online tersedia dan diaktifkan, data dapat disimpan melalui layanan cloud yang terhubung dengan Key Assistant.",
-  },
-  {
     q: "💰 Apakah klien bisa melihat pricelist?",
     lead: "Tentu. Bagikan pricelist dan biarkan klien memilih dengan mudah.",
     a: "Kamu bisa membagikan halaman pricelist melalui link, misalnya dari bio Instagram atau WhatsApp. Klien dapat melihat layanan dan harga, lalu mengajukan tanggal sesuai kebutuhannya. Data pengajuan kemudian bisa kamu gunakan untuk menindaklanjuti jadwal dan pembayaran.",
