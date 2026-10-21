@@ -60,10 +60,30 @@ const features = [
 ]
 
 const beforeAfter = [
-  ["Chat dan jadwal masih berantakan", "Chat dan jadwal lebih terorganisir"],
-  ["Sering lupa follow-up pembayaran", "Pengingat tagihan muncul tepat waktu"],
-  ["Invoice dibuat secara manual", "Invoice siap dikirim kapan saja"],
-  ["Risiko jadwal atau pesanan bertabrakan", "Bentrok jadwal terdeteksi lebih awal"],
+  [
+    "Cari vendor dari banyak grup WhatsApp",
+    "Cari partner vendor dalam satu aplikasi",
+  ],
+  [
+    "Harus chat satu per satu",
+    "Lebih mudah menemukan dan menghubungi partner",
+  ],
+  [
+    "Kontak vendor tersimpan di banyak tempat",
+    "Data partner lebih terorganisir",
+  ],
+  [
+    "Butuh waktu mencari vendor yang tersedia",
+    "Lebih mudah mencari partner sesuai kebutuhan",
+  ],
+  [
+    "Sulit mengingat vendor yang pernah bekerja sama",
+    "Simpan dan kelola partner favorit",
+  ],
+  [
+    "Harus berpindah-pindah aplikasi",
+    "Semua pencarian dan komunikasi lebih praktis",
+  ],
 ]
 
 const roles = [
