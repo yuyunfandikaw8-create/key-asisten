@@ -244,7 +244,7 @@ export default function HomePage() {
               <p className="mt-4 text-muted-foreground">
                 Kirim chat klien lewat WhatsApp, lalu biarkan Key Assistant
                 mencatat jadwal, membuat invoice, memantau pembayaran, dan
-                membantu menghindari bentrok pesanan — semua dalam satu
+                membantu menghindari bentrok pesanan — semua dalam 1
                 aplikasi.
               </p>
             </div>
