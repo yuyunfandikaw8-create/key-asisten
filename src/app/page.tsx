@@ -9,6 +9,7 @@ import {
   Globe,
 } from "lucide-react"
 
+import { HeroAppIllustration } from "@/components/hero-app-illustration"
 import { buttonVariants } from "@/components/ui/button"
 import { studio } from "@/lib/catalog"
 import { cn } from "@/lib/utils"
@@ -171,50 +172,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="relative">
-            <SparkMark className="hero-spark absolute -right-1 top-6 z-10 size-5" />
-            <aside className="relative rounded-[1.75rem] bg-card/95 p-4 shadow-[0_24px_50px_oklch(0.4_0.05_18_/0.14)] ring-1 ring-primary/10 backdrop-blur-sm">
-              <p className="mb-3 text-xs tracking-wide text-muted-foreground uppercase">
-                Ilustrasi Tampilan Aplikasi
-              </p>
-              <div className="rounded-2xl bg-primary px-4 py-4 text-primary-foreground">
-                <p className="text-sm">Selamat sore</p>
-                <p className="font-display text-3xl">{studio.name}</p>
-                <p className="mt-4 text-xs tracking-wide uppercase opacity-80">
-                  Laba bersih bulan ini
-                </p>
-                <p className="font-display text-4xl">Rp31.650.000</p>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-2xl bg-muted px-3 py-3">
-                  <p className="text-muted-foreground">Pemasukan</p>
-                  <p className="font-medium">Rp35.950.000</p>
-                </div>
-                <div className="rounded-2xl bg-muted px-3 py-3">
-                  <p className="text-muted-foreground">Pengeluaran</p>
-                  <p className="font-medium">Rp4.300.000</p>
-                </div>
-              </div>
-              <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs">
-                {[
-                  ["12", "Booking"],
-                  ["3", "Belum DP"],
-                  ["2", "Belum lunas"],
-                  ["7", "Lunas"],
-                ].map(([value, label]) => (
-                  <div key={label} className="rounded-xl bg-accent px-2 py-3">
-                    <p className="font-display text-2xl text-accent-foreground">{value}</p>
-                    <p className="text-muted-foreground">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </aside>
-            <div className="sticky-note absolute -top-3 -right-1 z-10 max-w-[13rem] rounded-xl px-3 py-3 sm:-right-4 sm:max-w-[14rem]">
-              <p className="font-script text-lg leading-snug text-primary sm:text-xl">
-                Semua lebih mudah dalam satu tempat.
-              </p>
-            </div>
-          </div>
+          <HeroAppIllustration />
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pb-16">
