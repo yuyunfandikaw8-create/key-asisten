@@ -266,16 +266,16 @@ export default function HomePage() {
             </div>
             <div className="overflow-hidden rounded-2xl ring-1 ring-foreground/10">
               <div className="grid grid-cols-2 bg-muted text-sm font-medium">
-                <p className="px-4 py-3">Sebelum</p>
-                <p className="bg-primary px-4 py-3 text-primary-foreground">Sesudah</p>
+                <p className="px-4 py-2">Sebelum</p>
+                <p className="bg-primary px-4 py-2 text-primary-foreground">Sesudah</p>
               </div>
               {beforeAfter.map(([before, after]) => (
                 <div
                   key={before}
-                  className="grid grid-cols-2 border-t text-sm leading-6"
+                  className="grid grid-cols-2 border-t text-sm leading-5"
                 >
-                  <p className="px-4 py-3 text-muted-foreground">{before}</p>
-                  <p className="bg-accent/60 px-4 py-3">{after}</p>
+                  <p className="px-4 py-1.5 text-muted-foreground">{before}</p>
+                  <p className="bg-accent/60 px-4 py-1.5">{after}</p>
                 </div>
               ))}
             </div>
