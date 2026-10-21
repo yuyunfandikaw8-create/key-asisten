@@ -303,8 +303,9 @@ export default function HomePage() {
               Siap membuat pekerjaan jadi lebih rapi?
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-primary-foreground/85 sm:text-lg">
-              Mulai trial gratis 14 hari dan lihat bagaimana jadwal, invoice,
-              keuangan, serta kebutuhan klien bisa dikelola dalam satu tempat.
+              Mulai uji coba gratis selama 14 hari dan lihat bagaimana jadwal,
+              invoice, keuangan, serta kebutuhan klien bisa dikelola dalam 1
+              tempat.
             </p>
             <div className="mt-6">
               <Link
