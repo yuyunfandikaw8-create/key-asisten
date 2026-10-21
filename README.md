@@ -22,13 +22,26 @@ Akun contoh (tersimpan di browser):
 
 Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog.
 
-Supabase sudah tersambung lewat publishable key (`NEXT_PUBLIC_SUPABASE_ANON_KEY` di `.env.local`).
+Supabase project: `iukerqusjdlkkoyxvgjs` — pakai **anon public JWT** di `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://iukerqusjdlkkoyxvgjs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
+```
 
 - Email/password baru → Auth Supabase (biasanya perlu konfirmasi email).
 - Akun contoh `@riasaja.id` dan pilihan Gmail demo → tetap lokal untuk coba cepat.
 - Google OAuth asli: aktifkan provider Google di Supabase Authentication, lalu tombol Google akan mengalihkan ke Google.
-- Jangan taruh `sb_secret_` / service_role di frontend.
-- SQL awal tabel studio ada di `supabase/schema.sql` (jalankan di SQL Editor).
+- **Jangan** taruh `service_role` / `sb_secret_` di frontend atau sebagai `NEXT_PUBLIC_*`.
+- Jalankan `supabase/schema.sql` di SQL Editor agar tabel `studios` + RLS tersedia.
+
+### Deploy Vercel
+
+1. Create repo GitHub dari chat Cursor (proyek ini masih Origin sementara).
+2. Import repo di Vercel.
+3. Set env Production/Preview: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (sama seperti lokal).
+4. Deploy branch `main`.
+5. Di Supabase Auth → URL Configuration, tambahkan `https://<domain-vercel>/masuk` ke Redirect URLs.
 
 ## Yang bisa dicoba
 
