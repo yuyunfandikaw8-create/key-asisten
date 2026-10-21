@@ -229,54 +229,91 @@ function PhoneScreen() {
   )
 }
 
+function FeatureCard({
+  title,
+  body,
+  accent,
+  className,
+}: {
+  title: string
+  body: string
+  accent: string
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl bg-card/95 px-2.5 py-2 shadow-[0_12px_28px_oklch(0.4_0.05_18_/0.14)] ring-1 ring-primary/10 backdrop-blur-sm sm:px-3 sm:py-2.5",
+        className
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <span className={cn("mt-0.5 size-2.5 shrink-0 rounded-full", accent)} />
+        <div>
+          <p className="text-[11px] font-semibold text-primary sm:text-xs">{title}</p>
+          <p className="mt-0.5 text-[9px] leading-snug text-muted-foreground sm:text-[11px]">
+            {body}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function HeroAppIllustration() {
   return (
     <div
-      className="hero-device-stage relative mx-auto w-full max-w-[34rem] px-1 pt-10 pb-14 sm:px-3 sm:pt-12 sm:pb-16"
+      className="hero-device-stage relative mx-auto w-full max-w-[34rem] px-1 pt-4 pb-2 sm:px-3 sm:pt-12 sm:pb-16"
       aria-label="Ilustrasi tampilan aplikasi Key Assistant di laptop dan ponsel"
     >
       {floatCards.map((card) => (
-        <div
+        <FeatureCard
           key={card.title}
+          title={card.title}
+          body={card.body}
+          accent={card.accent}
           className={cn(
-            "absolute z-20 max-w-[8.75rem] rounded-2xl bg-card/95 px-2.5 py-2 shadow-[0_12px_28px_oklch(0.4_0.05_18_/0.14)] ring-1 ring-primary/10 backdrop-blur-sm sm:max-w-[10.5rem] sm:px-3 sm:py-2.5",
+            "absolute z-20 hidden max-w-[10.5rem] sm:block",
             card.className
           )}
-        >
-          <div className="flex items-start gap-2">
-            <span className={cn("mt-0.5 size-2.5 shrink-0 rounded-full", card.accent)} />
-            <div>
-              <p className="text-[11px] font-semibold text-primary sm:text-xs">{card.title}</p>
-              <p className="mt-0.5 text-[9px] leading-snug text-muted-foreground sm:text-[11px]">
-                {card.body}
-              </p>
-            </div>
-          </div>
-        </div>
+        />
       ))}
 
-      <div className="hero-laptop relative z-10 mx-auto w-[86%] sm:w-[88%]">
-        <div className="rounded-t-[1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-2.5">
-          <div className="relative aspect-[16/10] overflow-hidden rounded-[0.65rem] bg-black/90 ring-1 ring-black/30">
-            <div className="absolute inset-[3%] sm:inset-[2.5%]">
-              <LaptopScreen />
+      <div className="relative">
+        <div className="hero-laptop relative z-10 mx-auto w-[92%] sm:w-[88%]">
+          <div className="rounded-t-[1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-2.5">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[0.65rem] bg-black/90 ring-1 ring-black/30">
+              <div className="absolute inset-[3%] sm:inset-[2.5%]">
+                <LaptopScreen />
+              </div>
+            </div>
+          </div>
+          <div className="relative h-2.5 rounded-b-[0.85rem] bg-[linear-gradient(180deg,oklch(0.78_0.015_20),oklch(0.7_0.02_20))] shadow-[0_10px_18px_oklch(0.4_0.04_20_/0.18)]">
+            <div className="absolute inset-x-[18%] -top-0.5 h-1 rounded-b-full bg-[oklch(0.62_0.02_20)]" />
+          </div>
+          <div className="mx-auto h-1.5 w-[70%] rounded-b-xl bg-[oklch(0.75_0.015_20)]" />
+        </div>
+
+        <div className="hero-phone absolute -bottom-2 left-1 z-30 w-[30%] max-w-[6.75rem] sm:bottom-[4.5rem] sm:left-4 sm:w-[26%] sm:max-w-[8rem]">
+          <div className="rounded-[1.15rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
+            <div className="overflow-hidden rounded-[0.85rem] bg-white">
+              <div className="aspect-[9/17]">
+                <PhoneScreen />
+              </div>
             </div>
           </div>
         </div>
-        <div className="relative h-2.5 rounded-b-[0.85rem] bg-[linear-gradient(180deg,oklch(0.78_0.015_20),oklch(0.7_0.02_20))] shadow-[0_10px_18px_oklch(0.4_0.04_20_/0.18)]">
-          <div className="absolute inset-x-[18%] -top-0.5 h-1 rounded-b-full bg-[oklch(0.62_0.02_20)]" />
-        </div>
-        <div className="mx-auto h-1.5 w-[70%] rounded-b-xl bg-[oklch(0.75_0.015_20)]" />
       </div>
 
-      <div className="hero-phone absolute bottom-16 left-2 z-30 w-[28%] max-w-[7rem] sm:bottom-[4.5rem] sm:left-4 sm:w-[26%] sm:max-w-[8rem]">
-        <div className="rounded-[1.15rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
-          <div className="overflow-hidden rounded-[0.85rem] bg-white">
-            <div className="aspect-[9/17]">
-              <PhoneScreen />
-            </div>
-          </div>
-        </div>
+      <div className="mt-6 grid grid-cols-2 gap-2 sm:hidden">
+        {floatCards.map((card) => (
+          <FeatureCard
+            key={`mobile-${card.title}`}
+            title={card.title}
+            body={card.body}
+            accent={card.accent}
+          />
+        ))}
       </div>
     </div>
   )
