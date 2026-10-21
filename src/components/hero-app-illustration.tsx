@@ -137,7 +137,7 @@ function LaptopScreen() {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-[8px] font-semibold sm:text-[9px]">
-              Selamat datang. Mulai hari yang produktif !
+              Selamat datang. Semoga hari ini berjalan lancar
             </p>
             <p className="text-[7px] text-[oklch(0.5_0.02_20)]">Studio · Owner</p>
           </div>
