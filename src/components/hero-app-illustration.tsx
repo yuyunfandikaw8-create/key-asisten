@@ -13,7 +13,7 @@ import {
 
 import { cn } from "@/lib/utils"
 
-const navItems = [
+const navItems: { icon: LucideIcon; label: string; active?: boolean }[] = [
   { icon: Home, label: "Beranda", active: true },
   { icon: CalendarDays, label: "Jadwal" },
   { icon: Users, label: "Klien" },
@@ -22,7 +22,7 @@ const navItems = [
   { icon: NotebookPen, label: "Catatan" },
   { icon: Handshake, label: "Vendor" },
   { icon: Settings, label: "Pengaturan" },
-] as const
+]
 
 const scheduleRows = [
   {
