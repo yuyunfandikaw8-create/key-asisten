@@ -160,10 +160,6 @@ const faqs: {
     a: "Bisa. Key Assistant membantu Anda menemukan partner vendor dalam satu aplikasi sehingga Anda tidak perlu mencari dari banyak tempat.",
   },
   {
-    q: "7. Vendor apa saja yang bisa saya temukan?",
-    a: "Anda dapat menemukan berbagai kategori partner sesuai kebutuhan pekerjaan, seperti MUA, hairstylist, fotografer, dekorasi, venue, wardrobe, dan kategori vendor lainnya.",
-  },
-  {
     q: "8. Apakah data klien dan bisnis saya aman?",
     a: "Key Assistant dirancang untuk menjaga data bisnis dan informasi pengguna agar tetap terlindungi. Akses data juga dibatasi sesuai akun dan hak akses pengguna.",
   },
@@ -366,8 +362,17 @@ export default function HomePage() {
                   {faq.q}
                 </summary>
                 <div className="pt-2 text-sm leading-6 text-muted-foreground">
-                  <p className="font-semibold text-foreground">{faq.lead}</p>
-                  <p className="mt-1">{faq.a}</p>
+                  {faq.lead ? (
+                    <p className="font-semibold text-foreground">{faq.lead}</p>
+                  ) : null}
+                  {faq.a ? <p className={faq.lead ? "mt-1" : undefined}>{faq.a}</p> : null}
+                  {faq.items?.length ? (
+                    <ul className="mt-2 list-none space-y-1">
+                      {faq.items.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               </details>
             ))}
