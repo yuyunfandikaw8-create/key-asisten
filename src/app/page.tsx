@@ -81,10 +81,6 @@ const beforeAfter = [
     "Lebih mudah mencari partner sesuai kebutuhan",
   ],
   [
-    "Sulit mengingat vendor yang pernah bekerja sama",
-    "Simpan dan kelola partner favorit",
-  ],
-  [
     "Harus berpindah-pindah aplikasi",
     "Semua pencarian dan komunikasi lebih praktis",
   ],
