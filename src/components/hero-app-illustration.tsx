@@ -8,6 +8,7 @@ import {
   Wallet,
   NotebookPen,
   Handshake,
+  type LucideIcon,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -34,7 +35,7 @@ const scheduleRows = [
   {
     time: "13.00",
     title: "Trial Makeup",
-    client: "Nadia · Wedding",
+    client: "Sinta · Wedding",
     status: "Proses",
     tone: "progress",
   },
@@ -47,32 +48,47 @@ const scheduleRows = [
   },
 ] as const
 
-const floatCards = [
+const featureIconStyle =
+  "flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
+
+const floatCards: {
+  title: string
+  body: string
+  icon: LucideIcon
+  className: string
+}[] = [
   {
     title: "Jadwal",
     body: "Atur semua agenda dalam satu tempat.",
-    accent: "bg-[oklch(0.55_0.14_25)]",
+    icon: CalendarDays,
     className: "hero-float hero-float--a left-0 top-0 sm:-left-3 sm:top-1",
   },
   {
     title: "Klien",
     body: "Kelola data klien dengan lebih mudah.",
-    accent: "bg-[oklch(0.62_0.12_155)]",
+    icon: Users,
     className: "hero-float hero-float--b right-0 top-1 sm:-right-1 sm:top-0",
   },
   {
     title: "Invoice",
     body: "Kirim invoice dan pantau pembayaran klien.",
-    accent: "bg-[oklch(0.58_0.12_245)]",
+    icon: FileText,
     className: "hero-float hero-float--c left-[22%] bottom-1 z-30 sm:left-[26%] sm:bottom-2",
   },
   {
     title: "Keuangan",
     body: "Pantau pemasukan dan pengeluaran bisnis.",
-    accent: "bg-[oklch(0.72_0.12_75)]",
+    icon: Wallet,
     className: "hero-float hero-float--d right-0 bottom-10 sm:-right-2 sm:bottom-12",
   },
-] as const
+]
+
+const metricCards: { label: string; value: string; icon: LucideIcon }[] = [
+  { label: "Jadwal", value: "4 Agenda", icon: CalendarDays },
+  { label: "Invoice", value: "3 Menunggu", icon: FileText },
+  { label: "Klien", value: "2 Baru", icon: Users },
+  { label: "Keuangan", value: "Rp4,3jt", icon: Wallet },
+]
 
 function StatusPill({
   tone,
@@ -123,20 +139,23 @@ function LaptopScreen() {
             <p className="truncate text-[8px] font-semibold sm:text-[9px]">
               Selamat datang. Mau hari yang produktif hari ini!
             </p>
-            <p className="text-[7px] text-[oklch(0.5_0.02_20)]">Nadia Putri · Owner</p>
+            <p className="text-[7px] text-[oklch(0.5_0.02_20)]">Studio · Owner</p>
           </div>
           <div className="size-4 shrink-0 rounded-full bg-[oklch(0.9_0.04_20)] ring-1 ring-primary/20" />
         </div>
 
         <div className="grid grid-cols-4 gap-1">
-          {[
-            ["Jadwal", "4 Agenda", "bg-[oklch(0.93_0.05_20)]"],
-            ["Invoice", "3 Menunggu", "bg-[oklch(0.94_0.04_55)]"],
-            ["Klien", "2 Baru", "bg-[oklch(0.93_0.03_245)]"],
-            ["Keuangan", "Rp4,3jt", "bg-[oklch(0.93_0.04_155)]"],
-          ].map(([label, value, tone]) => (
-            <div key={label} className={cn("rounded-md px-1 py-1", tone)}>
-              <p className="text-[6px] text-[oklch(0.48_0.03_20)]">{label}</p>
+          {metricCards.map(({ label, value, icon: Icon }) => (
+            <div
+              key={label}
+              className="rounded-md bg-[oklch(0.96_0.02_20)] px-1 py-1"
+            >
+              <div className="mb-0.5 flex items-center gap-0.5">
+                <span className="flex size-3 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <Icon className="size-2" aria-hidden />
+                </span>
+                <p className="truncate text-[6px] text-[oklch(0.48_0.03_20)]">{label}</p>
+              </div>
               <p className="truncate text-[7px] font-semibold sm:text-[8px]">{value}</p>
             </div>
           ))}
@@ -196,7 +215,7 @@ function PhoneScreen() {
     <div className="flex h-full flex-col bg-[oklch(0.985_0.01_25)] text-[oklch(0.32_0.03_20)]">
       <div className="mx-auto mt-1.5 h-1 w-8 rounded-full bg-[oklch(0.85_0.02_20)]" />
       <div className="px-2 pt-2">
-        <p className="text-[8px] font-semibold leading-tight">Halo, Nadia!</p>
+        <p className="text-[8px] font-semibold leading-tight">Selamat datang!</p>
         <p className="text-[6px] text-[oklch(0.5_0.02_20)]">Semoga hari ini berjalan lancar</p>
       </div>
       <div className="mt-2 space-y-1 px-2">
@@ -232,12 +251,12 @@ function PhoneScreen() {
 function FeatureCard({
   title,
   body,
-  accent,
+  icon: Icon,
   className,
 }: {
   title: string
   body: string
-  accent: string
+  icon: LucideIcon
   className?: string
 }) {
   return (
@@ -248,7 +267,9 @@ function FeatureCard({
       )}
     >
       <div className="flex items-start gap-2">
-        <span className={cn("mt-0.5 size-2.5 shrink-0 rounded-full", accent)} />
+        <span className={featureIconStyle}>
+          <Icon className="size-3.5" aria-hidden />
+        </span>
         <div>
           <p className="text-[11px] font-semibold text-primary sm:text-xs">{title}</p>
           <p className="mt-0.5 text-[9px] leading-snug text-muted-foreground sm:text-[11px]">
@@ -271,7 +292,7 @@ export function HeroAppIllustration() {
           key={card.title}
           title={card.title}
           body={card.body}
-          accent={card.accent}
+          icon={card.icon}
           className={cn(
             "absolute z-20 hidden max-w-[10.5rem] sm:block",
             card.className
@@ -279,7 +300,7 @@ export function HeroAppIllustration() {
         />
       ))}
 
-      <div className="relative">
+      <div className="relative pb-10 sm:pb-0">
         <div className="hero-laptop relative z-10 mx-auto w-[92%] sm:w-[88%]">
           <div className="rounded-t-[1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-2.5">
             <div className="relative aspect-[16/10] overflow-hidden rounded-[0.65rem] bg-black/90 ring-1 ring-black/30">
@@ -311,7 +332,7 @@ export function HeroAppIllustration() {
             key={`mobile-${card.title}`}
             title={card.title}
             body={card.body}
-            accent={card.accent}
+            icon={card.icon}
           />
         ))}
       </div>
