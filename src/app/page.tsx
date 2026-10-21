@@ -262,8 +262,8 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl px-4">
             <h2 className="text-center text-4xl">Semua Vendor, Ada dalam 1 Aplikasi</h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-              MUA, asisten, bridal, dan vendor lainnya bisa bekerja lebih rapi
-              dengan jadwal yang terkoordinasi.
+              MUA, Hijab & Hair Stylist , Fg & Vg dan vendor lainnya bisa
+              bekerja sama dengan jadwal yang rapi dan waktu yang efisien.
             </p>
           </div>
           <div className="mt-8 overflow-hidden">
