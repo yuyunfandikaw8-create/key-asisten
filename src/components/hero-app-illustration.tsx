@@ -300,7 +300,7 @@ export function HeroAppIllustration() {
         />
       ))}
 
-      <div className="relative pb-10 sm:pb-0">
+      <div className="relative pb-10 sm:pb-8">
         <div className="hero-laptop relative z-10 mx-auto w-[92%] sm:w-[88%]">
           <div className="rounded-t-[1rem] border border-b-0 border-[oklch(0.78_0.02_20)] bg-[oklch(0.82_0.015_20)] p-2 shadow-[0_28px_50px_oklch(0.4_0.05_18_/0.18)] sm:p-2.5">
             <div className="relative aspect-[16/10] overflow-hidden rounded-[0.65rem] bg-black/90 ring-1 ring-black/30">
@@ -315,7 +315,7 @@ export function HeroAppIllustration() {
           <div className="mx-auto h-1.5 w-[70%] rounded-b-xl bg-[oklch(0.75_0.015_20)]" />
         </div>
 
-        <div className="hero-phone absolute -bottom-2 left-1 z-30 w-[30%] max-w-[6.75rem] sm:bottom-[4.5rem] sm:left-4 sm:w-[26%] sm:max-w-[8rem]">
+        <div className="hero-phone absolute -bottom-2 left-1 z-30 w-[30%] max-w-[6.75rem] sm:bottom-1 sm:left-4 sm:w-[26%] sm:max-w-[8rem]">
           <div className="rounded-[1.15rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
             <div className="overflow-hidden rounded-[0.85rem] bg-white">
               <div className="aspect-[9/17]">
