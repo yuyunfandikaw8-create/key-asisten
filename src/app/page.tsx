@@ -95,7 +95,12 @@ const roles = [
   "Event & Wedding Content Creator",
 ]
 
-const faqs = [
+const faqs: {
+  q: string
+  lead?: string
+  a?: string
+  items?: string[]
+}[] = [
   {
     q: "⏱️ Berapa lama masa trial-nya?",
     lead: "Setiap akun baru mendapat trial gratis 14 hari.",
@@ -120,6 +125,63 @@ const faqs = [
     q: "💰 Apakah klien bisa melihat pricelist?",
     lead: "Tentu. Bagikan pricelist dan biarkan klien memilih dengan mudah.",
     a: "Kamu bisa membagikan halaman pricelist melalui link, misalnya dari bio Instagram atau WhatsApp. Klien dapat melihat layanan dan harga, lalu mengajukan tanggal sesuai kebutuhannya. Data pengajuan kemudian bisa kamu gunakan untuk menindaklanjuti jadwal dan pembayaran.",
+  },
+  {
+    q: "1. Apa itu Key Assistant?",
+    a: "Key Assistant adalah aplikasi untuk membantu MUA dan profesional beauty mengelola bisnis dalam satu tempat — mulai dari jadwal, klien, invoice, keuangan, hingga mencari partner vendor.",
+  },
+  {
+    q: "2. Siapa yang bisa menggunakan Key Assistant?",
+    a: "Key Assistant dirancang untuk MUA, hairstylist, fotografer, vendor wedding, dan profesional lainnya yang membutuhkan pengelolaan pekerjaan dan bisnis yang lebih teratur.",
+  },
+  {
+    q: "3. Apakah Key Assistant bisa digunakan secara gratis?",
+    a: "Ya. Pengguna baru dapat mencoba Key Assistant secara gratis selama 14 hari dengan akses ke fitur yang tersedia selama masa trial.",
+  },
+  {
+    q: "4. Apakah saya perlu kartu kredit untuk mencoba?",
+    a: "Tidak. Anda dapat memulai masa trial tanpa memasukkan kartu kredit.",
+  },
+  {
+    q: "5. Apa saja yang bisa saya kelola di Key Assistant?",
+    a: "Anda dapat mengelola:",
+    items: [
+      "📅 Jadwal dan agenda",
+      "👩 Klien",
+      "🧾 Invoice",
+      "💰 Keuangan",
+      "📝 Catatan klien",
+      "🤝 Partner/vendor",
+      "📊 Aktivitas bisnis",
+    ],
+  },
+  {
+    q: "6. Apakah saya bisa mencari partner vendor?",
+    a: "Bisa. Key Assistant membantu Anda menemukan partner vendor dalam satu aplikasi sehingga Anda tidak perlu mencari dari banyak tempat.",
+  },
+  {
+    q: "7. Vendor apa saja yang bisa saya temukan?",
+    a: "Anda dapat menemukan berbagai kategori partner sesuai kebutuhan pekerjaan, seperti MUA, hairstylist, fotografer, dekorasi, venue, wardrobe, dan kategori vendor lainnya.",
+  },
+  {
+    q: "8. Apakah data klien dan bisnis saya aman?",
+    a: "Key Assistant dirancang untuk menjaga data bisnis dan informasi pengguna agar tetap terlindungi. Akses data juga dibatasi sesuai akun dan hak akses pengguna.",
+  },
+  {
+    q: "9. Apakah Key Assistant bisa digunakan dari HP?",
+    a: "Ya. Key Assistant dirancang agar dapat digunakan melalui perangkat yang Anda gunakan untuk mengelola pekerjaan, termasuk smartphone dan komputer.",
+  },
+  {
+    q: "10. Apakah saya bisa mengelola beberapa pekerjaan sekaligus?",
+    a: "Bisa. Anda dapat mengatur berbagai agenda, klien, invoice, dan aktivitas bisnis dalam satu tempat sehingga pekerjaan lebih mudah dipantau.",
+  },
+  {
+    q: "11. Apa yang terjadi setelah masa trial 14 hari berakhir?",
+    a: "Setelah masa trial berakhir, Anda dapat memilih paket yang sesuai untuk melanjutkan penggunaan Key Assistant. Data dan ketentuan akses mengikuti paket yang Anda pilih.",
+  },
+  {
+    q: "12. Apakah Key Assistant hanya untuk MUA?",
+    a: "Tidak. Walaupun Key Assistant dibuat dengan kebutuhan MUA sebagai fokus utama, aplikasi ini juga dapat membantu profesional beauty dan vendor lainnya yang membutuhkan pengelolaan jadwal, klien, invoice, dan bisnis.",
   },
 ]
 
