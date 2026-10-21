@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
+import { isTrialExpired } from "@/lib/trial"
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { ready, user } = useAuth()
@@ -16,6 +17,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (!user) {
       const next = encodeURIComponent(pathname || "/studio")
       router.replace(`/masuk?next=${next}`)
+      return
+    }
+    if (isTrialExpired(user.trialStartedAt)) {
+      router.replace("/trial-berakhir")
     }
   }, [pathname, ready, router, user])
 
@@ -30,6 +35,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         </div>
       </>
     )
+  }
+
+  if (isTrialExpired(user.trialStartedAt)) {
+    return <StudioLoading />
   }
 
   return <>{children}</>

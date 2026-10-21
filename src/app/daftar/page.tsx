@@ -66,8 +66,8 @@ export default function RegisterPage() {
         </Link>
         <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Mulai kelola jadwal, klien, invoice, dan keuangan bisnis kamu dalam
-          satu tempat.
+          Coba gratis selama 14 hari. Kelola jadwal, klien, invoice, dan
+          keuangan bisnis kamu dalam satu tempat.
         </p>
       </div>
 

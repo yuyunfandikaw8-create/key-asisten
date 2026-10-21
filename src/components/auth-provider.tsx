@@ -20,6 +20,7 @@ import {
   type StoredAccount,
 } from "@/lib/auth"
 import { supabase, supabaseConfigured } from "@/lib/supabase"
+import { nowIso } from "@/lib/trial"
 
 type AuthResult = { ok: true; user: AuthUser } | { ok: false; error: string }
 
@@ -82,6 +83,10 @@ function userFromMetadata(
     (typeof metadata?.studioName === "string" && metadata.studioName) ||
     name
   const phone = typeof metadata?.phone === "string" ? metadata.phone : ""
+  const trialStartedAt =
+    typeof metadata?.trial_started_at === "string" && metadata.trial_started_at
+      ? metadata.trial_started_at
+      : nowIso()
   return {
     id,
     email,
@@ -90,7 +95,23 @@ function userFromMetadata(
     studioName,
     phone,
     provider,
+    trialStartedAt,
   }
+}
+
+function withTrial(user: AuthUser): AuthUser {
+  if (user.trialStartedAt) return user
+  return { ...user, trialStartedAt: nowIso() }
+}
+
+function persistAccountTrial(email: string, trialStartedAt: string) {
+  const accounts = readAccounts()
+  const index = accounts.findIndex((item) => item.email === normalizeEmail(email))
+  if (index < 0) return
+  if (accounts[index].trialStartedAt) return
+  const next = [...accounts]
+  next[index] = { ...next[index], trialStartedAt }
+  writeAccounts(next)
 }
 
 function isDemoEmail(email: string) {
@@ -116,7 +137,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!raw) return false
         const parsed = JSON.parse(raw) as AuthUser
         if (parsed?.email && parsed?.id) {
-          setUser({ ...parsed, provider: parsed.provider ?? "password" })
+          const next = withTrial({
+            ...parsed,
+            provider: parsed.provider ?? "password",
+          })
+          setUser(next)
+          persistAccountTrial(next.email, next.trialStartedAt!)
           return true
         }
       } catch {
@@ -225,7 +251,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (localAccount.password !== pass) {
             return { ok: false, error: "Kata sandi salah." }
           }
-          const publicUser = toPublicUser(localAccount)
+          const publicUser = withTrial(toPublicUser(localAccount))
+          if (!localAccount.trialStartedAt && publicUser.trialStartedAt) {
+            persistAccountTrial(publicUser.email, publicUser.trialStartedAt)
+          }
           setUser(publicUser)
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
           return { ok: true, user: publicUser }
@@ -238,11 +267,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               password: pass,
             })
             if (!error && data.user?.email) {
-              const publicUser = userFromMetadata(
-                data.user.id,
-                data.user.email,
-                data.user.user_metadata as Record<string, unknown>,
-                "password"
+              const publicUser = withTrial(
+                userFromMetadata(
+                  data.user.id,
+                  data.user.email,
+                  data.user.user_metadata as Record<string, unknown>,
+                  "password"
+                )
               )
               setUser(publicUser)
               return { ok: true, user: publicUser }
@@ -263,6 +294,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           studioName: name,
           password: pass,
           provider: "password",
+          trialStartedAt: nowIso(),
         }
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)
@@ -284,6 +316,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, error: "Email ini sudah terdaftar. Silakan masuk." }
         }
 
+        const trialStartedAt = nowIso()
         const account: StoredAccount = {
           id: crypto.randomUUID(),
           name: input.name.trim(),
@@ -293,6 +326,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           studioName: input.studioName.trim() || input.name.trim(),
           password: input.password.trim(),
           provider: "password",
+          trialStartedAt,
         }
 
         // Langsung aktif di browser supaya tidak menunggu konfirmasi email Supabase.
@@ -311,6 +345,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 phone: input.phone.trim(),
                 city: input.city.trim() || "Bandung",
                 studio_name: input.studioName.trim() || input.name.trim(),
+                trial_started_at: trialStartedAt,
               },
               emailRedirectTo:
                 typeof window !== "undefined" ? `${window.location.origin}/masuk` : undefined,
@@ -328,11 +363,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const accounts = readAccounts()
         const existing = accounts.find((item) => item.email === email)
         if (existing) {
-          const publicUser = toPublicUser({
-            ...existing,
-            provider: "google",
-            name: existing.name || choice.name,
-          })
+          const publicUser = withTrial(
+            toPublicUser({
+              ...existing,
+              provider: "google",
+              name: existing.name || choice.name,
+            })
+          )
+          if (!existing.trialStartedAt && publicUser.trialStartedAt) {
+            persistAccountTrial(publicUser.email, publicUser.trialStartedAt)
+          }
           setUser(publicUser)
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
           return { ok: true, user: publicUser }
@@ -347,6 +387,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password: `google:${email}`,
           provider: "google",
           avatar: choice.initial,
+          trialStartedAt: nowIso(),
         }
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)

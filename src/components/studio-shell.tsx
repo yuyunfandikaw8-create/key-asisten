@@ -29,6 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  TRIAL_DAYS,
+  formatTrialEndsAt,
+  getTrialDaysRemaining,
+  trialStatusLabel,
+} from "@/lib/trial"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -144,6 +150,9 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, logout } = useAuth()
   const { reset, notice, dismissNotice, city } = useStudio()
+  const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
+  const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
+  const trialUrgent = trialDaysLeft > 0 && trialDaysLeft <= 3
 
   return (
     <div className="min-h-screen bg-background">
@@ -156,6 +165,23 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             {user?.studioName ?? studio.name}
             {user ? ` · ${user.name}` : null}
           </span>
+          {user ? (
+            <span
+              className={cn(
+                "hidden rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide sm:inline",
+                trialUrgent
+                  ? "bg-[oklch(0.94_0.05_55)] text-[oklch(0.42_0.1_45)]"
+                  : "bg-accent text-primary"
+              )}
+              title={
+                trialEndsLabel
+                  ? `Trial ${TRIAL_DAYS} hari sampai ${trialEndsLabel}`
+                  : `Trial ${TRIAL_DAYS} hari`
+              }
+            >
+              {trialStatusLabel(user.trialStartedAt)}
+            </span>
+          ) : null}
           <div className="ml-auto flex items-center gap-2">
             <CityPicker />
             <Link
@@ -187,6 +213,13 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           <SideNav />
         </Suspense>
         <div className="studio-main min-w-0 pb-20 md:pb-0">
+          {user && trialDaysLeft > 0 && trialDaysLeft <= 3 ? (
+            <div className="mb-4 rounded-xl bg-[oklch(0.96_0.04_55)] px-4 py-3 text-sm text-[oklch(0.38_0.08_45)] ring-1 ring-[oklch(0.85_0.06_55)]">
+              Masa trial kamu tinggal {trialDaysLeft} hari
+              {trialEndsLabel ? ` (sampai ${trialEndsLabel})` : null}. Hubungi kami sebelum
+              akses studio dinonaktifkan.
+            </div>
+          ) : null}
           {notice ? (
             <div className="mb-4 flex items-start justify-between gap-3 rounded-xl bg-accent px-4 py-3 text-sm">
               <p>{notice}</p>
@@ -197,6 +230,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           ) : null}
           <p className="mb-4 text-xs text-muted-foreground md:hidden">
             Lokasi aktif: {city}. Partner dan inbox mengikuti kota ini.
+            {user ? ` · ${trialStatusLabel(user.trialStartedAt)}.` : null}
           </p>
           {children}
         </div>

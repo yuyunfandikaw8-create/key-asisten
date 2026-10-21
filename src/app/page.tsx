@@ -77,6 +77,11 @@ const roles = [
 
 const faqs = [
   {
+    q: "⏱️ Berapa lama masa trial-nya?",
+    lead: "Setiap akun baru mendapat trial gratis 14 hari.",
+    a: "Setelah daftar, kamu bisa memakai seluruh fitur studio selama 14 hari. Sisa hari trial ditampilkan di dalam aplikasi. Ketika masa trial berakhir, akses studio dinonaktifkan sampai kamu melanjutkan langganan.",
+  },
+  {
     q: "💬 Apa yang bisa saya coba sekarang?",
     lead: "Langsung coba tanpa harus mulai dari nol.",
     a: "Key Assistant sudah dilengkapi data seperti jadwal, data klien, koleksi gaun, invoice, dan pricelist. Kamu bisa langsung mencoba alurnya dan melihat bagaimana pekerjaan administrasi menjadi lebih cepat dan rapi.",
@@ -150,7 +155,7 @@ export default function HomePage() {
             <p className="mt-3 text-sm text-muted-foreground">
               Belum punya akun?{" "}
               <Link href="/daftar" className="font-medium text-primary hover:underline">
-                Daftar
+                Daftar — coba gratis 14 hari
               </Link>
             </p>
             <p className="font-script mt-6 text-2xl text-primary sm:text-3xl">
@@ -298,18 +303,18 @@ export default function HomePage() {
               Siap membuat pekerjaan jadi lebih rapi?
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-primary-foreground/85 sm:text-lg">
-              Coba Key Assistant dan lihat bagaimana jadwal, invoice, keuangan,
-              serta kebutuhan klien bisa dikelola dalam satu tempat.
+              Mulai trial gratis 14 hari dan lihat bagaimana jadwal, invoice,
+              keuangan, serta kebutuhan klien bisa dikelola dalam satu tempat.
             </p>
             <div className="mt-6">
               <Link
-                href="/masuk"
+                href="/daftar"
                 className={cn(
                   buttonVariants({ size: "lg", variant: "secondary" }),
                   "h-11 rounded-2xl px-5"
                 )}
               >
-                Coba Key Assistant
+                Mulai trial 14 hari
               </Link>
             </div>
           </div>

@@ -9,6 +9,8 @@ export type AuthUser = {
   studioName: string
   provider: AuthProviderKind
   avatar?: string
+  /** ISO timestamp when the 14-day trial began */
+  trialStartedAt?: string
 }
 
 export type StoredAccount = AuthUser & {
