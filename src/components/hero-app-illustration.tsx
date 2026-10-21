@@ -73,7 +73,7 @@ const floatCards: {
     title: "Invoice",
     body: "Kirim invoice dan pantau pembayaran klien.",
     icon: FileText,
-    className: "hero-float hero-float--c left-[22%] bottom-1 z-30 lg:left-[24%] lg:bottom-0",
+    className: "hero-float hero-float--c left-[36%] bottom-1 z-20 lg:left-[40%] lg:bottom-0",
   },
   {
     title: "Keuangan",
@@ -315,7 +315,7 @@ export function HeroAppIllustration() {
           <div className="mx-auto h-1.5 w-[70%] rounded-b-xl bg-[oklch(0.75_0.015_20)]" />
         </div>
 
-        <div className="hero-phone absolute -bottom-2 left-1 z-30 w-[30%] max-w-[7rem] sm:bottom-1 sm:left-3 sm:w-[26%] sm:max-w-[8.25rem]">
+        <div className="hero-phone absolute -bottom-2 -left-1 z-30 w-[30%] max-w-[7rem] sm:bottom-1 sm:-left-3 sm:w-[26%] sm:max-w-[8.25rem]">
           <div className="rounded-[1.15rem] border-[3px] border-[oklch(0.28_0.02_20)] bg-[oklch(0.22_0.02_20)] p-1 shadow-[0_18px_36px_oklch(0.35_0.05_20_/0.28)]">
             <div className="overflow-hidden rounded-[0.85rem] bg-white">
               <div className="aspect-[9/17]">
