@@ -99,7 +99,7 @@ const faqs = [
   {
     q: "⏱️ Berapa lama masa trial-nya?",
     lead: "Setiap akun baru mendapat trial gratis 14 hari.",
-    a: "Setelah daftar, kamu bisa memakai seluruh fitur studio selama 14 hari. Sisa hari trial ditampilkan di dalam aplikasi. Ketika masa trial berakhir, akses studio dinonaktifkan sampai kamu melanjutkan langganan.",
+    a: "Setelah daftar, kamu bisa memakai seluruh fitur Key Assistant selama 14 hari. Sisa hari trial ditampilkan di dalam aplikasi. Ketika masa trial berakhir, akses penuh Key Assistant akan dinonaktifkan sementara sampai kamu melanjutkan berlangganan.",
   },
   {
     q: "💬 Apa yang bisa saya coba sekarang?",
