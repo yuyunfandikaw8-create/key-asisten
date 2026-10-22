@@ -126,6 +126,40 @@ export function InvoiceDetail() {
         <StatusBadge status={paymentStatus(booking)} />
       </div>
 
+      <div className="no-print grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <Label htmlFor="invoice-tanggal">Tanggal jadwal</Label>
+          <Input
+            id="invoice-tanggal"
+            type="date"
+            value={booking.date}
+            onChange={(event) => {
+              const next = event.target.value
+              if (!next) return
+              updateBooking(booking.id, { date: next })
+            }}
+            className="h-10"
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="invoice-jam">Jam</Label>
+          <Input
+            id="invoice-jam"
+            type="time"
+            value={booking.time}
+            onChange={(event) => {
+              const next = event.target.value
+              if (!next) return
+              updateBooking(booking.id, { time: next })
+            }}
+            className="h-10"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground sm:col-span-2">
+          Ubah tanggal atau jam di sini — jadwal dan isi invoice ikut berubah.
+        </p>
+      </div>
+
       <article className="invoice-sheet mx-auto w-full max-w-3xl overflow-hidden rounded-[1.75rem] bg-white text-[oklch(0.32_0.03_40)] shadow-sm ring-1 ring-[oklch(0.88_0.03_20)]">
         <div className="relative px-6 py-8 sm:px-10 sm:py-10">
           <div
