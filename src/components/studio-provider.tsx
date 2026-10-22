@@ -25,10 +25,13 @@ import type {
 
 const STORAGE_PREFIX = "key-assistant.studio.v1"
 
+type StudioViewMode = "real" | "demo"
+
 type StudioContextValue = {
   ready: boolean
   notice: string | null
   dismissNotice: () => void
+  viewMode: StudioViewMode
   city: string
   setCity: (city: string) => void
   bookings: Booking[]
@@ -46,6 +49,8 @@ type StudioContextValue = {
   removeCombo: (id: string) => void
   sendMessage: (partnerId: string, body: string) => void
   markThreadRead: (partnerId: string) => void
+  showDemo: () => void
+  showReal: () => void
   reset: () => void
   clearStudio: () => void
 }
@@ -54,6 +59,10 @@ const StudioContext = createContext<StudioContextValue | null>(null)
 
 function storageKeyFor(userId: string | null) {
   return `${STORAGE_PREFIX}:${userId ?? "guest"}`
+}
+
+function previewFlagKey(storageKey: string) {
+  return `${storageKey}:preview-done`
 }
 
 function normalizeState(parsed: Partial<StudioState>, fallbackCity: string): StudioState {
@@ -68,18 +77,22 @@ function normalizeState(parsed: Partial<StudioState>, fallbackCity: string): Stu
   }
 }
 
-function readStoredState(key: string, fallbackCity: string): StudioState {
+function readStoredState(key: string, fallbackCity: string): StudioState | null {
   try {
     const raw = localStorage.getItem(key)
-    if (!raw) return createEmptyStudio(fallbackCity)
+    if (!raw) return null
     const parsed = JSON.parse(raw) as Partial<StudioState>
     if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
-      return createEmptyStudio(fallbackCity)
+      return null
     }
     return normalizeState(parsed, fallbackCity)
   } catch {
-    return createEmptyStudio(fallbackCity)
+    return null
   }
+}
+
+function sampleState(city: string): StudioState {
+  return { ...createSeed(), city }
 }
 
 export function StudioProvider({ children }: { children: ReactNode }) {
@@ -87,39 +100,118 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const userId = user?.id ?? null
   const userCity = user?.city ?? "Bandung"
   const [state, setState] = useState<StudioState | null>(null)
+  const [viewMode, setViewMode] = useState<StudioViewMode>("real")
   const [ready, setReady] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [storageKey, setStorageKey] = useState<string | null>(null)
   const skipPersist = useRef(false)
+  const viewModeRef = useRef<StudioViewMode>("real")
+  const stateRef = useRef<StudioState | null>(null)
+  const storageKeyRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    viewModeRef.current = viewMode
+  }, [viewMode])
+
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
+  useEffect(() => {
+    storageKeyRef.current = storageKey
+  }, [storageKey])
 
   useEffect(() => {
     if (!authReady) return
     const key = storageKeyFor(userId)
+    const city = user?.city ?? "Bandung"
+    const stored = readStoredState(key, city)
+    const previewDone = localStorage.getItem(previewFlagKey(key)) === "1"
+
     skipPersist.current = true
-    setState(readStoredState(key, user?.city ?? "Bandung"))
     setStorageKey(key)
+
+    if (!stored && !previewDone) {
+      setViewMode("demo")
+      setState(sampleState(city))
+      setNotice(
+        "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk mulai dengan data real."
+      )
+    } else {
+      setViewMode("real")
+      setState(stored ?? createEmptyStudio(city))
+    }
+
     setReady(true)
-    // Avoid writing the previous account's state into the new key during switch.
     window.setTimeout(() => {
       skipPersist.current = false
     }, 0)
-    // Only reload when the signed-in account changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- user.city used only for first empty create
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, userId])
 
   useEffect(() => {
     if (!ready || !state || !storageKey || skipPersist.current) return
+    if (viewMode !== "real") return
     localStorage.setItem(storageKey, JSON.stringify(state))
-  }, [ready, state, storageKey])
+  }, [ready, state, storageKey, viewMode])
 
   const value = useMemo<StudioContextValue>(() => {
+    function leaveDemoForReal(message?: string) {
+      const key = storageKeyRef.current
+      const city = stateRef.current?.city ?? userCity
+      const stored = key ? readStoredState(key, city) : null
+      const real = stored ?? createEmptyStudio(city)
+      skipPersist.current = true
+      viewModeRef.current = "real"
+      setViewMode("real")
+      setState(real)
+      stateRef.current = real
+      if (key) localStorage.setItem(previewFlagKey(key), "1")
+      if (message) setNotice(message)
+      window.setTimeout(() => {
+        skipPersist.current = false
+      }, 0)
+      return real
+    }
+
+    function withRealBase(updater: (base: StudioState) => StudioState) {
+      let base = stateRef.current ?? createEmptyStudio(userCity)
+      if (viewModeRef.current === "demo") {
+        base = leaveDemoForReal(
+          "Kamu mulai mengedit — beralih ke data saya (real). Data contoh tidak diubah."
+        )
+      }
+      const next = updater(base)
+      stateRef.current = next
+      setState(next)
+      return next
+    }
+
+    function enterDemo() {
+      const city = stateRef.current?.city ?? userCity
+      if (viewModeRef.current === "real" && stateRef.current && storageKeyRef.current) {
+        localStorage.setItem(storageKeyRef.current, JSON.stringify(stateRef.current))
+      }
+      const demo = sampleState(city)
+      skipPersist.current = true
+      viewModeRef.current = "demo"
+      setViewMode("demo")
+      setState(demo)
+      stateRef.current = demo
+      setNotice("Menampilkan data contoh. Data real kamu aman. Klik “Data saya” untuk kembali.")
+      window.setTimeout(() => {
+        skipPersist.current = false
+      }, 0)
+    }
+
     return {
       ready,
       notice,
       dismissNotice: () => setNotice(null),
+      viewMode,
       city: state?.city ?? userCity,
       setCity: (city) => {
-        setState((current) => (current ? { ...current, city } : current))
+        withRealBase((base) => ({ ...base, city }))
         setNotice(`Lokasi aktif diganti ke ${city}. Partner dan inbox hanya menampilkan kota ini.`)
       },
       bookings: state?.bookings ?? [],
@@ -133,38 +225,26 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
         }
-        setState((current) =>
-          current ? { ...current, bookings: [booking, ...current.bookings] } : current
-        )
+        withRealBase((base) => ({ ...base, bookings: [booking, ...base.bookings] }))
         return booking
       },
       updateBooking: (id, patch) => {
-        setState((current) =>
-          current
-            ? {
-                ...current,
-                bookings: current.bookings.map((booking) =>
-                  booking.id === id ? { ...booking, ...patch } : booking
-                ),
-              }
-            : current
-        )
+        withRealBase((base) => ({
+          ...base,
+          bookings: base.bookings.map((booking) =>
+            booking.id === id ? { ...booking, ...patch } : booking
+          ),
+        }))
       },
       removeBooking: (id) => {
-        setState((current) =>
-          current
-            ? {
-                ...current,
-                bookings: current.bookings.filter((booking) => booking.id !== id),
-              }
-            : current
-        )
+        withRealBase((base) => ({
+          ...base,
+          bookings: base.bookings.filter((booking) => booking.id !== id),
+        }))
       },
       addExpense: (input) => {
         const expense: Expense = { ...input, id: crypto.randomUUID() }
-        setState((current) =>
-          current ? { ...current, expenses: [expense, ...current.expenses] } : current
-        )
+        withRealBase((base) => ({ ...base, expenses: [expense, ...base.expenses] }))
       },
       invitePartner: (partnerId, note, accepted) => {
         const next: Partnership = {
@@ -173,23 +253,18 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           note,
           createdAt: new Date().toISOString(),
         }
-        setState((current) => {
-          if (!current) return current
-          const rest = current.partnerships.filter((item) => item.partnerId !== partnerId)
-          return { ...current, partnerships: [next, ...rest] }
+        withRealBase((base) => {
+          const rest = base.partnerships.filter((item) => item.partnerId !== partnerId)
+          return { ...base, partnerships: [next, ...rest] }
         })
       },
       acceptPartner: (partnerId) => {
-        setState((current) =>
-          current
-            ? {
-                ...current,
-                partnerships: current.partnerships.map((item) =>
-                  item.partnerId === partnerId ? { ...item, status: "diterima" } : item
-                ),
-              }
-            : current
-        )
+        withRealBase((base) => ({
+          ...base,
+          partnerships: base.partnerships.map((item) =>
+            item.partnerId === partnerId ? { ...item, status: "diterima" } : item
+          ),
+        }))
       },
       addCombo: (input) => {
         const combo: Combo = {
@@ -197,17 +272,14 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
         }
-        setState((current) =>
-          current ? { ...current, combos: [combo, ...current.combos] } : current
-        )
+        withRealBase((base) => ({ ...base, combos: [combo, ...base.combos] }))
         return combo
       },
       removeCombo: (id) => {
-        setState((current) =>
-          current
-            ? { ...current, combos: current.combos.filter((combo) => combo.id !== id) }
-            : current
-        )
+        withRealBase((base) => ({
+          ...base,
+          combos: base.combos.filter((combo) => combo.id !== id),
+        }))
       },
       sendMessage: (partnerId, body) => {
         const partner = partnerById(partnerId)
@@ -221,12 +293,11 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           createdAt: new Date().toISOString(),
           read: true,
         }
-        setState((current) =>
-          current ? { ...current, messages: [...current.messages, outbound] } : current
-        )
+        withRealBase((base) => ({ ...base, messages: [...base.messages, outbound] }))
 
         if (partner.repliesFast) {
           window.setTimeout(() => {
+            if (viewModeRef.current === "demo") return
             const reply: InboxMessage = {
               id: crypto.randomUUID(),
               partnerId,
@@ -236,23 +307,25 @@ export function StudioProvider({ children }: { children: ReactNode }) {
               createdAt: new Date().toISOString(),
               read: false,
             }
-            setState((current) =>
-              current ? { ...current, messages: [...current.messages, reply] } : current
-            )
+            setState((current) => {
+              if (!current) return current
+              const next = { ...current, messages: [...current.messages, reply] }
+              stateRef.current = next
+              return next
+            })
           }, 700)
         }
       },
       markThreadRead: (partnerId) => {
-        setState((current) => {
-          if (!current) return current
-          const needsUpdate = current.messages.some(
+        withRealBase((base) => {
+          const needsUpdate = base.messages.some(
             (message) =>
               message.partnerId === partnerId && message.sender === "partner" && !message.read
           )
-          if (!needsUpdate) return current
+          if (!needsUpdate) return base
           return {
-            ...current,
-            messages: current.messages.map((message) =>
+            ...base,
+            messages: base.messages.map((message) =>
               message.partnerId === partnerId && message.sender === "partner"
                 ? { ...message, read: true }
                 : message
@@ -260,17 +333,39 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           }
         })
       },
-      reset: () => {
-        const sample = createSeed()
-        setState({ ...sample, city: state?.city ?? userCity })
-        setNotice("Data contoh sudah dimuat. Booking dan laba contoh muncul di beranda.")
+      showDemo: enterDemo,
+      showReal: () => {
+        const key = storageKeyRef.current
+        const stored = key ? readStoredState(key, userCity) : null
+        const hasRealData = Boolean(
+          stored && (stored.bookings.length > 0 || stored.expenses.length > 0)
+        )
+        leaveDemoForReal(
+          hasRealData
+            ? "Kembali ke data saya (real)."
+            : "Kembali ke data saya. Studio siap diisi booking dan invoice asli."
+        )
       },
+      reset: enterDemo,
       clearStudio: () => {
-        setState(createEmptyStudio(state?.city ?? userCity))
-        setNotice("Data studio dikosongkan. Booking dan laba kembali nol.")
+        const city = stateRef.current?.city ?? userCity
+        const empty = createEmptyStudio(city)
+        skipPersist.current = true
+        viewModeRef.current = "real"
+        setViewMode("real")
+        setState(empty)
+        stateRef.current = empty
+        if (storageKeyRef.current) {
+          localStorage.setItem(storageKeyRef.current, JSON.stringify(empty))
+          localStorage.setItem(previewFlagKey(storageKeyRef.current), "1")
+        }
+        setNotice("Data real dikosongkan. Booking dan laba kembali nol.")
+        window.setTimeout(() => {
+          skipPersist.current = false
+        }, 0)
       },
     }
-  }, [notice, ready, state, userCity])
+  }, [notice, ready, state, userCity, viewMode])
 
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>
 }

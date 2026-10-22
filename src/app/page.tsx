@@ -129,7 +129,7 @@ const faqs: {
   {
     q: "💬 Apa yang bisa saya coba sekarang?",
     lead: "Langsung coba tanpa harus mulai dari nol.",
-    a: "Akun baru mulai dengan jadwal dan keuangan kosong. Kalau ingin melihat contoh alur kerja, kamu bisa memuat data contoh dari studio, lalu mencoba jadwal, invoice, dan pricelist.",
+    a: "Saat pertama masuk, kamu bisa melihat data contoh supaya paham bentuk studio yang sudah terisi. Klik “Data saya” untuk kembali ke data real milik akunmu. Data contoh tidak menimpa data real.",
   },
   {
     q: "📋 Bagaimana cara kerja fitur Tempel Chat?",

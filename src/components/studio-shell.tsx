@@ -13,6 +13,7 @@ import {
   LogOut,
   RotateCcw,
   Shirt,
+  UserRound,
   Wallet,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -139,7 +140,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, logout } = useAuth()
   const brand = studioBrand(user)
-  const { reset, notice, dismissNotice, city } = useStudio()
+  const { showDemo, showReal, viewMode, notice, dismissNotice, city } = useStudio()
   const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
   const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
   const trialUrgent = trialDaysLeft > 0 && trialDaysLeft <= 3
@@ -179,9 +180,23 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             >
               Pricelist
             </Link>
-            <Button variant="outline" size="sm" onClick={reset}>
+            <Button
+              variant={viewMode === "demo" ? "default" : "outline"}
+              size="sm"
+              onClick={showDemo}
+              title="Lihat contoh studio yang sudah terisi"
+            >
               <RotateCcw />
               <span className="hidden sm:inline">Data contoh</span>
+            </Button>
+            <Button
+              variant={viewMode === "real" ? "default" : "outline"}
+              size="sm"
+              onClick={showReal}
+              title="Kembali ke data real akun ini"
+            >
+              <UserRound />
+              <span className="hidden sm:inline">Data saya</span>
             </Button>
             <Button
               variant="outline"
@@ -207,6 +222,17 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               Masa trial kamu tinggal {trialDaysLeft} hari
               {trialEndsLabel ? ` (sampai ${trialEndsLabel})` : null}. Hubungi kami sebelum
               akses studio dinonaktifkan.
+            </div>
+          ) : null}
+          {viewMode === "demo" ? (
+            <div className="mb-4 flex flex-col gap-2 rounded-xl bg-[oklch(0.96_0.03_75)] px-4 py-3 text-sm text-[oklch(0.4_0.08_55)] ring-1 ring-[oklch(0.88_0.05_55)] sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                Mode <span className="font-semibold">data contoh</span> — hanya untuk melihat
+                tampilan studio terisi. Data real tidak berubah.
+              </p>
+              <Button size="sm" variant="outline" className="bg-card" onClick={showReal}>
+                Ke data saya
+              </Button>
             </div>
           ) : null}
           {notice ? (
