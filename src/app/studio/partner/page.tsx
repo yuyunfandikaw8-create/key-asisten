@@ -355,7 +355,7 @@ export default function PartnerPage() {
               />
             </div>
             <div className="grid gap-1.5">
-              <Label>Paket rias Laras</Label>
+              <Label>Paket rias studio</Label>
               <Select value={packageId} onValueChange={(value) => setPackageId(value ?? "adat")}>
                 <SelectTrigger className="h-10 w-full">
                   <SelectValue>

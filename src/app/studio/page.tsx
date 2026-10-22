@@ -209,9 +209,7 @@ export default function StudioHomePage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {greeting()} · {formatDate(todayISO())}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {studio.owner} · {city}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{city}</p>
           {counts.partial > 0 ? (
             <p className="mt-2 text-sm text-primary">
               {counts.partial} tagihan belum lunas · {reminders.length} perlu ditagih H-7

@@ -42,7 +42,7 @@ const scheduleRows = [
   {
     time: "16.30",
     title: "Paket Adat",
-    client: "Laras · Akad",
+    client: "Ayu · Akad",
     status: "Menunggu",
     tone: "wait",
   },

@@ -34,7 +34,7 @@ export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v1"
 export const DEMO_ACCOUNTS: StoredAccount[] = [
   {
     id: "user-laras",
-    name: "Laras Ayu",
+    name: "Key Partner",
     email: "laras@riasaja.id",
     phone: "081223334455",
     city: "Bandung",
@@ -58,12 +58,12 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
 export const GOOGLE_CHOICES: GoogleChoice[] = [
   {
     id: "gmail-laras",
-    name: "Laras Ayu",
-    email: "laras.bridal@gmail.com",
+    name: "Key Partner",
+    email: "key.partner@gmail.com",
     city: "Bandung",
     studioName: "Key Partner",
     phone: "081223334455",
-    initial: "L",
+    initial: "K",
     tone: "bg-[oklch(0.55_0.14_25)] text-white",
   },
   {

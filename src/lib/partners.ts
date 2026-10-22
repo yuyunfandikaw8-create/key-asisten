@@ -324,7 +324,7 @@ export function initialCollaboration(): {
       {
         partnerId: "baju-lemari",
         status: "diminta",
-        note: "Mau tahan kebaya adat untuk klien Laras.",
+        note: "Mau tahan kebaya adat untuk klien akad.",
         createdAt: new Date(now - 86_400_000).toISOString(),
       },
     ],
@@ -346,7 +346,7 @@ export function initialCollaboration(): {
         partnerId: "dekor-rumah-bunga",
         city: "Bandung",
         sender: "partner",
-        body: "Laras, tanggal 20 Nov pelaminan kayu masih kosong. Mau kita kunci untuk akad Sunda?",
+        body: "Tanggal 20 Nov pelaminan kayu masih kosong. Mau kita kunci untuk akad Sunda?",
         createdAt: new Date(now - 3_600_000 * 5).toISOString(),
         read: false,
       },

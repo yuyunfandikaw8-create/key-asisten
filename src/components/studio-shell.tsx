@@ -151,7 +151,6 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           </Link>
           <span className="hidden min-w-0 truncate text-sm text-muted-foreground lg:inline">
             {user?.studioName ?? studio.name}
-            {user ? ` · ${user.name}` : null}
           </span>
           {user ? (
             <span

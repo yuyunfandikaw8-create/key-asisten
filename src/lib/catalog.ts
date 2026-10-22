@@ -6,13 +6,13 @@ export const studio = {
   slug: "laras",
   name: "Key Partner",
   city: "Bandung",
-  owner: "Laras Ayu",
+  owner: "Key Partner",
   phone: "081223334455",
-  instagram: "@laras.bridal",
+  instagram: "@key.partner",
   address: "Jl. Ir. H. Juanda No. 18, Bandung",
   bio: "Rias pengantin, adat, dan wisuda. Jadwal dikunci supaya gaun dan jam tidak bentrok.",
   bank: "Bank Central Asia",
-  accountName: "Laras Ayu",
+  accountName: "Key Partner",
   accountNumber: "8822100345",
 }
 
