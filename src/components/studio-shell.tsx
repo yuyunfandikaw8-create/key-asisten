@@ -169,7 +169,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               {trialStatusLabel(user.trialStartedAt)}
             </span>
           ) : null}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="relative z-50 ml-auto flex items-center gap-2 pointer-events-auto">
             <CityPicker />
             <Link
               href={`/p/${studio.slug}`}
