@@ -39,16 +39,24 @@ import {
   conflictLabel,
   conflictPairs,
   financeSummary,
+  incomePeriodTitle,
+  incomeSeries,
   lateAttire,
-  monthlyIncomeSeries,
   paymentStatus,
   sortBookings,
+  type IncomePeriod,
 } from "@/lib/metrics"
 import { partners } from "@/lib/partners"
 import type { Booking } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-function ProfitSparkline({ values }: { values: number[] }) {
+function ProfitSparkline({
+  values,
+  labels,
+}: {
+  values: number[]
+  labels?: string[]
+}) {
   const width = 220
   const height = 72
   const max = Math.max(...values, 1)
@@ -60,25 +68,41 @@ function ProfitSparkline({ values }: { values: number[] }) {
     })
     .join(" ")
 
+  const showEdgeLabels = Boolean(labels && labels.length >= 2)
+
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-16 w-full max-w-[220px]" aria-hidden>
-      <polyline
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points}
-        opacity={0.95}
-      />
-      {values.map((value, index) => {
-        const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width
-        const y = height - (value / max) * (height - 8) - 4
-        return <circle key={`${index}-${value}`} cx={x} cy={y} r="3" fill="currentColor" />
-      })}
-    </svg>
+    <div className="w-full max-w-[220px]">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-16 w-full" aria-hidden>
+        <polyline
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          points={points}
+          opacity={0.95}
+        />
+        {values.map((value, index) => {
+          const x = values.length === 1 ? width / 2 : (index / (values.length - 1)) * width
+          const y = height - (value / max) * (height - 8) - 4
+          return <circle key={`${index}-${value}`} cx={x} cy={y} r="3" fill="currentColor" />
+        })}
+      </svg>
+      {showEdgeLabels ? (
+        <div className="mt-1 flex justify-between text-[10px] opacity-70">
+          <span>{labels![0]}</span>
+          <span>{labels![labels!.length - 1]}</span>
+        </div>
+      ) : null}
+    </div>
   )
 }
+
+const INCOME_PERIODS: { id: IncomePeriod; label: string }[] = [
+  { id: "minggu", label: "Minggu" },
+  { id: "bulan", label: "Bulan" },
+  { id: "tahun", label: "Tahun" },
+]
 
 type AgendaTone = "done" | "progress" | "wait"
 
@@ -125,10 +149,16 @@ export default function StudioHomePage() {
   const brand = studioBrand(user)
   const { ready, city, bookings, expenses, partnerships, combos, messages } = useStudio()
   const [selectedDate, setSelectedDate] = useState(() => todayISO())
+  const [incomePeriod, setIncomePeriod] = useState<IncomePeriod>("bulan")
 
   const markedDates = useMemo(
     () => [...new Set(bookings.map((booking) => booking.date))],
     [bookings]
+  )
+
+  const series = useMemo(
+    () => incomeSeries(bookings, incomePeriod, todayISO()),
+    [bookings, incomePeriod]
   )
 
   if (!ready) return <StudioLoading />
@@ -137,7 +167,6 @@ export default function StudioHomePage() {
   const unreadInbox = messages.filter(
     (message) => message.city === city && message.sender === "partner" && !message.read
   ).length
-  const series = monthlyIncomeSeries(bookings, 6, todayISO())
   const counts = {
     all: bookings.length,
     dp: bookings.filter((booking) => paymentStatus(booking) === "belum_dp").length,
@@ -245,8 +274,38 @@ export default function StudioHomePage() {
             </div>
           </div>
           <div className="opacity-95">
-            <p className="mb-1 text-right text-xs opacity-75">Pemasukan 6 bulan</p>
-            <ProfitSparkline values={series.map((item) => item.value)} />
+            <div className="mb-2 flex flex-col items-end gap-2">
+              <p className="text-xs opacity-75">{incomePeriodTitle(incomePeriod)}</p>
+              <div
+                className="inline-flex rounded-full bg-black/15 p-0.5 text-[11px] font-medium"
+                role="group"
+                aria-label="Periode pemasukan"
+              >
+                {INCOME_PERIODS.map((period) => {
+                  const active = incomePeriod === period.id
+                  return (
+                    <button
+                      key={period.id}
+                      type="button"
+                      onClick={() => setIncomePeriod(period.id)}
+                      className={cn(
+                        "rounded-full px-2.5 py-1 transition",
+                        active
+                          ? "bg-white text-primary shadow-sm"
+                          : "text-white/80 hover:text-white"
+                      )}
+                      aria-pressed={active}
+                    >
+                      {period.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <ProfitSparkline
+              values={series.map((item) => item.value)}
+              labels={series.map((item) => item.label)}
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 border-t border-white/15 bg-black/5 text-sm sm:grid-cols-4">

@@ -135,6 +135,21 @@ export function monthKey(iso: string) {
   return iso.slice(0, 7)
 }
 
+export function yearKey(iso: string) {
+  return iso.slice(0, 4)
+}
+
+/** Senin sebagai awal minggu (ISO-style), kunci = tanggal Senin YYYY-MM-DD. */
+export function weekKey(iso: string) {
+  const date = new Date(`${iso}T12:00:00`)
+  const day = date.getDay() // 0 = Minggu
+  const offset = day === 0 ? -6 : 1 - day
+  date.setDate(date.getDate() + offset)
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const dayNum = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${month}-${dayNum}`
+}
+
 export function recentMonths(count = 4, anchor = todayISO()) {
   const keys: string[] = []
   const cursor = new Date(`${anchor}T12:00:00`)
@@ -148,13 +163,119 @@ export function recentMonths(count = 4, anchor = todayISO()) {
   return keys
 }
 
-export function monthlyIncomeSeries(bookings: Booking[], count = 6, anchor = todayISO()) {
+export function recentWeeks(count = 8, anchor = todayISO()) {
+  const keys: string[] = []
+  const start = weekKey(anchor)
+  const cursor = new Date(`${start}T12:00:00`)
+  for (let index = count - 1; index >= 0; index -= 1) {
+    const date = new Date(cursor)
+    date.setDate(cursor.getDate() - index * 7)
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    keys.push(`${date.getFullYear()}-${month}-${day}`)
+  }
+  return keys
+}
+
+export function recentYears(count = 5, anchor = todayISO()) {
+  const year = Number(yearKey(anchor))
+  const keys: string[] = []
+  for (let index = count - 1; index >= 0; index -= 1) {
+    keys.push(String(year - index))
+  }
+  return keys
+}
+
+const MONTH_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+]
+
+function weekLabel(mondayIso: string) {
+  const date = new Date(`${mondayIso}T12:00:00`)
+  return `${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`
+}
+
+function monthLabel(key: string) {
+  const monthIndex = Number(key.slice(5, 7)) - 1
+  return MONTH_SHORT[monthIndex] ?? key.slice(5)
+}
+
+export type IncomePeriod = "minggu" | "bulan" | "tahun"
+
+export type IncomeSeriesPoint = {
+  key: string
+  label: string
+  value: number
+}
+
+export function monthlyIncomeSeries(
+  bookings: Booking[],
+  count = 6,
+  anchor = todayISO()
+): IncomeSeriesPoint[] {
   const keys = recentMonths(count, anchor)
   return keys.map((key) => ({
     key,
-    label: key.slice(5),
+    label: monthLabel(key),
     value: bookings
       .filter((booking) => monthKey(booking.date) === key)
       .reduce((sum, booking) => sum + booking.paid, 0),
   }))
+}
+
+export function weeklyIncomeSeries(
+  bookings: Booking[],
+  count = 8,
+  anchor = todayISO()
+): IncomeSeriesPoint[] {
+  const keys = recentWeeks(count, anchor)
+  return keys.map((key) => ({
+    key,
+    label: weekLabel(key),
+    value: bookings
+      .filter((booking) => weekKey(booking.date) === key)
+      .reduce((sum, booking) => sum + booking.paid, 0),
+  }))
+}
+
+export function yearlyIncomeSeries(
+  bookings: Booking[],
+  count = 5,
+  anchor = todayISO()
+): IncomeSeriesPoint[] {
+  const keys = recentYears(count, anchor)
+  return keys.map((key) => ({
+    key,
+    label: key,
+    value: bookings
+      .filter((booking) => yearKey(booking.date) === key)
+      .reduce((sum, booking) => sum + booking.paid, 0),
+  }))
+}
+
+export function incomeSeries(
+  bookings: Booking[],
+  period: IncomePeriod,
+  anchor = todayISO()
+): IncomeSeriesPoint[] {
+  if (period === "minggu") return weeklyIncomeSeries(bookings, 8, anchor)
+  if (period === "tahun") return yearlyIncomeSeries(bookings, 5, anchor)
+  return monthlyIncomeSeries(bookings, 6, anchor)
+}
+
+export function incomePeriodTitle(period: IncomePeriod) {
+  if (period === "minggu") return "Pemasukan 8 minggu"
+  if (period === "tahun") return "Pemasukan 5 tahun"
+  return "Pemasukan 6 bulan"
 }
