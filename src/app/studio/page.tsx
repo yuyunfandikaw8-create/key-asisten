@@ -1,25 +1,30 @@
 "use client"
 
 import Link from "next/link"
+import { useMemo, useState } from "react"
 import {
   AlertTriangle,
   CalendarDays,
   ChevronRight,
+  FileText,
   Handshake,
   Inbox,
   Plus,
   Receipt,
   Shirt,
-  Sparkles,
+  Users,
+  Wallet,
 } from "lucide-react"
 
 import { EmptyState, StudioLoading, StatusBadge } from "@/components/studio-bits"
+import { StudioMonthCalendar } from "@/components/studio-month-calendar"
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { attireById, attires, packageById, studio } from "@/lib/catalog"
 import {
   daysUntil,
   EVENT_LABEL,
+  formatDate,
   formatShortDate,
   formatTime,
   greeting,
@@ -32,13 +37,13 @@ import {
   conflictLabel,
   conflictPairs,
   financeSummary,
-  isSameMonth,
   lateAttire,
   monthlyIncomeSeries,
   paymentStatus,
   sortBookings,
 } from "@/lib/metrics"
 import { partners } from "@/lib/partners"
+import type { Booking } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 function ProfitSparkline({ values }: { values: number[] }) {
@@ -73,8 +78,55 @@ function ProfitSparkline({ values }: { values: number[] }) {
   )
 }
 
+type AgendaTone = "done" | "progress" | "wait"
+
+function agendaStatus(booking: Booking, selectedDate: string): { label: string; tone: AgendaTone } {
+  const today = todayISO()
+  if (selectedDate < today) return { label: "Selesai", tone: "done" }
+  if (selectedDate > today) return { label: "Menunggu", tone: "wait" }
+
+  const now = new Date()
+  const minutesNow = now.getHours() * 60 + now.getMinutes()
+  const [hh = "0", mm = "0"] = booking.time.split(":")
+  const start = Number(hh) * 60 + Number(mm)
+  const end = start + 120
+
+  if (minutesNow >= end) return { label: "Selesai", tone: "done" }
+  if (minutesNow >= start) return { label: "Proses", tone: "progress" }
+  return { label: "Menunggu", tone: "wait" }
+}
+
+function AgendaStatusPill({ tone, children }: { tone: AgendaTone; children: string }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase",
+        tone === "done" && "bg-[oklch(0.92_0.05_155)] text-[oklch(0.4_0.1_155)]",
+        tone === "progress" && "bg-[oklch(0.93_0.04_75)] text-[oklch(0.45_0.1_55)]",
+        tone === "wait" && "bg-[oklch(0.93_0.03_250)] text-[oklch(0.42_0.1_250)]"
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+function compactMoney(value: number) {
+  if (value >= 1_000_000_000) return `Rp${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}M`
+  if (value >= 1_000_000) return `Rp${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}jt`
+  if (value >= 1_000) return `Rp${Math.round(value / 1_000)}rb`
+  return rupiah(value)
+}
+
 export default function StudioHomePage() {
   const { ready, city, bookings, expenses, partnerships, combos, messages } = useStudio()
+  const [selectedDate, setSelectedDate] = useState(() => todayISO())
+
+  const markedDates = useMemo(
+    () => [...new Set(bookings.map((booking) => booking.date))],
+    [bookings]
+  )
+
   if (!ready) return <StudioLoading />
 
   const money = financeSummary(bookings, expenses)
@@ -82,9 +134,6 @@ export default function StudioHomePage() {
     (message) => message.city === city && message.sender === "partner" && !message.read
   ).length
   const series = monthlyIncomeSeries(bookings, 6, todayISO())
-  const today = bookings.filter((booking) => daysUntil(booking.date) === 0)
-  const tomorrow = bookings.filter((booking) => daysUntil(booking.date) === 1)
-  const monthCount = bookings.filter((booking) => isSameMonth(booking.date)).length
   const counts = {
     all: bookings.length,
     dp: bookings.filter((booking) => paymentStatus(booking) === "belum_dp").length,
@@ -112,44 +161,56 @@ export default function StudioHomePage() {
     combo.published && combo.partnerIds.some((id) => partners.find((entry) => entry.id === id)?.city === city)
   ).length
 
-  const dayKpis = [
+  const dayBookings = sortBookings(bookings.filter((booking) => booking.date === selectedDate))
+  const todayCount = bookings.filter((booking) => booking.date === todayISO()).length
+  const waitingInvoices = counts.dp + counts.partial
+  const uniqueClients = new Set(bookings.map((booking) => booking.clientName)).size
+  const newClients = bookings.filter((booking) => daysUntil(booking.createdAt.slice(0, 10)) >= -7)
+    .length
+
+  const metricCards = [
     {
-      value: today.length,
-      label: "Hari ini",
-      hint: today.length ? "Acara yang harus siap" : "Kosong, aman",
+      label: "Jadwal",
+      value: `${todayCount} Agenda`,
       href: "/studio/jadwal?status=hari_ini",
-      className: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.35_0.06_220)]",
-      iconClass: "bg-[oklch(0.86_0.06_220)] text-[oklch(0.42_0.1_220)]",
       Icon: CalendarDays,
     },
     {
-      value: tomorrow.length,
-      label: "Besok",
-      hint: tomorrow.length ? "Siapkan DP dan gaun" : "Belum ada booking",
-      href: "/studio/jadwal?status=besok",
-      className: "bg-[oklch(0.94_0.03_15)] text-[oklch(0.38_0.08_15)]",
-      iconClass: "bg-[oklch(0.88_0.05_15)] text-[oklch(0.48_0.12_15)]",
-      Icon: Sparkles,
+      label: "Invoice",
+      value: `${waitingInvoices} Menunggu`,
+      href: "/studio/invoice",
+      Icon: FileText,
     },
     {
-      value: monthCount,
-      label: "Bulan ini",
-      hint: `${counts.dp} belum DP`,
+      label: "Klien",
+      value: `${newClients || uniqueClients} Baru`,
       href: "/studio/jadwal",
-      className: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.38_0.06_55)]",
-      iconClass: "bg-[oklch(0.88_0.06_75)] text-[oklch(0.48_0.1_55)]",
-      Icon: CalendarDays,
+      Icon: Users,
+    },
+    {
+      label: "Keuangan",
+      value: compactMoney(money.profit),
+      href: "/studio/keuangan",
+      Icon: Wallet,
     },
   ]
+
+  const selectedIsToday = selectedDate === todayISO()
+  const dayTitle = selectedIsToday ? "Jadwal Hari Ini" : `Jadwal ${formatShortDate(selectedDate)}`
 
   return (
     <div className="grid gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{greeting()}</p>
+          <p className="text-sm text-muted-foreground">
+            Selamat datang. Semoga hari ini berjalan lancar
+          </p>
           <h1 className="text-4xl">{studio.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {studio.owner} · {studio.city}. Angka di bawah dihitung dari jadwal di browser ini.
+            {greeting()} · {formatDate(todayISO())}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {studio.owner} · {city}
           </p>
           {counts.partial > 0 ? (
             <p className="mt-2 text-sm text-primary">
@@ -162,6 +223,76 @@ export default function StudioHomePage() {
           Buat booking
         </Link>
       </div>
+
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {metricCards.map(({ label, value, href, Icon }) => (
+          <Link
+            key={label}
+            href={href}
+            className="rounded-2xl bg-card px-4 py-4 ring-1 ring-foreground/10 transition hover:bg-accent/40"
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Icon className="size-4" />
+              </span>
+              <p className="text-sm text-muted-foreground">{label}</p>
+            </div>
+            <p className="font-display text-2xl leading-none">{value}</p>
+          </Link>
+        ))}
+      </section>
+
+      <section className="grid gap-3 lg:grid-cols-[1.35fr_0.9fr]">
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold">{dayTitle}</h2>
+            <Link
+              href="/studio/jadwal"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Lihat semua
+            </Link>
+          </div>
+          {dayBookings.length === 0 ? (
+            <EmptyState
+              title={selectedIsToday ? "Belum ada jadwal hari ini" : "Tidak ada jadwal di tanggal ini"}
+              body="Pilih tanggal lain di kalender, atau buat booking baru."
+            />
+          ) : (
+            <div className="space-y-2">
+              {dayBookings.map((booking) => {
+                const status = agendaStatus(booking, selectedDate)
+                return (
+                  <Link
+                    key={booking.id}
+                    href={`/studio/invoice/${booking.id}`}
+                    className="flex items-center gap-3 rounded-xl bg-[oklch(0.975_0.01_20)] px-3 py-3 transition hover:bg-accent/50"
+                  >
+                    <span className="w-12 shrink-0 text-sm font-semibold text-primary sm:w-14">
+                      {formatTime(booking.time)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">
+                        {packageById(booking.packageId)?.name ?? EVENT_LABEL[booking.eventType]}
+                      </p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {booking.clientName} · {EVENT_LABEL[booking.eventType]}
+                      </p>
+                    </div>
+                    <AgendaStatusPill tone={status.tone}>{status.label}</AgendaStatusPill>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <StudioMonthCalendar
+          markedDates={markedDates}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
         <Link
@@ -227,31 +358,6 @@ export default function StudioHomePage() {
             >
               <span className="font-display text-2xl">{value}</span>
               <span className="mt-0.5 block text-xs opacity-80">{label}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-3">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium tracking-wide text-primary uppercase">Ringkasan</p>
-            <h2 className="text-2xl">Hari ini, besok, bulan ini</h2>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {dayKpis.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn("rounded-2xl px-4 py-4 transition hover:brightness-[0.98]", item.className)}
-            >
-              <span className={cn("inline-flex size-9 items-center justify-center rounded-xl", item.iconClass)}>
-                <item.Icon className="size-4" />
-              </span>
-              <p className="mt-4 font-display text-4xl leading-none">{item.value}</p>
-              <p className="mt-2 text-sm font-semibold tracking-wide uppercase">{item.label}</p>
-              <p className="mt-1 text-sm opacity-80">{item.hint}</p>
             </Link>
           ))}
         </div>
