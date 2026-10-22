@@ -18,17 +18,10 @@ import {
 import { useRouter } from "next/navigation"
 
 import { studio } from "@/lib/catalog"
-import { CITIES } from "@/lib/cities"
 import { useAuth } from "@/components/auth-provider"
+import { CitySearchPicker } from "@/components/city-search-picker"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   TRIAL_DAYS,
   formatTrialEndsAt,
@@ -131,18 +124,13 @@ function MobileNav() {
 function CityPicker() {
   const { city, setCity } = useStudio()
   return (
-    <Select value={city} onValueChange={(value) => value && setCity(value)}>
-      <SelectTrigger className="h-8 w-[8.5rem] bg-card text-xs sm:w-40 sm:text-sm" size="sm">
-        <SelectValue>{(value) => String(value ?? city)}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {CITIES.map((item) => (
-          <SelectItem key={item} value={item}>
-            {item}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <CitySearchPicker
+      value={city}
+      onChange={setCity}
+      compact
+      placeholder="Cari wilayah"
+      aria-label="Pilih wilayah aktif"
+    />
   )
 }
 

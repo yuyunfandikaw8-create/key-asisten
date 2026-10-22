@@ -5,12 +5,12 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
+import { CitySearchPicker } from "@/components/city-search-picker"
 import { GoogleAuthButton } from "@/components/google-auth-button"
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CITIES } from "@/lib/cities"
 import { cn } from "@/lib/utils"
 
 export default function RegisterPage() {
@@ -129,22 +129,14 @@ export default function RegisterPage() {
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="city">Kota</Label>
-            <Input
+            <Label htmlFor="city">Wilayah / Kota</Label>
+            <CitySearchPicker
               id="city"
-              list="city-options"
               value={city}
-              onChange={(event) => setCityField(event.target.value)}
-              placeholder="Pilih kota"
-              className="h-10"
+              onChange={setCityField}
+              placeholder="Cari wilayah / kota"
               required
-              autoComplete="address-level2"
             />
-            <datalist id="city-options">
-              {CITIES.map((item) => (
-                <option key={item} value={item} />
-              ))}
-            </datalist>
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="password">Kata sandi</Label>

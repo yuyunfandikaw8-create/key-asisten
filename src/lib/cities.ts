@@ -518,6 +518,54 @@ export const CITIES = [
 
 export type CityName = (typeof CITIES)[number]
 
+/** Nama pendek yang dipakai data contoh / akun demo. */
+export const POPULAR_CITIES = [
+  "Bandung",
+  "Jakarta",
+  "Surabaya",
+  "Cimahi",
+  "Kota Bandung",
+  "Kota Jakarta Selatan",
+  "Kota Surabaya",
+  "Kota Yogyakarta",
+  "Kota Medan",
+  "Kota Denpasar",
+] as const
+
 export function isKnownCity(value: string): value is CityName {
   return (CITIES as readonly string[]).includes(value)
+}
+
+export function allCityOptions(extra: string[] = []): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const city of [...extra, ...POPULAR_CITIES, ...CITIES]) {
+    const value = city.trim()
+    if (!value || seen.has(value)) continue
+    seen.add(value)
+    result.push(value)
+  }
+  return result
+}
+
+/** Cari wilayah: cocokkan nama kabupaten/kota (dan alias populer). */
+export function searchCities(query: string, options?: { limit?: number; extra?: string[] }) {
+  const limit = options?.limit ?? 80
+  const all = allCityOptions(options?.extra)
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) {
+    return all.slice(0, limit)
+  }
+  const starts: string[] = []
+  const contains: string[] = []
+  for (const city of all) {
+    const hay = city.toLowerCase()
+    if (hay.startsWith(normalized) || hay.replace(/^kota |^kabupaten /, "").startsWith(normalized)) {
+      starts.push(city)
+    } else if (hay.includes(normalized)) {
+      contains.push(city)
+    }
+    if (starts.length + contains.length >= limit * 2) break
+  }
+  return [...starts, ...contains].slice(0, limit)
 }
