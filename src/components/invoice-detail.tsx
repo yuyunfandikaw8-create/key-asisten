@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { EmptyState, StatusBadge, StudioLoading } from "@/components/studio-bits"
+import { ScheduleFields } from "@/components/schedule-fields"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -200,37 +201,17 @@ export function InvoiceDetail() {
         </p>
       )}
 
-      <div className="no-print grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-2">
-        <div className="grid gap-1.5">
-          <Label htmlFor="invoice-tanggal">Tanggal jadwal</Label>
-          <Input
-            id="invoice-tanggal"
-            type="date"
-            value={booking.date}
-            onChange={(event) => {
-              const next = event.target.value
-              if (!next) return
-              updateBooking(booking.id, { date: next })
-            }}
-            className="h-10"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="invoice-jam">Jam</Label>
-          <Input
-            id="invoice-jam"
-            type="time"
-            value={booking.time}
-            onChange={(event) => {
-              const next = event.target.value
-              if (!next) return
-              updateBooking(booking.id, { time: next })
-            }}
-            className="h-10"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground sm:col-span-2">
-          Ubah tanggal atau jam di sini — jadwal dan isi invoice ikut berubah.
+      <div className="no-print rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+        <ScheduleFields
+          date={booking.date}
+          time={booking.time}
+          dateId="invoice-tanggal"
+          timeId="invoice-jam"
+          onDateChange={(next) => updateBooking(booking.id, { date: next })}
+          onTimeChange={(next) => updateBooking(booking.id, { time: next })}
+        />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Ketik tanggal dan jam manual — jadwal serta isi invoice ikut berubah.
         </p>
       </div>
 

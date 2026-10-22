@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import { ScheduleFields } from "@/components/schedule-fields"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -165,16 +166,13 @@ export default function NewBookingPage() {
             <Label htmlFor="hp">WhatsApp</Label>
             <Input id="hp" value={phone} onChange={(event) => setPhone(event.target.value)} className="h-10 bg-background" placeholder="08…" />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-1.5">
-              <Label htmlFor="tanggal">Tanggal</Label>
-              <Input id="tanggal" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="h-10 bg-background" />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="jam">Jam</Label>
-              <Input id="jam" type="time" value={time} onChange={(event) => setTime(event.target.value)} className="h-10 bg-background" />
-            </div>
-          </div>
+          <ScheduleFields
+            date={date}
+            time={time}
+            onDateChange={setDate}
+            onTimeChange={setTime}
+            inputClassName="bg-background"
+          />
           <div className="grid gap-1.5">
             <Label>Acara</Label>
             <Select value={eventType} onValueChange={(value) => setEventType((value ?? "pengantin") as EventType)}>

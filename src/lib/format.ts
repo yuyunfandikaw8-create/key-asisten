@@ -64,6 +64,66 @@ export function formatTime(time: string) {
   return time.replace(":", ".")
 }
 
+/** Tampilkan ISO `YYYY-MM-DD` sebagai `DD/MM/YYYY` agar mudah diketik. */
+export function formatDateInput(iso: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim())
+  if (!match) return iso
+  return `${match[3]}/${match[2]}/${match[1]}`
+}
+
+/**
+ * Terima ketikan manual: `22/10/2026`, `22-10-2026`, atau `2026-10-22`.
+ * Mengembalikan ISO `YYYY-MM-DD` atau null jika tidak valid.
+ */
+export function parseDateInput(value: string): string | null {
+  const raw = value.trim()
+  if (!raw) return null
+
+  let year = 0
+  let month = 0
+  let day = 0
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw)
+  const dmy = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(raw)
+  if (iso) {
+    year = Number(iso[1])
+    month = Number(iso[2])
+    day = Number(iso[3])
+  } else if (dmy) {
+    day = Number(dmy[1])
+    month = Number(dmy[2])
+    year = Number(dmy[3])
+  } else {
+    return null
+  }
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null
+  const date = new Date(year, month - 1, day)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null
+  }
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+}
+
+/**
+ * Terima ketikan manual: `8.00`, `08.00`, `8:00`, `08:00`.
+ * Mengembalikan `HH:mm` atau null jika tidak valid.
+ */
+export function parseTimeInput(value: string): string | null {
+  const raw = value.trim()
+  if (!raw) return null
+  const match = /^(\d{1,2})[:.](\d{2})$/.exec(raw)
+  if (!match) return null
+  const hour = Number(match[1])
+  const minute = Number(match[2])
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+}
+
 export function formatMonth(iso: string) {
   return new Intl.DateTimeFormat("id-ID", {
     month: "long",
