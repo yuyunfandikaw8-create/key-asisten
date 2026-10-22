@@ -6,7 +6,7 @@ import { useState } from "react"
 
 import { EmptyState, StatusBadge, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -27,8 +27,13 @@ import {
   rupiah,
   waLink,
 } from "@/lib/format"
+import {
+  buildInvoicePdf,
+  downloadPdfBlob,
+  invoicePdfFilename,
+  shareOrDownloadInvoicePdf,
+} from "@/lib/invoice-pdf"
 import { balance, paymentStatus } from "@/lib/metrics"
-import { cn } from "@/lib/utils"
 
 type LineItem = {
   label: string
@@ -44,11 +49,13 @@ export function InvoiceDetail() {
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState("")
   const [error, setError] = useState("")
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfNotice, setPdfNotice] = useState("")
 
   if (!ready) return <StudioLoading />
 
-  const booking = bookings.find((item) => item.id === params.id)
-  if (!booking) {
+  const found = bookings.find((item) => item.id === params.id)
+  if (!found) {
     return (
       <EmptyState
         title="Invoice tidak ditemukan"
@@ -56,11 +63,13 @@ export function InvoiceDetail() {
       />
     )
   }
+  const booking = found
 
   const pkg = packageById(booking.packageId)
   const attire = attireById(booking.attireId)
   const due = balance(booking)
   const number = invoiceNo(booking.date, booking.id)
+  const filename = invoicePdfFilename(number, booking.clientName)
   const lines: LineItem[] = [
     {
       label: pkg?.name ?? "Paket rias",
@@ -79,7 +88,7 @@ export function InvoiceDetail() {
   }
 
   const message = [
-    `Halo ${booking.clientName}, ini invoice ${studio.name}.`,
+    `Halo ${booking.clientName}, ini invoice ${studio.name} dalam bentuk PDF.`,
     number,
     `${EVENT_LABEL[booking.eventType]} · ${formatDate(booking.date)} pukul ${formatTime(booking.time)}`,
     booking.location,
@@ -88,6 +97,63 @@ export function InvoiceDetail() {
     `Sisa ${rupiah(due)}`,
     `Transfer ke ${studio.bank} a.n. ${studio.accountName} ${studio.accountNumber}`,
   ].join("\n")
+
+  const waFallbackMessage = [
+    message,
+    "",
+    "File PDF invoice sudah diunduh di perangkat kamu. Lampirkan file tersebut di chat WhatsApp ini.",
+  ].join("\n")
+
+  function makePdfBlob() {
+    return buildInvoicePdf({
+      booking,
+      number,
+      city,
+      lines,
+      due,
+    })
+  }
+
+  async function downloadPdf() {
+    setPdfBusy(true)
+    setPdfNotice("")
+    try {
+      downloadPdfBlob(makePdfBlob(), filename)
+      setPdfNotice("PDF invoice siap diunduh.")
+    } catch {
+      setPdfNotice("Gagal membuat PDF. Coba lagi.")
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
+  async function sendWhatsAppPdf() {
+    setPdfBusy(true)
+    setPdfNotice("")
+    try {
+      const blob = makePdfBlob()
+      const result = await shareOrDownloadInvoicePdf({
+        blob,
+        filename,
+        title: `Invoice ${number}`,
+        text: message,
+      })
+      if (result === "shared") {
+        setPdfNotice("Pilih WhatsApp di menu bagikan, lalu kirim PDF ke customer.")
+        return
+      }
+      setPdfNotice("PDF diunduh. Lampirkan file itu di chat WhatsApp yang terbuka.")
+      window.open(waLink(booking.phone, waFallbackMessage), "_blank", "noopener,noreferrer")
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setPdfNotice("Pengiriman dibatalkan.")
+        return
+      }
+      setPdfNotice("Gagal menyiapkan PDF. Coba unduh PDF dulu, lalu kirim manual lewat WhatsApp.")
+    } finally {
+      setPdfBusy(false)
+    }
+  }
 
   function record(nextPaid: number) {
     const paid = Math.min(Math.max(nextPaid, 0), booking!.price)
@@ -103,14 +169,12 @@ export function InvoiceDetail() {
           Semua invoice
         </Button>
         <Button onClick={() => window.print()}>Cetak</Button>
-        <a
-          className={cn(buttonVariants({ variant: "outline" }))}
-          href={waLink(booking.phone, message)}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Kirim WhatsApp
-        </a>
+        <Button variant="outline" disabled={pdfBusy} onClick={() => void downloadPdf()}>
+          Unduh PDF
+        </Button>
+        <Button disabled={pdfBusy} onClick={() => void sendWhatsAppPdf()}>
+          {pdfBusy ? "Menyiapkan PDF…" : "Kirim WhatsApp (PDF)"}
+        </Button>
         <Button variant="outline" onClick={() => setOpen(true)}>
           Catat bayar
         </Button>
@@ -125,6 +189,16 @@ export function InvoiceDetail() {
         </Button>
         <StatusBadge status={paymentStatus(booking)} />
       </div>
+      {pdfNotice ? (
+        <p className="no-print rounded-xl bg-accent px-4 py-3 text-sm text-accent-foreground">
+          {pdfNotice}
+        </p>
+      ) : (
+        <p className="no-print text-xs text-muted-foreground">
+          Kirim WhatsApp akan membuat PDF invoice. Di HP, pilih WhatsApp dari menu bagikan. Di
+          komputer, PDF diunduh dulu lalu dilampirkan di chat.
+        </p>
+      )}
 
       <div className="no-print grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:grid-cols-2">
         <div className="grid gap-1.5">
