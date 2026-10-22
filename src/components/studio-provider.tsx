@@ -23,7 +23,7 @@ import type {
   StudioState,
 } from "@/lib/types"
 
-const STORAGE_PREFIX = "key-assistant.studio.v1"
+const STORAGE_PREFIX = "key-assistant.studio.v2"
 
 type StudioViewMode = "real" | "demo"
 
@@ -100,11 +100,6 @@ function hasStudioData(state: StudioState | null | undefined) {
   return state.bookings.length > 0 || state.expenses.length > 0
 }
 
-/** Data saya default: seed terisi (termasuk Rio & Nadila), bukan studio kosong. */
-function defaultRealState(city: string): StudioState {
-  return sampleState(city)
-}
-
 export function StudioProvider({ children }: { children: ReactNode }) {
   const { ready: authReady, user } = useAuth()
   const userId = user?.id ?? null
@@ -145,11 +140,11 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       setViewMode("demo")
       setState(sampleState(city))
       setNotice(
-        "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk membuka data kamu (terisi contoh booking seperti Rio dan Nadila)."
+        "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
       )
     } else {
       setViewMode("real")
-      setState(hasStudioData(stored) ? stored! : defaultRealState(city))
+      setState(stored ?? createEmptyStudio(city))
     }
 
     setReady(true)
@@ -170,18 +165,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       const key = storageKeyRef.current
       const city = stateRef.current?.city ?? userCity
       const stored = key ? readStoredState(key, city) : null
-      const real = hasStudioData(stored) ? stored! : defaultRealState(city)
+      const real = stored ?? createEmptyStudio(city)
       skipPersist.current = true
       viewModeRef.current = "real"
       setViewMode("real")
       setState(real)
       stateRef.current = real
-      if (key) {
-        localStorage.setItem(previewFlagKey(key), "1")
-        if (!hasStudioData(stored)) {
-          localStorage.setItem(key, JSON.stringify(real))
-        }
-      }
+      if (key) localStorage.setItem(previewFlagKey(key), "1")
       if (message) setNotice(message)
       window.setTimeout(() => {
         skipPersist.current = false
@@ -355,7 +345,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         leaveDemoForReal(
           hasStudioData(stored)
             ? "Kembali ke data saya (real)."
-            : "Kembali ke data saya — booking contoh (Rio, Nadila, dan lainnya) sudah siap. Edit bebas; ini data real kamu."
+            : "Kembali ke data saya. Studio kosong — siap diisi booking dan invoice asli."
         )
       },
       reset: enterDemo,
