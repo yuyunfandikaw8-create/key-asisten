@@ -222,6 +222,48 @@ export default function StudioHomePage() {
         </Link>
       </div>
 
+      <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-sm">
+        <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_auto] lg:items-end">
+          <div>
+            <p className="text-xs font-medium tracking-wide uppercase opacity-80">
+              KPI studio · Laba bersih bulan ini
+            </p>
+            <p className="mt-2 font-display text-4xl sm:text-5xl">{rupiah(money.profit)}</p>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:max-w-md">
+              <div>
+                <p className="opacity-75">Pemasukan</p>
+                <p className="font-medium">{rupiah(money.income)}</p>
+              </div>
+              <div>
+                <p className="opacity-75">Pengeluaran</p>
+                <p className="font-medium">{rupiah(money.spent)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="opacity-95">
+            <p className="mb-1 text-right text-xs opacity-75">Pemasukan 6 bulan</p>
+            <ProfitSparkline values={series.map((item) => item.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 border-t border-white/15 bg-black/5 text-sm sm:grid-cols-4">
+          {[
+            [counts.all, "Booking", "/studio/jadwal"],
+            [counts.dp, "Belum DP", "/studio/jadwal?status=belum_dp"],
+            [counts.partial, "Belum lunas", "/studio/jadwal?status=belum_lunas"],
+            [counts.paid, "Lunas", "/studio/jadwal?status=lunas"],
+          ].map(([value, label, href]) => (
+            <Link
+              key={String(label)}
+              href={String(href)}
+              className="px-4 py-3 transition hover:bg-white/10"
+            >
+              <span className="font-display text-2xl">{value}</span>
+              <span className="mt-0.5 block text-xs opacity-80">{label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {metricCards.map(({ label, value, href, Icon }) => (
           <Link
@@ -317,48 +359,6 @@ export default function StudioHomePage() {
             <span className="text-sm text-white/85">Cek pengajuan & kombo yang masuk</span>
           </span>
         </Link>
-      </section>
-
-      <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-sm">
-        <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_auto] lg:items-end">
-          <div>
-            <p className="text-xs font-medium tracking-wide uppercase opacity-80">
-              KPI studio · Laba bersih bulan ini
-            </p>
-            <p className="mt-2 font-display text-4xl sm:text-5xl">{rupiah(money.profit)}</p>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:max-w-md">
-              <div>
-                <p className="opacity-75">Pemasukan</p>
-                <p className="font-medium">{rupiah(money.income)}</p>
-              </div>
-              <div>
-                <p className="opacity-75">Pengeluaran</p>
-                <p className="font-medium">{rupiah(money.spent)}</p>
-              </div>
-            </div>
-          </div>
-          <div className="opacity-95">
-            <p className="mb-1 text-right text-xs opacity-75">Pemasukan 6 bulan</p>
-            <ProfitSparkline values={series.map((item) => item.value)} />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 border-t border-white/15 bg-black/5 text-sm sm:grid-cols-4">
-          {[
-            [counts.all, "Booking", "/studio/jadwal"],
-            [counts.dp, "Belum DP", "/studio/jadwal?status=belum_dp"],
-            [counts.partial, "Belum lunas", "/studio/jadwal?status=belum_lunas"],
-            [counts.paid, "Lunas", "/studio/jadwal?status=lunas"],
-          ].map(([value, label, href]) => (
-            <Link
-              key={String(label)}
-              href={String(href)}
-              className="px-4 py-3 transition hover:bg-white/10"
-            >
-              <span className="font-display text-2xl">{value}</span>
-              <span className="mt-0.5 block text-xs opacity-80">{label}</span>
-            </Link>
-          ))}
-        </div>
       </section>
 
       <section className="grid gap-3">
