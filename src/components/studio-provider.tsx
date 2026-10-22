@@ -5,11 +5,13 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
 
-import { createSeed } from "@/lib/catalog"
+import { useAuth } from "@/components/auth-provider"
+import { createEmptyStudio, createSeed } from "@/lib/catalog"
 import { partnerById } from "@/lib/partners"
 import type {
   Booking,
@@ -21,7 +23,7 @@ import type {
   StudioState,
 } from "@/lib/types"
 
-const STORAGE_KEY = "riasaja.laras.v3"
+const STORAGE_PREFIX = "key-assistant.studio.v1"
 
 type StudioContextValue = {
   ready: boolean
@@ -45,60 +47,77 @@ type StudioContextValue = {
   sendMessage: (partnerId: string, body: string) => void
   markThreadRead: (partnerId: string) => void
   reset: () => void
+  clearStudio: () => void
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null)
 
-function normalizeState(parsed: Partial<StudioState>): StudioState {
-  const seed = createSeed()
+function storageKeyFor(userId: string | null) {
+  return `${STORAGE_PREFIX}:${userId ?? "guest"}`
+}
+
+function normalizeState(parsed: Partial<StudioState>, fallbackCity: string): StudioState {
+  const empty = createEmptyStudio(fallbackCity)
   return {
-    city: typeof parsed.city === "string" && parsed.city ? parsed.city : seed.city,
-    bookings: Array.isArray(parsed.bookings) ? parsed.bookings : seed.bookings,
-    expenses: Array.isArray(parsed.expenses) ? parsed.expenses : seed.expenses,
-    partnerships: Array.isArray(parsed.partnerships) ? parsed.partnerships : seed.partnerships,
-    combos: Array.isArray(parsed.combos) ? parsed.combos : seed.combos,
-    messages: Array.isArray(parsed.messages) ? parsed.messages : seed.messages,
+    city: typeof parsed.city === "string" && parsed.city ? parsed.city : empty.city,
+    bookings: Array.isArray(parsed.bookings) ? parsed.bookings : empty.bookings,
+    expenses: Array.isArray(parsed.expenses) ? parsed.expenses : empty.expenses,
+    partnerships: Array.isArray(parsed.partnerships) ? parsed.partnerships : empty.partnerships,
+    combos: Array.isArray(parsed.combos) ? parsed.combos : empty.combos,
+    messages: Array.isArray(parsed.messages) ? parsed.messages : empty.messages,
+  }
+}
+
+function readStoredState(key: string, fallbackCity: string): StudioState {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return createEmptyStudio(fallbackCity)
+    const parsed = JSON.parse(raw) as Partial<StudioState>
+    if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
+      return createEmptyStudio(fallbackCity)
+    }
+    return normalizeState(parsed, fallbackCity)
+  } catch {
+    return createEmptyStudio(fallbackCity)
   }
 }
 
 export function StudioProvider({ children }: { children: ReactNode }) {
+  const { ready: authReady, user } = useAuth()
+  const userId = user?.id ?? null
+  const userCity = user?.city ?? "Bandung"
   const [state, setState] = useState<StudioState | null>(null)
   const [ready, setReady] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [storageKey, setStorageKey] = useState<string | null>(null)
+  const skipPersist = useRef(false)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("riasaja.laras.v2")
-        if (!raw) {
-          setState(createSeed())
-        } else {
-          const parsed = JSON.parse(raw) as Partial<StudioState>
-          if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
-            throw new Error("Data studio tidak lengkap")
-          }
-          setState(normalizeState(parsed))
-        }
-      } catch {
-        setState(createSeed())
-        setNotice("Data di browser ini tidak bisa dibaca. Contoh studio Key Partner dikembalikan.")
-      }
-      setReady(true)
+    if (!authReady) return
+    const key = storageKeyFor(userId)
+    skipPersist.current = true
+    setState(readStoredState(key, user?.city ?? "Bandung"))
+    setStorageKey(key)
+    setReady(true)
+    // Avoid writing the previous account's state into the new key during switch.
+    window.setTimeout(() => {
+      skipPersist.current = false
     }, 0)
-    return () => window.clearTimeout(timer)
-  }, [])
+    // Only reload when the signed-in account changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- user.city used only for first empty create
+  }, [authReady, userId])
 
   useEffect(() => {
-    if (!ready || !state) return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  }, [ready, state])
+    if (!ready || !state || !storageKey || skipPersist.current) return
+    localStorage.setItem(storageKey, JSON.stringify(state))
+  }, [ready, state, storageKey])
 
   const value = useMemo<StudioContextValue>(() => {
     return {
       ready,
       notice,
       dismissNotice: () => setNotice(null),
-      city: state?.city ?? "Bandung",
+      city: state?.city ?? userCity,
       setCity: (city) => {
         setState((current) => (current ? { ...current, city } : current))
         setNotice(`Lokasi aktif diganti ke ${city}. Partner dan inbox hanya menampilkan kota ini.`)
@@ -242,11 +261,16 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         })
       },
       reset: () => {
-        setState(createSeed())
-        setNotice("Data contoh Key Partner sudah dikembalikan.")
+        const sample = createSeed()
+        setState({ ...sample, city: state?.city ?? userCity })
+        setNotice("Data contoh sudah dimuat. Booking dan laba contoh muncul di beranda.")
+      },
+      clearStudio: () => {
+        setState(createEmptyStudio(state?.city ?? userCity))
+        setNotice("Data studio dikosongkan. Booking dan laba kembali nol.")
       },
     }
-  }, [notice, ready, state])
+  }, [notice, ready, state, userCity])
 
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>
 }

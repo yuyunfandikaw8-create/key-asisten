@@ -129,7 +129,7 @@ const faqs: {
   {
     q: "💬 Apa yang bisa saya coba sekarang?",
     lead: "Langsung coba tanpa harus mulai dari nol.",
-    a: "Key Assistant sudah dilengkapi data seperti jadwal, data klien, koleksi gaun, invoice, dan pricelist. Kamu bisa langsung mencoba alurnya dan melihat bagaimana pekerjaan administrasi menjadi lebih cepat dan rapi.",
+    a: "Akun baru mulai dengan jadwal dan keuangan kosong. Kalau ingin melihat contoh alur kerja, kamu bisa memuat data contoh dari studio, lalu mencoba jadwal, invoice, dan pricelist.",
   },
   {
     q: "📋 Bagaimana cara kerja fitur Tempel Chat?",

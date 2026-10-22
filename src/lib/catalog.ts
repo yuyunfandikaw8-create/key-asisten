@@ -115,6 +115,18 @@ function booking(
   }
 }
 
+/** Studio kosong untuk akun baru — tanpa booking, laba, atau inbox contoh. */
+export function createEmptyStudio(city = studio.city): StudioState {
+  return {
+    city,
+    bookings: [],
+    expenses: [],
+    partnerships: [],
+    combos: [],
+    messages: [],
+  }
+}
+
 export function createSeed(): StudioState {
   const today = todayISO()
   const emas = packages[0]
