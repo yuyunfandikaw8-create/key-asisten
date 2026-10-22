@@ -17,7 +17,7 @@ const FIXED_NATIONAL: { month: number; day: number; name: string }[] = [
 ]
 
 /** Libur nasional bergerak + cuti bersama per tahun (sumber: Kemenko PMK / SKB). */
-const YEARLY: Record<number, Omit<Holiday, "date"> & { date: string }[]> = {
+const YEARLY: Record<number, Holiday[]> = {
   2025: [
     { date: "2025-01-27", name: "Isra Mikraj Nabi Muhammad SAW", kind: "nasional" },
     { date: "2025-01-28", name: "Cuti bersama Imlek", kind: "cuti" },
