@@ -163,29 +163,6 @@ export function recentMonths(count = 4, anchor = todayISO()) {
   return keys
 }
 
-export function recentWeeks(count = 8, anchor = todayISO()) {
-  const keys: string[] = []
-  const start = weekKey(anchor)
-  const cursor = new Date(`${start}T12:00:00`)
-  for (let index = count - 1; index >= 0; index -= 1) {
-    const date = new Date(cursor)
-    date.setDate(cursor.getDate() - index * 7)
-    const month = String(date.getMonth() + 1).padStart(2, "0")
-    const day = String(date.getDate()).padStart(2, "0")
-    keys.push(`${date.getFullYear()}-${month}-${day}`)
-  }
-  return keys
-}
-
-export function recentYears(count = 5, anchor = todayISO()) {
-  const year = Number(yearKey(anchor))
-  const keys: string[] = []
-  for (let index = count - 1; index >= 0; index -= 1) {
-    keys.push(String(year - index))
-  }
-  return keys
-}
-
 const MONTH_SHORT = [
   "Jan",
   "Feb",
@@ -201,9 +178,22 @@ const MONTH_SHORT = [
   "Des",
 ]
 
-function weekLabel(mondayIso: string) {
-  const date = new Date(`${mondayIso}T12:00:00`)
-  return `${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`
+const DAY_SHORT = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
+
+function toISODate(date: Date) {
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function daysInMonth(year: number, monthIndex: number) {
+  return new Date(year, monthIndex + 1, 0).getDate()
+}
+
+function sumPaidOnDate(bookings: Booking[], iso: string) {
+  return bookings
+    .filter((booking) => booking.date === iso)
+    .reduce((sum, booking) => sum + booking.paid, 0)
 }
 
 function monthLabel(key: string) {
@@ -219,49 +209,60 @@ export type IncomeSeriesPoint = {
   value: number
 }
 
-export function monthlyIncomeSeries(
-  bookings: Booking[],
-  count = 6,
-  anchor = todayISO()
-): IncomeSeriesPoint[] {
-  const keys = recentMonths(count, anchor)
-  return keys.map((key) => ({
-    key,
-    label: monthLabel(key),
-    value: bookings
-      .filter((booking) => monthKey(booking.date) === key)
-      .reduce((sum, booking) => sum + booking.paid, 0),
-  }))
-}
-
+/** Satu minggu berjalan (Senin–Minggu): pemasukan per hari. */
 export function weeklyIncomeSeries(
   bookings: Booking[],
-  count = 8,
   anchor = todayISO()
 ): IncomeSeriesPoint[] {
-  const keys = recentWeeks(count, anchor)
-  return keys.map((key) => ({
-    key,
-    label: weekLabel(key),
-    value: bookings
-      .filter((booking) => weekKey(booking.date) === key)
-      .reduce((sum, booking) => sum + booking.paid, 0),
-  }))
+  const monday = new Date(`${weekKey(anchor)}T12:00:00`)
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + index)
+    const key = toISODate(date)
+    return {
+      key,
+      label: DAY_SHORT[date.getDay()] ?? String(date.getDate()),
+      value: sumPaidOnDate(bookings, key),
+    }
+  })
 }
 
-export function yearlyIncomeSeries(
+/** Satu bulan berjalan: pemasukan per hari di bulan ini. */
+export function monthlyIncomeSeries(
   bookings: Booking[],
-  count = 5,
   anchor = todayISO()
 ): IncomeSeriesPoint[] {
-  const keys = recentYears(count, anchor)
-  return keys.map((key) => ({
-    key,
-    label: key,
-    value: bookings
-      .filter((booking) => yearKey(booking.date) === key)
-      .reduce((sum, booking) => sum + booking.paid, 0),
-  }))
+  const cursor = new Date(`${anchor}T12:00:00`)
+  const year = cursor.getFullYear()
+  const monthIndex = cursor.getMonth()
+  const totalDays = daysInMonth(year, monthIndex)
+  return Array.from({ length: totalDays }, (_, index) => {
+    const day = index + 1
+    const key = `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    return {
+      key,
+      label: String(day),
+      value: sumPaidOnDate(bookings, key),
+    }
+  })
+}
+
+/** Satu tahun berjalan: pemasukan per bulan di tahun ini. */
+export function yearlyIncomeSeries(
+  bookings: Booking[],
+  anchor = todayISO()
+): IncomeSeriesPoint[] {
+  const year = yearKey(anchor)
+  return Array.from({ length: 12 }, (_, index) => {
+    const key = `${year}-${String(index + 1).padStart(2, "0")}`
+    return {
+      key,
+      label: monthLabel(key),
+      value: bookings
+        .filter((booking) => monthKey(booking.date) === key)
+        .reduce((sum, booking) => sum + booking.paid, 0),
+    }
+  })
 }
 
 export function incomeSeries(
@@ -269,13 +270,13 @@ export function incomeSeries(
   period: IncomePeriod,
   anchor = todayISO()
 ): IncomeSeriesPoint[] {
-  if (period === "minggu") return weeklyIncomeSeries(bookings, 8, anchor)
-  if (period === "tahun") return yearlyIncomeSeries(bookings, 5, anchor)
-  return monthlyIncomeSeries(bookings, 6, anchor)
+  if (period === "minggu") return weeklyIncomeSeries(bookings, anchor)
+  if (period === "tahun") return yearlyIncomeSeries(bookings, anchor)
+  return monthlyIncomeSeries(bookings, anchor)
 }
 
 export function incomePeriodTitle(period: IncomePeriod) {
-  if (period === "minggu") return "Pemasukan 8 minggu"
-  if (period === "tahun") return "Pemasukan 5 tahun"
-  return "Pemasukan 6 bulan"
+  if (period === "minggu") return "Pemasukan 1 minggu"
+  if (period === "tahun") return "Pemasukan 1 tahun"
+  return "Pemasukan 1 bulan"
 }

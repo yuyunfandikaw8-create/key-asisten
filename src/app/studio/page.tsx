@@ -99,9 +99,9 @@ function ProfitSparkline({
 }
 
 const INCOME_PERIODS: { id: IncomePeriod; label: string }[] = [
-  { id: "minggu", label: "Minggu" },
-  { id: "bulan", label: "Bulan" },
-  { id: "tahun", label: "Tahun" },
+  { id: "minggu", label: "1 minggu" },
+  { id: "bulan", label: "1 bulan" },
+  { id: "tahun", label: "1 tahun" },
 ]
 
 type AgendaTone = "done" | "progress" | "wait"
