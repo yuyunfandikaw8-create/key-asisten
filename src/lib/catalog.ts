@@ -193,8 +193,8 @@ export function createSeed(): StudioState {
       paid: dpFor(perak.price),
     }),
     booking({
-      id: "bk-nadia",
-      clientName: "Nadia Permata",
+      id: "bk-nadila",
+      clientName: "Nadila Permata",
       phone: "081800011122",
       eventType: "pengantin",
       date: addDays(today, -2),
@@ -236,8 +236,8 @@ export function createSeed(): StudioState {
       paid: 0,
     }),
     booking({
-      id: "bk-raka",
-      clientName: "Raka Wijaya",
+      id: "bk-rio",
+      clientName: "Rio Wijaya",
       phone: "082166667788",
       eventType: "wisuda",
       date: addDays(today, 3),
