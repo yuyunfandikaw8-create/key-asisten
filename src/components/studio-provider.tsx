@@ -23,7 +23,30 @@ import type {
   StudioState,
 } from "@/lib/types"
 
-const STORAGE_PREFIX = "key-assistant.studio.v2"
+const STORAGE_PREFIX = "key-assistant.studio.v3"
+const LEGACY_STORAGE_PREFIXES = [
+  "key-assistant.studio.v1",
+  "key-assistant.studio.v2",
+] as const
+
+/** Booking/expense ids from createSeed — never treat these as real user data. */
+const SAMPLE_BOOKING_IDS = new Set([
+  "bk-sari",
+  "bk-kirana",
+  "bk-dinda",
+  "bk-lala",
+  "bk-nadia",
+  "bk-nadila",
+  "bk-maya",
+  "bk-intan",
+  "bk-raka",
+  "bk-rio",
+  "bk-past-1",
+  "bk-past-2",
+  "bk-past-3",
+  "bk-past-4",
+])
+const SAMPLE_EXPENSE_IDS = new Set(["ex-1", "ex-2", "ex-3", "ex-4"])
 
 type StudioViewMode = "real" | "demo"
 
@@ -65,6 +88,15 @@ function previewFlagKey(storageKey: string) {
   return `${storageKey}:preview-done`
 }
 
+function purgeLegacyStudioKeys(userId: string | null) {
+  const suffix = userId ?? "guest"
+  for (const prefix of LEGACY_STORAGE_PREFIXES) {
+    const key = `${prefix}:${suffix}`
+    localStorage.removeItem(key)
+    localStorage.removeItem(previewFlagKey(key))
+  }
+}
+
 function normalizeState(parsed: Partial<StudioState>, fallbackCity: string): StudioState {
   const empty = createEmptyStudio(fallbackCity)
   return {
@@ -77,6 +109,21 @@ function normalizeState(parsed: Partial<StudioState>, fallbackCity: string): Stu
   }
 }
 
+/** True when stored "real" data is just the demo seed (or empty of real rows). */
+function isSampleOrEmptyReal(state: StudioState): boolean {
+  const realBookings = state.bookings.filter((booking) => !SAMPLE_BOOKING_IDS.has(booking.id))
+  const realExpenses = state.expenses.filter((expense) => !SAMPLE_EXPENSE_IDS.has(expense.id))
+  return realBookings.length === 0 && realExpenses.length === 0
+}
+
+function stripSampleRows(state: StudioState): StudioState {
+  return {
+    ...state,
+    bookings: state.bookings.filter((booking) => !SAMPLE_BOOKING_IDS.has(booking.id)),
+    expenses: state.expenses.filter((expense) => !SAMPLE_EXPENSE_IDS.has(expense.id)),
+  }
+}
+
 function readStoredState(key: string, fallbackCity: string): StudioState | null {
   try {
     const raw = localStorage.getItem(key)
@@ -85,7 +132,11 @@ function readStoredState(key: string, fallbackCity: string): StudioState | null 
     if (!Array.isArray(parsed.bookings) || !Array.isArray(parsed.expenses)) {
       return null
     }
-    return normalizeState(parsed, fallbackCity)
+    const normalized = normalizeState(parsed, fallbackCity)
+    if (isSampleOrEmptyReal(normalized)) {
+      return createEmptyStudio(normalized.city)
+    }
+    return stripSampleRows(normalized)
   } catch {
     return null
   }
@@ -130,6 +181,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     if (!authReady) return
     const key = storageKeyFor(userId)
     const city = user?.city ?? "Bandung"
+    purgeLegacyStudioKeys(userId)
     const stored = readStoredState(key, city)
     const previewDone = localStorage.getItem(previewFlagKey(key)) === "1"
 
@@ -138,13 +190,17 @@ export function StudioProvider({ children }: { children: ReactNode }) {
 
     if (!stored && !previewDone) {
       setViewMode("demo")
+      viewModeRef.current = "demo"
       setState(sampleState(city))
       setNotice(
         "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
       )
     } else {
+      const real = stored ?? createEmptyStudio(city)
       setViewMode("real")
-      setState(stored ?? createEmptyStudio(city))
+      viewModeRef.current = "real"
+      setState(real)
+      localStorage.setItem(key, JSON.stringify(real))
     }
 
     setReady(true)
@@ -157,21 +213,43 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready || !state || !storageKey || skipPersist.current) return
     if (viewMode !== "real") return
-    localStorage.setItem(storageKey, JSON.stringify(state))
+    // Never persist demo/seed rows as "Data saya".
+    const toSave = isSampleOrEmptyReal(state)
+      ? createEmptyStudio(state.city)
+      : stripSampleRows(state)
+    localStorage.setItem(storageKey, JSON.stringify(toSave))
   }, [ready, state, storageKey, viewMode])
+
+  // Guard: if real mode somehow still holds only sample seed, wipe it.
+  useEffect(() => {
+    if (!ready || viewMode !== "real" || !state) return
+    if (!hasStudioData(state) || !isSampleOrEmptyReal(state)) return
+    const empty = createEmptyStudio(state.city)
+    skipPersist.current = true
+    setState(empty)
+    stateRef.current = empty
+    if (storageKey) localStorage.setItem(storageKey, JSON.stringify(empty))
+    window.setTimeout(() => {
+      skipPersist.current = false
+    }, 0)
+  }, [ready, viewMode, state, storageKey])
 
   const value = useMemo<StudioContextValue>(() => {
     function leaveDemoForReal(message?: string) {
       const key = storageKeyRef.current
       const city = stateRef.current?.city ?? userCity
       const stored = key ? readStoredState(key, city) : null
+      // Never carry demo/seed rows into Data saya — only keep true user rows.
       const real = stored ?? createEmptyStudio(city)
       skipPersist.current = true
       viewModeRef.current = "real"
       setViewMode("real")
       setState(real)
       stateRef.current = real
-      if (key) localStorage.setItem(previewFlagKey(key), "1")
+      if (key) {
+        localStorage.setItem(previewFlagKey(key), "1")
+        localStorage.setItem(key, JSON.stringify(real))
+      }
       if (message) setNotice(message)
       window.setTimeout(() => {
         skipPersist.current = false
@@ -341,12 +419,23 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       showDemo: enterDemo,
       showReal: () => {
         const key = storageKeyRef.current
-        const stored = key ? readStoredState(key, userCity) : null
-        leaveDemoForReal(
-          hasStudioData(stored)
-            ? "Kembali ke data saya (real)."
-            : "Kembali ke data saya. Studio kosong — siap diisi booking dan invoice asli."
-        )
+        const city = stateRef.current?.city ?? userCity
+        purgeLegacyStudioKeys(userId)
+        // Always open Data saya as empty studio (sample data stays in Data contoh only).
+        const real = createEmptyStudio(city)
+        skipPersist.current = true
+        viewModeRef.current = "real"
+        setViewMode("real")
+        setState(real)
+        stateRef.current = real
+        if (key) {
+          localStorage.setItem(previewFlagKey(key), "1")
+          localStorage.setItem(key, JSON.stringify(real))
+        }
+        setNotice("Kembali ke data saya. Studio kosong — siap diisi booking dan invoice asli.")
+        window.setTimeout(() => {
+          skipPersist.current = false
+        }, 0)
       },
       reset: enterDemo,
       clearStudio: () => {
