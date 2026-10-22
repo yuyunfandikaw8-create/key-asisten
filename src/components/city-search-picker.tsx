@@ -1,10 +1,16 @@
 "use client"
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { createPortal } from "react-dom"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { Check, ChevronsUpDown, MapPin, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { searchCities } from "@/lib/cities"
 import { cn } from "@/lib/utils"
@@ -14,7 +20,7 @@ type CitySearchPickerProps = {
   onChange: (city: string) => void
   id?: string
   placeholder?: string
-  /** Compact trigger for studio header */
+  /** Compact trigger for studio header — opens a dialog (more reliable than popover). */
   compact?: boolean
   className?: string
   required?: boolean
@@ -22,68 +28,205 @@ type CitySearchPickerProps = {
   "aria-label"?: string
 }
 
-type PanelPos = { top: number; left: number; width: number }
+function CityResults({
+  listId,
+  value,
+  query,
+  results,
+  onPick,
+}: {
+  listId: string
+  value: string
+  query: string
+  results: string[]
+  onPick: (city: string) => void
+}) {
+  return (
+    <>
+      <ul
+        id={listId}
+        role="listbox"
+        aria-label="Hasil pencarian wilayah"
+        className="max-h-64 overflow-y-auto p-1"
+      >
+        {results.length === 0 ? (
+          <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Wilayah tidak ditemukan. Coba kata lain.
+          </li>
+        ) : (
+          results.map((city) => {
+            const selected = city === value
+            return (
+              <li key={city}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => onPick(city)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition",
+                    selected ? "bg-primary text-primary-foreground" : "hover:bg-accent"
+                  )}
+                >
+                  <span className="min-w-0 flex-1 truncate">{city}</span>
+                  {selected ? <Check className="size-3.5 shrink-0" /> : null}
+                </button>
+              </li>
+            )
+          })
+        )}
+      </ul>
+      {query.trim() && results.length > 0 ? (
+        <p className="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
+          {results.length} wilayah cocok
+        </p>
+      ) : null}
+    </>
+  )
+}
 
-export function CitySearchPicker({
+function TriggerLabel({
+  value,
+  placeholder,
+}: {
+  value: string
+  placeholder: string
+}) {
+  return (
+    <>
+      <span className="flex min-w-0 items-center gap-1.5">
+        <MapPin className="size-3.5 shrink-0 text-primary" />
+        <span className={cn("truncate", !value && "text-muted-foreground")}>
+          {value || placeholder}
+        </span>
+      </span>
+      <ChevronsUpDown className="size-3.5 shrink-0 opacity-60" />
+    </>
+  )
+}
+
+function CompactCitySearchPicker({
   value,
   onChange,
   id,
-  placeholder = "Cari wilayah / kota",
-  compact = false,
+  placeholder,
+  className,
+  disabled,
+  ariaLabel,
+}: {
+  value: string
+  onChange: (city: string) => void
+  id?: string
+  placeholder: string
+  className?: string
+  disabled?: boolean
+  ariaLabel: string
+}) {
+  const listId = useId()
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
+  const results = useMemo(
+    () => searchCities(query, { limit: 60, extra: value ? [value] : [] }),
+    [query, value]
+  )
+
+  function pick(city: string) {
+    onChange(city)
+    setOpen(false)
+    setQuery("")
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (!next) setQuery("")
+      }}
+    >
+      <Button
+        id={id}
+        type="button"
+        variant="outline"
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className={cn(
+          "h-8 w-[9.5rem] justify-between gap-2 bg-card px-2.5 text-xs font-normal sm:w-44 sm:text-sm",
+          className
+        )}
+      >
+        <TriggerLabel value={value} placeholder={placeholder} />
+      </Button>
+      <DialogContent className="gap-3 sm:max-w-md" showCloseButton>
+        <DialogHeader>
+          <DialogTitle>Pilih wilayah</DialogTitle>
+          <DialogDescription>
+            Cari kabupaten atau kota untuk partner dan inbox.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+          <Search className="size-4 shrink-0 text-muted-foreground" />
+          <Input
+            autoFocus
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Ketik nama kota / kabupaten…"
+            className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+            autoComplete="off"
+          />
+        </div>
+        <div className="overflow-hidden rounded-xl border">
+          <CityResults
+            listId={listId}
+            value={value}
+            query={query}
+            results={results}
+            onPick={pick}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function InlineCitySearchPicker({
+  value,
+  onChange,
+  id,
+  placeholder,
   className,
   required,
   disabled,
-  "aria-label": ariaLabel = "Pilih wilayah",
-}: CitySearchPickerProps) {
+  ariaLabel,
+}: {
+  value: string
+  onChange: (city: string) => void
+  id?: string
+  placeholder: string
+  className?: string
+  required?: boolean
+  disabled?: boolean
+  ariaLabel: string
+}) {
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const [mounted, setMounted] = useState(false)
-  const [panelPos, setPanelPos] = useState<PanelPos | null>(null)
-
   const results = useMemo(
     () => searchCities(query, { limit: 60, extra: value ? [value] : [] }),
     [query, value]
   )
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  function updatePanelPos() {
-    const trigger = rootRef.current
-    if (!trigger) return
-    const rect = trigger.getBoundingClientRect()
-    const width = compact
-      ? Math.min(320, Math.max(rect.width, Math.min(window.innerWidth - 16, 280)))
-      : Math.max(rect.width, 240)
-    let left = compact ? rect.right - width : rect.left
-    left = Math.min(Math.max(8, left), window.innerWidth - width - 8)
-    const top = rect.bottom + 4
-    setPanelPos({ top, left, width })
-  }
-
-  useLayoutEffect(() => {
-    if (!open) return
-    updatePanelPos()
-    const onReposition = () => updatePanelPos()
-    window.addEventListener("resize", onReposition)
-    window.addEventListener("scroll", onReposition, true)
-    return () => {
-      window.removeEventListener("resize", onReposition)
-      window.removeEventListener("scroll", onReposition, true)
-    }
-  }, [open, compact])
-
-  useEffect(() => {
     if (!open) return
     const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node
-      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
-      setOpen(false)
-      setQuery("")
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false)
+        setQuery("")
+      }
     }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -91,11 +234,10 @@ export function CitySearchPicker({
         setQuery("")
       }
     }
-    // Capture phase so sticky headers / overlays don't swallow the dismiss.
-    document.addEventListener("pointerdown", onPointerDown, true)
+    document.addEventListener("pointerdown", onPointerDown)
     document.addEventListener("keydown", onKey)
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true)
+      document.removeEventListener("pointerdown", onPointerDown)
       document.removeEventListener("keydown", onKey)
     }
   }, [open])
@@ -105,80 +247,6 @@ export function CitySearchPicker({
     setOpen(false)
     setQuery("")
   }
-
-  const panel =
-    open && mounted && panelPos
-      ? createPortal(
-          <div
-            ref={panelRef}
-            data-city-search-panel=""
-            style={{
-              position: "fixed",
-              top: panelPos.top,
-              left: panelPos.left,
-              width: panelPos.width,
-              zIndex: 80,
-            }}
-            className="overflow-hidden rounded-xl border border-border bg-card shadow-lg ring-1 ring-foreground/5"
-          >
-            <div className="flex items-center gap-2 border-b px-3 py-2">
-              <Search className="size-4 shrink-0 text-muted-foreground" />
-              <Input
-                autoFocus
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Ketik nama kota / kabupaten…"
-                className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-                autoComplete="off"
-              />
-            </div>
-            <ul
-              id={listId}
-              role="listbox"
-              aria-label="Hasil pencarian wilayah"
-              className="max-h-64 overflow-y-auto p-1"
-            >
-              {results.length === 0 ? (
-                <li className="px-3 py-6 text-center text-sm text-muted-foreground">
-                  Wilayah tidak ditemukan. Coba kata lain.
-                </li>
-              ) : (
-                results.map((city) => {
-                  const selected = city === value
-                  return (
-                    <li key={city}>
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={selected}
-                        onPointerDown={(event) => {
-                          // Prefer pointerdown so selection isn't lost if the panel closes early.
-                          event.preventDefault()
-                          event.stopPropagation()
-                          pick(city)
-                        }}
-                        className={cn(
-                          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition",
-                          selected ? "bg-primary text-primary-foreground" : "hover:bg-accent"
-                        )}
-                      >
-                        <span className="min-w-0 flex-1 truncate">{city}</span>
-                        {selected ? <Check className="size-3.5 shrink-0" /> : null}
-                      </button>
-                    </li>
-                  )
-                })
-              )}
-            </ul>
-            {query.trim() && results.length > 0 ? (
-              <p className="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
-                {results.length} wilayah cocok
-              </p>
-            ) : null}
-          </div>,
-          document.body
-        )
-      : null
 
   return (
     <div ref={rootRef} className={cn("relative", className)}>
@@ -191,31 +259,10 @@ export function CitySearchPicker({
         aria-expanded={open}
         aria-controls={listId}
         aria-haspopup="listbox"
-        onPointerDown={(event) => {
-          // Keep the trigger click from being treated as an outside dismiss.
-          event.stopPropagation()
-        }}
-        onClick={() => {
-          setOpen((current) => {
-            const next = !current
-            if (!next) setQuery("")
-            return next
-          })
-        }}
-        className={cn(
-          "relative z-[1] justify-between gap-2 font-normal",
-          compact
-            ? "h-8 w-[9.5rem] bg-card px-2.5 text-xs sm:w-44 sm:text-sm"
-            : "h-10 w-full px-3 text-sm"
-        )}
+        onClick={() => setOpen((current) => !current)}
+        className="h-10 w-full justify-between gap-2 px-3 text-sm font-normal"
       >
-        <span className="flex min-w-0 items-center gap-1.5">
-          <MapPin className="size-3.5 shrink-0 text-primary" />
-          <span className={cn("truncate", !value && "text-muted-foreground")}>
-            {value || placeholder}
-          </span>
-        </span>
-        <ChevronsUpDown className="size-3.5 shrink-0 opacity-60" />
+        <TriggerLabel value={value} placeholder={placeholder} />
       </Button>
 
       {required ? (
@@ -229,7 +276,67 @@ export function CitySearchPicker({
         />
       ) : null}
 
-      {panel}
+      {open ? (
+        <div className="absolute left-0 z-50 mt-1 w-full overflow-hidden rounded-xl border border-border bg-card shadow-lg ring-1 ring-foreground/5">
+          <div className="flex items-center gap-2 border-b px-3 py-2">
+            <Search className="size-4 shrink-0 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Ketik nama kota / kabupaten…"
+              className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+              autoComplete="off"
+            />
+          </div>
+          <CityResults
+            listId={listId}
+            value={value}
+            query={query}
+            results={results}
+            onPick={pick}
+          />
+        </div>
+      ) : null}
     </div>
+  )
+}
+
+export function CitySearchPicker({
+  value,
+  onChange,
+  id,
+  placeholder = "Cari wilayah / kota",
+  compact = false,
+  className,
+  required,
+  disabled,
+  "aria-label": ariaLabel = "Pilih wilayah",
+}: CitySearchPickerProps) {
+  if (compact) {
+    return (
+      <CompactCitySearchPicker
+        value={value}
+        onChange={onChange}
+        id={id}
+        placeholder={placeholder}
+        className={className}
+        disabled={disabled}
+        ariaLabel={ariaLabel}
+      />
+    )
+  }
+
+  return (
+    <InlineCitySearchPicker
+      value={value}
+      onChange={onChange}
+      id={id}
+      placeholder={placeholder}
+      className={className}
+      required={required}
+      disabled={disabled}
+      ariaLabel={ariaLabel}
+    />
   )
 }
