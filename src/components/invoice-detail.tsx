@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useState } from "react"
 
+import { useAuth } from "@/components/auth-provider"
 import { EmptyState, StatusBadge, StudioLoading } from "@/components/studio-bits"
 import { ScheduleFields } from "@/components/schedule-fields"
 import { useStudio } from "@/components/studio-provider"
@@ -35,6 +36,7 @@ import {
   shareOrDownloadInvoicePdf,
 } from "@/lib/invoice-pdf"
 import { balance, paymentStatus } from "@/lib/metrics"
+import { studioBrand } from "@/lib/studio-brand"
 
 type LineItem = {
   label: string
@@ -46,6 +48,8 @@ type LineItem = {
 export function InvoiceDetail() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useAuth()
+  const brand = studioBrand(user)
   const { ready, city, bookings, updateBooking, removeBooking } = useStudio()
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState("")
@@ -89,14 +93,14 @@ export function InvoiceDetail() {
   }
 
   const message = [
-    `Halo ${booking.clientName}, ini invoice ${studio.name} dalam bentuk PDF.`,
+    `Halo ${booking.clientName}, ini invoice ${brand.name} dalam bentuk PDF.`,
     number,
     `${EVENT_LABEL[booking.eventType]} · ${formatDate(booking.date)} pukul ${formatTime(booking.time)}`,
     booking.location,
     `Total ${rupiah(booking.price)}`,
     `Sudah dibayar ${rupiah(booking.paid)}`,
     `Sisa ${rupiah(due)}`,
-    `Transfer ke ${studio.bank} a.n. ${studio.accountName} ${studio.accountNumber}`,
+    `Transfer ke ${brand.bank} a.n. ${brand.accountName} ${brand.accountNumber}`,
   ].join("\n")
 
   const waFallbackMessage = [
@@ -112,6 +116,16 @@ export function InvoiceDetail() {
       city,
       lines,
       due,
+      brand: {
+        name: brand.name,
+        owner: brand.owner,
+        phone: brand.phone,
+        city: brand.city,
+        bank: brand.bank,
+        accountName: brand.accountName,
+        accountNumber: brand.accountNumber,
+        instagram: brand.instagram,
+      },
     })
   }
 
@@ -234,7 +248,7 @@ export function InvoiceDetail() {
                   {booking.clientName}
                   <span className="font-medium text-[oklch(0.48_0.03_30)]">
                     {" "}
-                    · ({city || studio.city})
+                    · ({city || brand.city})
                   </span>
                 </p>
                 <p className="text-sm text-[oklch(0.48_0.03_30)]">
@@ -245,11 +259,12 @@ export function InvoiceDetail() {
               <div>
                 <p className="text-xs font-semibold tracking-[0.18em] uppercase">Issued by</p>
                 <p className="mt-2 text-base font-semibold">
-                  {studio.owner} · {studio.instagram}
+                  {brand.owner}
+                  {brand.instagram ? ` · ${brand.instagram}` : null}
                 </p>
-                <p className="text-sm text-[oklch(0.48_0.03_30)]">{studio.phone}</p>
+                <p className="text-sm text-[oklch(0.48_0.03_30)]">{brand.phone}</p>
                 <p className="text-sm text-[oklch(0.48_0.03_30)]">
-                  {studio.name} · {studio.city}
+                  {brand.name} · {brand.city}
                 </p>
               </div>
             </div>
@@ -310,9 +325,9 @@ export function InvoiceDetail() {
           <div className="relative mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
               <p className="text-xs font-semibold tracking-[0.18em] uppercase">Pay to</p>
-              <p className="mt-2 font-semibold">{studio.bank}</p>
+              <p className="mt-2 font-semibold">{brand.bank}</p>
               <p className="text-sm">
-                {studio.accountName} · {studio.accountNumber}
+                {brand.accountName} · {brand.accountNumber}
               </p>
               {booking.notes ? (
                 <p className="mt-3 max-w-sm text-sm text-[oklch(0.48_0.03_30)]">{booking.notes}</p>
@@ -339,13 +354,13 @@ export function InvoiceDetail() {
         </div>
 
         <footer className="bg-[oklch(0.93_0.035_15)] px-6 py-4 text-center text-sm font-medium tracking-[0.14em] uppercase text-[oklch(0.38_0.05_20)] sm:px-10">
-          WhatsApp {studio.phone} · {studio.city}
+          WhatsApp {brand.phone} · {brand.city}
         </footer>
       </article>
 
       <p className="no-print text-center text-xs text-muted-foreground">
         <Link href={`/p/${studio.slug}`} className="text-primary hover:underline">
-          Pricelist publik {studio.name}
+          Pricelist publik {brand.name}
         </Link>
       </p>
 

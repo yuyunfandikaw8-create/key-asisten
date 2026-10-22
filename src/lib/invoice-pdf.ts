@@ -11,12 +11,24 @@ export type InvoicePdfLine = {
   price: number
 }
 
+export type InvoicePdfBrand = {
+  name: string
+  owner: string
+  phone: string
+  city: string
+  bank: string
+  accountName: string
+  accountNumber: string
+  instagram?: string
+}
+
 export type InvoicePdfInput = {
   booking: Booking
   number: string
   city: string
   lines: InvoicePdfLine[]
   due: number
+  brand?: InvoicePdfBrand
 }
 
 function safeFilename(value: string) {
@@ -29,6 +41,16 @@ export function invoicePdfFilename(number: string, clientName: string) {
 
 export function buildInvoicePdf(input: InvoicePdfInput): Blob {
   const { booking, number, city, lines, due } = input
+  const brand = input.brand ?? {
+    name: studio.name,
+    owner: studio.owner,
+    phone: studio.phone,
+    city: studio.city,
+    bank: studio.bank,
+    accountName: studio.accountName,
+    accountNumber: studio.accountNumber,
+    instagram: studio.instagram,
+  }
   const doc = new jsPDF({ unit: "mm", format: "a4" })
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 16
@@ -49,12 +71,17 @@ export function buildInvoicePdf(input: InvoicePdfInput): Blob {
 
   doc.setFontSize(11)
   doc.setTextColor(40)
-  doc.text(studio.name, pageWidth - margin, 16, { align: "right" })
+  doc.text(brand.name, pageWidth - margin, 16, { align: "right" })
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...muted)
-  doc.text(studio.instagram, pageWidth - margin, 22, { align: "right" })
-  doc.text(studio.phone, pageWidth - margin, 27, { align: "right" })
+  if (brand.instagram) {
+    doc.text(brand.instagram, pageWidth - margin, 22, { align: "right" })
+    doc.text(brand.phone, pageWidth - margin, 27, { align: "right" })
+  } else {
+    doc.text(brand.owner, pageWidth - margin, 22, { align: "right" })
+    doc.text(brand.phone, pageWidth - margin, 27, { align: "right" })
+  }
 
   y = 48
   doc.setTextColor(...muted)
@@ -164,9 +191,9 @@ export function buildInvoicePdf(input: InvoicePdfInput): Blob {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...muted)
-  doc.text(studio.bank, margin, y)
+  doc.text(brand.bank, margin, y)
   y += 5
-  doc.text(`${studio.accountName} · ${studio.accountNumber}`, margin, y)
+  doc.text(`${brand.accountName} · ${brand.accountNumber}`, margin, y)
   y += 5
   doc.text(`Acara: ${EVENT_LABEL[booking.eventType]}`, margin, y)
 
@@ -190,7 +217,7 @@ export function buildInvoicePdf(input: InvoicePdfInput): Blob {
   doc.setFontSize(8)
   doc.setFont("helvetica", "bold")
   doc.text(
-    `WhatsApp ${studio.phone} · ${studio.city} · Key Assistant`,
+    `WhatsApp ${brand.phone} · ${brand.city || city} · ${brand.name}`,
     pageWidth / 2,
     292,
     { align: "center" }

@@ -21,10 +21,12 @@ import {
   Wallet,
 } from "lucide-react"
 
+import { useAuth } from "@/components/auth-provider"
 import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
 import { Input } from "@/components/ui/input"
 import { studio } from "@/lib/catalog"
+import { studioBrand } from "@/lib/studio-brand"
 import { cn } from "@/lib/utils"
 
 type MenuItem = {
@@ -174,6 +176,8 @@ const sections: MenuSection[] = [
 ]
 
 export default function MenuPage() {
+  const { user } = useAuth()
+  const brand = studioBrand(user)
   const { ready, city, messages, partnerships, combos } = useStudio()
   const [query, setQuery] = useState("")
 
@@ -294,21 +298,22 @@ export default function MenuPage() {
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-muted-foreground">Studio</dt>
-            <dd className="font-medium">{studio.name}</dd>
+            <dd className="font-medium">{brand.name}</dd>
             <dd>
-              {studio.owner} · {studio.instagram}
+              {brand.owner}
+              {brand.instagram ? ` · ${brand.instagram}` : null}
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Kontak</dt>
-            <dd className="font-medium">{studio.phone}</dd>
-            <dd>{studio.address}</dd>
+            <dd className="font-medium">{brand.phone}</dd>
+            <dd>{brand.address}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Rekening transfer</dt>
-            <dd className="font-medium">{studio.bank}</dd>
+            <dd className="font-medium">{brand.bank}</dd>
             <dd>
-              {studio.accountName} · {studio.accountNumber}
+              {brand.accountName} · {brand.accountNumber}
             </dd>
           </div>
           <div>

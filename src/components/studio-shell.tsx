@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/navigation"
 
 import { studio } from "@/lib/catalog"
+import { studioBrand } from "@/lib/studio-brand"
 import { useAuth } from "@/components/auth-provider"
 import { CitySearchPicker } from "@/components/city-search-picker"
 import { useStudio } from "@/components/studio-provider"
@@ -137,6 +138,7 @@ function CityPicker() {
 export function StudioShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, logout } = useAuth()
+  const brand = studioBrand(user)
   const { reset, notice, dismissNotice, city } = useStudio()
   const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
   const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
@@ -150,7 +152,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             Key Assistant
           </Link>
           <span className="hidden min-w-0 truncate text-sm text-muted-foreground lg:inline">
-            {user?.studioName ?? studio.name}
+            {brand.name}
           </span>
           {user ? (
             <span

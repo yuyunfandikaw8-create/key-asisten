@@ -16,11 +16,13 @@ import {
   Wallet,
 } from "lucide-react"
 
+import { useAuth } from "@/components/auth-provider"
 import { EmptyState, StudioLoading, StatusBadge } from "@/components/studio-bits"
 import { StudioMonthCalendar } from "@/components/studio-month-calendar"
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { attireById, attires, packageById, studio } from "@/lib/catalog"
+import { studioBrand } from "@/lib/studio-brand"
 import {
   daysUntil,
   EVENT_LABEL,
@@ -119,6 +121,8 @@ function compactMoney(value: number) {
 }
 
 export default function StudioHomePage() {
+  const { user } = useAuth()
+  const brand = studioBrand(user)
   const { ready, city, bookings, expenses, partnerships, combos, messages } = useStudio()
   const [selectedDate, setSelectedDate] = useState(() => todayISO())
 
@@ -205,7 +209,7 @@ export default function StudioHomePage() {
           <p className="text-sm text-muted-foreground">
             Selamat datang. Semoga hari ini berjalan lancar
           </p>
-          <h1 className="text-4xl">{studio.name}</h1>
+          <h1 className="text-4xl">{brand.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {greeting()} · {formatDate(todayISO())}
           </p>
