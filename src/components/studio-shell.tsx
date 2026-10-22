@@ -144,8 +144,8 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="studio-chrome sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-3">
+      <header className="studio-chrome sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 overflow-visible px-4 sm:gap-3">
           <Link href="/" className="font-display text-xl leading-none">
             Key Assistant
           </Link>
