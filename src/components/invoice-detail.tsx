@@ -350,9 +350,9 @@ export function InvoiceDetail() {
                 <span>Total</span>
                 <span>{rupiah(due)}</span>
               </div>
-              <p className="text-xs text-[oklch(0.5_0.03_30)]">
-                {due === 0 ? "Lunas" : `Sisa yang perlu dilunasi · DP diminta ${rupiah(booking.dp)}`}
-              </p>
+              {due === 0 ? (
+                <p className="text-xs text-[oklch(0.5_0.03_30)]">Lunas</p>
+              ) : null}
             </div>
           </div>
         </div>
