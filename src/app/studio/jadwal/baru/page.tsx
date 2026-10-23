@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { attires, packageById, packages, SAMPLE_CHAT } from "@/lib/catalog"
-import { dpFor, EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
+import { EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
 import { conflictsFor } from "@/lib/metrics"
 import { parseChat } from "@/lib/parse-chat"
 import { extractTextFromChatImage, isChatImageFile } from "@/lib/read-chat-image"
@@ -46,12 +46,12 @@ export default function NewBookingPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [clientName, setClientName] = useState("")
   const [phone, setPhone] = useState("")
-  const [eventType, setEventType] = useState<EventType>("pengantin")
+  const [eventType, setEventType] = useState<EventType | "">("")
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
   const [location, setLocation] = useState("")
-  const [packageId, setPackageId] = useState("emas")
-  const [dpAmount, setDpAmount] = useState(() => String(dpFor(packages[0]?.price ?? 0)))
+  const [packageId, setPackageId] = useState("")
+  const [dpAmount, setDpAmount] = useState("")
   const [attireId, setAttireId] = useState("none")
   const [notes, setNotes] = useState("")
   const [screenshotName, setScreenshotName] = useState("")
@@ -60,7 +60,7 @@ export default function NewBookingPage() {
   const [readingImage, setReadingImage] = useState(false)
   const [dragging, setDragging] = useState(false)
 
-  const selected = packageById(packageId) ?? packages[0]
+  const selected = packageId ? packageById(packageId) : undefined
   const clashes = useMemo(() => {
     if (!date || !time) return []
     return conflictsFor(bookings, {
@@ -89,15 +89,10 @@ export default function NewBookingPage() {
     setFound(parsed.found)
     if (parsed.clientName) setClientName(parsed.clientName)
     if (parsed.phone) setPhone(parsed.phone)
-    if (parsed.eventType) setEventType(parsed.eventType)
     if (parsed.date) setDate(parsed.date)
     if (parsed.time) setTime(parsed.time)
     if (parsed.location) setLocation(parsed.location)
-    if (parsed.packageId) {
-      setPackageId(parsed.packageId)
-      const pkg = packageById(parsed.packageId)
-      if (pkg) setDpAmount(String(dpFor(pkg.price)))
-    }
+    // Acara, paket, dan DP sengaja tidak diisi otomatis — owner yang memilih.
   }
 
   async function readScreenshot(file: File) {
@@ -144,6 +139,18 @@ export default function NewBookingPage() {
       setFormError("Nama, tanggal, dan jam wajib diisi.")
       return
     }
+    if (!eventType) {
+      setFormError("Pilih jenis acara dulu.")
+      return
+    }
+    if (!selected) {
+      setFormError("Pilih paket dulu.")
+      return
+    }
+    if (!dpAmount.trim()) {
+      setFormError("Isi nominal DP dulu.")
+      return
+    }
     setFormError("")
     if (clashes.length) {
       setConfirmOpen(true)
@@ -153,6 +160,7 @@ export default function NewBookingPage() {
   }
 
   function commit() {
+    if (!eventType || !selected) return
     const dpValue = Number(dpAmount.replace(/\D/g, "")) || 0
     const booking = addBooking({
       clientName: clientName.trim(),
@@ -353,12 +361,14 @@ export default function NewBookingPage() {
           <div className="grid gap-1.5">
             <Label>Acara</Label>
             <Select
-              value={eventType}
-              onValueChange={(value) => setEventType((value ?? "pengantin") as EventType)}
+              value={eventType || null}
+              onValueChange={(value) => setEventType((value as EventType) || "")}
             >
               <SelectTrigger className="h-10 w-full bg-background">
-                <SelectValue>
-                  {(value) => EVENT_LABEL[(value as EventType) ?? "pengantin"]}
+                <SelectValue placeholder="Pilih acara">
+                  {(value) =>
+                    value ? EVENT_LABEL[value as EventType] : "Pilih acara"
+                  }
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -373,18 +383,14 @@ export default function NewBookingPage() {
           <div className="grid gap-1.5">
             <Label>Paket</Label>
             <Select
-              value={packageId}
-              onValueChange={(value) => {
-                const nextId = value ?? "emas"
-                setPackageId(nextId)
-                const pkg = packageById(nextId)
-                if (pkg) setDpAmount(String(dpFor(pkg.price)))
-              }}
+              value={packageId || null}
+              onValueChange={(value) => setPackageId(value ?? "")}
             >
               <SelectTrigger className="h-10 w-full bg-background">
-                <SelectValue>
+                <SelectValue placeholder="Pilih paket">
                   {(value) => {
-                    const item = packageById(String(value ?? "emas"))
+                    if (!value) return "Pilih paket"
+                    const item = packageById(String(value))
                     return item ? `${item.name} · ${rupiah(item.price)}` : "Pilih paket"
                   }}
                 </SelectValue>
@@ -405,12 +411,9 @@ export default function NewBookingPage() {
               value={dpAmount}
               onChange={(event) => setDpAmount(event.target.value.replace(/\D/g, ""))}
               inputMode="numeric"
-              placeholder="1950000"
+              placeholder="Nominal DP"
               className="h-10 bg-background"
             />
-            <p className="text-xs text-muted-foreground">
-              {dpAmount ? rupiah(Number(dpAmount) || 0) : "Isi nominal DP"}
-            </p>
           </div>
           <div className="grid gap-1.5">
             <Label>Gaun</Label>
