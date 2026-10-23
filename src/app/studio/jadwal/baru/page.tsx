@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ImagePlus, LoaderCircle, X } from "lucide-react"
 
 import { ScheduleFields } from "@/components/schedule-fields"
+import { SearchableSelect, type SearchableOption } from "@/components/searchable-select"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,13 +18,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { attires, packageById, packages, SAMPLE_CHAT } from "@/lib/catalog"
 import { EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
@@ -33,7 +27,32 @@ import { extractTextFromChatImage, isChatImageFile } from "@/lib/read-chat-image
 import type { EventType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const events = Object.keys(EVENT_LABEL) as EventType[]
+const eventOptions: SearchableOption[] = (Object.keys(EVENT_LABEL) as EventType[]).map(
+  (event) => ({
+    value: event,
+    label: EVENT_LABEL[event],
+    keywords: event,
+  })
+)
+
+const packageOptions: SearchableOption[] = packages.map((item) => ({
+  value: item.id,
+  label: `${item.name} · ${rupiah(item.price)}`,
+  keywords: `${item.name} ${item.blurb} ${item.includes.join(" ")}`,
+}))
+
+const attireOptions: SearchableOption[] = [
+  {
+    value: "none",
+    label: "Tidak memakai gaun studio",
+    keywords: "tanpa none kosong",
+  },
+  ...attires.map((attire) => ({
+    value: attire.id,
+    label: attire.name,
+    keywords: `${attire.category} ${attire.tone} ${attire.size}`,
+  })),
+]
 
 export default function NewBookingPage() {
   const router = useRouter()
@@ -359,50 +378,28 @@ export default function NewBookingPage() {
             inputClassName="bg-background"
           />
           <div className="grid gap-1.5">
-            <Label>Acara</Label>
-            <Select
-              value={eventType || null}
-              onValueChange={(value) => setEventType((value as EventType) || "")}
-            >
-              <SelectTrigger className="h-10 w-full bg-background">
-                <SelectValue placeholder="Pilih acara">
-                  {(value) =>
-                    value ? EVENT_LABEL[value as EventType] : "Pilih acara"
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {events.map((event) => (
-                  <SelectItem key={event} value={event}>
-                    {EVENT_LABEL[event]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="acara">Acara</Label>
+            <SearchableSelect
+              id="acara"
+              value={eventType}
+              onChange={(value) => setEventType((value as EventType) || "")}
+              options={eventOptions}
+              placeholder="Ketik atau pilih acara"
+              emptyText="Acara tidak ditemukan."
+              aria-label="Cari acara"
+            />
           </div>
           <div className="grid gap-1.5">
-            <Label>Paket</Label>
-            <Select
-              value={packageId || null}
-              onValueChange={(value) => setPackageId(value ?? "")}
-            >
-              <SelectTrigger className="h-10 w-full bg-background">
-                <SelectValue placeholder="Pilih paket">
-                  {(value) => {
-                    if (!value) return "Pilih paket"
-                    const item = packageById(String(value))
-                    return item ? `${item.name} · ${rupiah(item.price)}` : "Pilih paket"
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {packages.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.name} · {rupiah(item.price)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="paket">Paket</Label>
+            <SearchableSelect
+              id="paket"
+              value={packageId}
+              onChange={setPackageId}
+              options={packageOptions}
+              placeholder="Ketik atau pilih paket"
+              emptyText="Paket tidak ditemukan."
+              aria-label="Cari paket"
+            />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="dp">DP</Label>
@@ -416,26 +413,16 @@ export default function NewBookingPage() {
             />
           </div>
           <div className="grid gap-1.5">
-            <Label>Gaun</Label>
-            <Select value={attireId} onValueChange={(value) => setAttireId(value ?? "none")}>
-              <SelectTrigger className="h-10 w-full bg-background">
-                <SelectValue>
-                  {(value) =>
-                    value === "none" || !value
-                      ? "Tidak memakai gaun studio"
-                      : (attires.find((item) => item.id === value)?.name ?? "Pilih gaun")
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Tidak memakai gaun studio</SelectItem>
-                {attires.map((attire) => (
-                  <SelectItem key={attire.id} value={attire.id}>
-                    {attire.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="gaun">Gaun</Label>
+            <SearchableSelect
+              id="gaun"
+              value={attireId}
+              onChange={setAttireId}
+              options={attireOptions}
+              placeholder="Ketik atau pilih gaun"
+              emptyText="Gaun tidak ditemukan."
+              aria-label="Cari gaun"
+            />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="lokasi">Lokasi</Label>
