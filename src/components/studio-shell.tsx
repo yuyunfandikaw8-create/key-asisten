@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LogOut,
+  MapPin,
   RotateCcw,
   Shirt,
   UserRound,
@@ -126,19 +127,28 @@ function MobileNav() {
 function CityPicker() {
   const { city, setCity, viewMode } = useStudio()
   const ownerOnly = viewMode === "real"
+
+  // Di data contoh: tampilkan chip (bukan tombol disabled) agar tidak menghalangi /
+  // menyesatkan klik tombol header lain.
+  if (!ownerOnly) {
+    return (
+      <span
+        className="inline-flex h-8 max-w-[9.5rem] items-center gap-1.5 truncate rounded-lg border border-border bg-card px-2.5 text-xs text-muted-foreground sm:max-w-[11rem] sm:text-sm"
+        title="Wilayah terkunci di data contoh. Ganti hanya di Data saya oleh owner."
+      >
+        <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden />
+        <span className="truncate">{city}</span>
+      </span>
+    )
+  }
+
   return (
     <CitySearchPicker
       value={city}
       onChange={setCity}
       compact
-      disabled={!ownerOnly}
       placeholder="Cari wilayah"
-      aria-label={
-        ownerOnly
-          ? "Pilih wilayah studio (hanya owner)"
-          : "Wilayah terkunci di data contoh — ganti di Data saya"
-      }
-      className={!ownerOnly ? "opacity-70" : undefined}
+      aria-label="Pilih wilayah studio"
     />
   )
 }
@@ -188,18 +198,22 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               Pricelist
             </Link>
             <Button
+              type="button"
               variant={viewMode === "demo" ? "default" : "outline"}
               size="sm"
               onClick={showDemo}
+              aria-label="Data contoh"
               title="Lihat contoh studio yang sudah terisi"
             >
               <RotateCcw />
               <span className="hidden sm:inline">Data contoh</span>
             </Button>
             <Button
+              type="button"
               variant={viewMode === "real" ? "default" : "outline"}
               size="sm"
               onClick={showReal}
+              aria-label="Data saya"
               title="Kembali ke data real akun ini"
             >
               <UserRound />
