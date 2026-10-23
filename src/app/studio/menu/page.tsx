@@ -177,8 +177,8 @@ const sections: MenuSection[] = [
 
 export default function MenuPage() {
   const { user } = useAuth()
-  const brand = studioBrand(user)
-  const { ready, city, messages, partnerships, combos } = useStudio()
+  const { ready, city, messages, partnerships, combos, viewMode } = useStudio()
+  const brand = studioBrand(user, { demo: viewMode === "demo" })
   const [query, setQuery] = useState("")
 
   const unread = messages.filter(

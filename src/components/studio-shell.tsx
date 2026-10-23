@@ -156,8 +156,8 @@ function CityPicker() {
 export function StudioShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, logout } = useAuth()
-  const brand = studioBrand(user)
   const { showDemo, showReal, viewMode, notice, dismissNotice, city } = useStudio()
+  const brand = studioBrand(user, { demo: viewMode === "demo" })
   const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
   const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
   const trialUrgent = trialDaysLeft > 0 && trialDaysLeft <= 3

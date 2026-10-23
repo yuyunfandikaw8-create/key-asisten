@@ -155,8 +155,9 @@ function compactMoney(value: number) {
 export default function StudioHomePage() {
   const router = useRouter()
   const { user, updateProfile } = useAuth()
-  const brand = studioBrand(user)
-  const { ready, city, bookings, expenses, partnerships, combos, messages } = useStudio()
+  const { ready, city, bookings, expenses, partnerships, combos, messages, viewMode } =
+    useStudio()
+  const brand = studioBrand(user, { demo: viewMode === "demo" })
   const [selectedDate, setSelectedDate] = useState(() => todayISO())
   const [incomePeriod, setIncomePeriod] = useState<IncomePeriod>("bulan")
   const [reopening, setReopening] = useState(false)
