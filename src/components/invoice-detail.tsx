@@ -19,9 +19,14 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { attireById, packageById, studio } from "@/lib/catalog"
 import {
-  EVENT_LABEL,
+  attireById,
+  bookingAttireName,
+  bookingEventLabel,
+  bookingPackageName,
+  studio,
+} from "@/lib/catalog"
+import {
   formatDate,
   formatShortDate,
   formatTime,
@@ -70,23 +75,25 @@ export function InvoiceDetail() {
   }
   const booking = found
 
-  const pkg = packageById(booking.packageId)
   const attire = attireById(booking.attireId)
+  const attireLabel = bookingAttireName(booking)
   const due = balance(booking)
   const number = invoiceNo(booking.date, booking.id)
   const filename = invoicePdfFilename(number, booking.clientName)
   const lines: LineItem[] = [
     {
-      label: pkg?.name ?? "Paket rias",
-      detail: `${EVENT_LABEL[booking.eventType]} · ${formatTime(booking.time)} · ${booking.location}`,
+      label: bookingPackageName(booking),
+      detail: `${bookingEventLabel(booking)} · ${formatTime(booking.time)} · ${booking.location}`,
       qty: 1,
       price: booking.price,
     },
   ]
-  if (attire) {
+  if (attireLabel) {
     lines.push({
-      label: `Sewa ${attire.name}`,
-      detail: `${attire.category} · ukuran ${attire.size}`,
+      label: `Sewa ${attireLabel}`,
+      detail: attire
+        ? `${attire.category} · ukuran ${attire.size}`
+        : "Gaun / wardrobe",
       qty: 1,
       price: 0,
     })
@@ -95,7 +102,7 @@ export function InvoiceDetail() {
   const message = [
     `Halo ${booking.clientName}, ini invoice ${brand.name} dalam bentuk PDF.`,
     number,
-    `${EVENT_LABEL[booking.eventType]} · ${formatDate(booking.date)} pukul ${formatTime(booking.time)}`,
+    `${bookingEventLabel(booking)} · ${formatDate(booking.date)} pukul ${formatTime(booking.time)}`,
     booking.location,
     `Total ${rupiah(booking.price)}`,
     `Sudah dibayar ${rupiah(booking.paid)}`,

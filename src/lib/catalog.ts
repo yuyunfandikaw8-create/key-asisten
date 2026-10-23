@@ -1,4 +1,4 @@
-import { addDays, dpFor, todayISO } from "@/lib/format"
+import { addDays, dpFor, EVENT_LABEL, todayISO } from "@/lib/format"
 import { initialCollaboration } from "@/lib/partners"
 import type { Attire, Booking, Expense, Package, StudioState } from "@/lib/types"
 
@@ -353,4 +353,31 @@ export function packageById(id: string) {
 export function attireById(id: string | null) {
   if (!id) return undefined
   return attires.find((item) => item.id === id)
+}
+
+export function bookingEventLabel(booking: {
+  eventType: Booking["eventType"]
+  eventLabel?: string
+}) {
+  const custom = booking.eventLabel?.trim()
+  if (custom) return custom
+  return EVENT_LABEL[booking.eventType] ?? booking.eventType
+}
+
+export function bookingPackageName(booking: {
+  packageId: string
+  packageName?: string
+}) {
+  const custom = booking.packageName?.trim()
+  if (custom) return custom
+  return packageById(booking.packageId)?.name ?? "Paket"
+}
+
+export function bookingAttireName(booking: {
+  attireId: string | null
+  attireName?: string
+}) {
+  const custom = booking.attireName?.trim()
+  if (custom) return custom
+  return attireById(booking.attireId)?.name
 }

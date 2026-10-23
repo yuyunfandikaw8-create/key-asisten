@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { ImagePlus, LoaderCircle, X } from "lucide-react"
 
 import { ScheduleFields } from "@/components/schedule-fields"
-import { SearchableSelect, type SearchableOption } from "@/components/searchable-select"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,40 +18,38 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { attires, packageById, packages, SAMPLE_CHAT } from "@/lib/catalog"
-import { EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
+import { attires, packages, SAMPLE_CHAT } from "@/lib/catalog"
+import { EVENT_LABEL, formatDate, formatTime } from "@/lib/format"
 import { conflictsFor } from "@/lib/metrics"
 import { parseChat } from "@/lib/parse-chat"
 import { extractTextFromChatImage, isChatImageFile } from "@/lib/read-chat-image"
 import type { EventType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const eventOptions: SearchableOption[] = (Object.keys(EVENT_LABEL) as EventType[]).map(
-  (event) => ({
-    value: event,
-    label: EVENT_LABEL[event],
-    keywords: event,
-  })
-)
+function resolveEventType(label: string): EventType {
+  const needle = label.trim().toLowerCase()
+  const matched = (Object.entries(EVENT_LABEL) as [EventType, string][]).find(
+    ([key, value]) => value.toLowerCase() === needle || key === needle
+  )
+  return matched?.[0] ?? "pengantin"
+}
 
-const packageOptions: SearchableOption[] = packages.map((item) => ({
-  value: item.id,
-  label: `${item.name} · ${rupiah(item.price)}`,
-  keywords: `${item.name} ${item.blurb} ${item.includes.join(" ")}`,
-}))
+function resolvePackage(label: string) {
+  const needle = label.trim().toLowerCase()
+  return packages.find(
+    (item) => item.name.toLowerCase() === needle || item.id === needle
+  )
+}
 
-const attireOptions: SearchableOption[] = [
-  {
-    value: "none",
-    label: "Tidak memakai gaun studio",
-    keywords: "tanpa none kosong",
-  },
-  ...attires.map((attire) => ({
-    value: attire.id,
-    label: attire.name,
-    keywords: `${attire.category} ${attire.tone} ${attire.size}`,
-  })),
-]
+function resolveAttire(label: string) {
+  const needle = label.trim().toLowerCase()
+  if (!needle) return null
+  return (
+    attires.find(
+      (item) => item.name.toLowerCase() === needle || item.id === needle
+    ) ?? null
+  )
+}
 
 export default function NewBookingPage() {
   const router = useRouter()
@@ -65,13 +62,14 @@ export default function NewBookingPage() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [clientName, setClientName] = useState("")
   const [phone, setPhone] = useState("")
-  const [eventType, setEventType] = useState<EventType | "">("")
+  const [acara, setAcara] = useState("")
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
   const [location, setLocation] = useState("")
-  const [packageId, setPackageId] = useState("")
+  const [paket, setPaket] = useState("")
+  const [priceAmount, setPriceAmount] = useState("")
   const [dpAmount, setDpAmount] = useState("")
-  const [attireId, setAttireId] = useState("none")
+  const [gaun, setGaun] = useState("")
   const [notes, setNotes] = useState("")
   const [screenshotName, setScreenshotName] = useState("")
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
@@ -79,15 +77,15 @@ export default function NewBookingPage() {
   const [readingImage, setReadingImage] = useState(false)
   const [dragging, setDragging] = useState(false)
 
-  const selected = packageId ? packageById(packageId) : undefined
+  const matchedAttire = resolveAttire(gaun)
   const clashes = useMemo(() => {
     if (!date || !time) return []
     return conflictsFor(bookings, {
       date,
       time,
-      attireId: attireId === "none" ? null : attireId,
+      attireId: matchedAttire?.id ?? null,
     })
-  }, [attireId, bookings, date, time])
+  }, [bookings, date, matchedAttire?.id, time])
 
   useEffect(() => {
     return () => {
@@ -158,12 +156,19 @@ export default function NewBookingPage() {
       setFormError("Nama, tanggal, dan jam wajib diisi.")
       return
     }
-    if (!eventType) {
-      setFormError("Pilih jenis acara dulu.")
+    if (!acara.trim()) {
+      setFormError("Isi jenis acara dulu.")
       return
     }
-    if (!selected) {
-      setFormError("Pilih paket dulu.")
+    if (!paket.trim()) {
+      setFormError("Isi nama paket dulu.")
+      return
+    }
+    const matchedPackage = resolvePackage(paket)
+    const priceValue =
+      matchedPackage?.price ?? (Number(priceAmount.replace(/\D/g, "")) || 0)
+    if (!priceValue) {
+      setFormError("Isi harga paket dulu.")
       return
     }
     if (!dpAmount.trim()) {
@@ -179,19 +184,30 @@ export default function NewBookingPage() {
   }
 
   function commit() {
-    if (!eventType || !selected) return
+    const acaraLabel = acara.trim()
+    const paketLabel = paket.trim()
+    const gaunLabel = gaun.trim()
+    const matchedPackage = resolvePackage(paketLabel)
+    const attire = resolveAttire(gaunLabel)
+    const priceValue =
+      matchedPackage?.price ?? (Number(priceAmount.replace(/\D/g, "")) || 0)
     const dpValue = Number(dpAmount.replace(/\D/g, "")) || 0
+    const eventType = resolveEventType(acaraLabel)
+
     const booking = addBooking({
       clientName: clientName.trim(),
       phone: phone.trim(),
       eventType,
+      eventLabel: acaraLabel,
       date,
       time,
       location: location.trim() || "Lokasi menyusul",
-      packageId: selected.id,
-      attireId: attireId === "none" ? null : attireId,
-      price: selected.price,
-      dp: Math.min(dpValue, selected.price),
+      packageId: matchedPackage?.id ?? "custom",
+      packageName: paketLabel,
+      attireId: attire?.id ?? (gaunLabel ? "custom" : null),
+      attireName: gaunLabel || undefined,
+      price: priceValue,
+      dp: Math.min(dpValue, priceValue),
       paid: 0,
       notes: notes.trim(),
       source: chat.trim() || screenshotName ? "chat" : "studio",
@@ -379,26 +395,33 @@ export default function NewBookingPage() {
           />
           <div className="grid gap-1.5">
             <Label htmlFor="acara">Acara</Label>
-            <SearchableSelect
+            <Input
               id="acara"
-              value={eventType}
-              onChange={(value) => setEventType((value as EventType) || "")}
-              options={eventOptions}
-              placeholder="Ketik atau pilih acara"
-              emptyText="Acara tidak ditemukan."
-              aria-label="Cari acara"
+              value={acara}
+              onChange={(event) => setAcara(event.target.value)}
+              placeholder="Contoh: Rias pengantin"
+              className="h-10 bg-background"
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="paket">Paket</Label>
-            <SearchableSelect
+            <Input
               id="paket"
-              value={packageId}
-              onChange={setPackageId}
-              options={packageOptions}
-              placeholder="Ketik atau pilih paket"
-              emptyText="Paket tidak ditemukan."
-              aria-label="Cari paket"
+              value={paket}
+              onChange={(event) => setPaket(event.target.value)}
+              placeholder="Contoh: Paket Emas"
+              className="h-10 bg-background"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="harga">Harga paket</Label>
+            <Input
+              id="harga"
+              value={priceAmount}
+              onChange={(event) => setPriceAmount(event.target.value.replace(/\D/g, ""))}
+              inputMode="numeric"
+              placeholder="Nominal harga"
+              className="h-10 bg-background"
             />
           </div>
           <div className="grid gap-1.5">
@@ -414,14 +437,12 @@ export default function NewBookingPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="gaun">Gaun</Label>
-            <SearchableSelect
+            <Input
               id="gaun"
-              value={attireId}
-              onChange={setAttireId}
-              options={attireOptions}
-              placeholder="Ketik atau pilih gaun"
-              emptyText="Gaun tidak ditemukan."
-              aria-label="Cari gaun"
+              value={gaun}
+              onChange={(event) => setGaun(event.target.value)}
+              placeholder="Kosongkan jika tidak pakai gaun studio"
+              className="h-10 bg-background"
             />
           </div>
           <div className="grid gap-1.5">

@@ -21,11 +21,16 @@ import { EmptyState, StudioLoading, StatusBadge } from "@/components/studio-bits
 import { StudioMonthCalendar } from "@/components/studio-month-calendar"
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
-import { attireById, attires, packageById, studio } from "@/lib/catalog"
+import {
+  attires,
+  bookingAttireName,
+  bookingEventLabel,
+  bookingPackageName,
+  studio,
+} from "@/lib/catalog"
 import { studioBrand } from "@/lib/studio-brand"
 import {
   daysUntil,
-  EVENT_LABEL,
   formatDate,
   formatShortDate,
   formatTime,
@@ -376,10 +381,10 @@ export default function StudioHomePage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">
-                        {packageById(booking.packageId)?.name ?? EVENT_LABEL[booking.eventType]}
+                        {bookingPackageName(booking)}
                       </p>
                       <p className="truncate text-sm text-muted-foreground">
-                        {booking.clientName} · {EVENT_LABEL[booking.eventType]}
+                        {booking.clientName} · {bookingEventLabel(booking)}
                       </p>
                     </div>
                     <AgendaStatusPill tone={status.tone}>{status.label}</AgendaStatusPill>
@@ -496,7 +501,7 @@ export default function StudioHomePage() {
             >
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <span>
-                {attireById(booking.attireId)?.name} untuk {booking.clientName} belum ditandai
+                {bookingAttireName(booking)} untuk {booking.clientName} belum ditandai
                 kembali.
               </span>
             </Link>
@@ -538,7 +543,7 @@ export default function StudioHomePage() {
                 <p className="font-medium">{booking.clientName}</p>
                 <p className="text-sm text-muted-foreground">
                   {formatShortDate(booking.date)} · {formatTime(booking.time)} ·{" "}
-                  {EVENT_LABEL[booking.eventType]} · {packageById(booking.packageId)?.name}
+                  {bookingEventLabel(booking)} · {bookingPackageName(booking)}
                 </p>
               </div>
               <StatusBadge status={paymentStatus(booking)} />

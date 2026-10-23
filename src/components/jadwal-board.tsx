@@ -9,8 +9,8 @@ import { EmptyState, StatusBadge, StudioLoading } from "@/components/studio-bits
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { packageById } from "@/lib/catalog"
-import { daysUntil, EVENT_LABEL, formatShortDate, formatTime } from "@/lib/format"
+import { bookingEventLabel, bookingPackageName } from "@/lib/catalog"
+import { daysUntil, formatShortDate, formatTime } from "@/lib/format"
 import { conflictPairs, paymentStatus, sortBookings } from "@/lib/metrics"
 import type { PaymentStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -123,7 +123,7 @@ export function JadwalBoard() {
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 {formatShortDate(booking.date)} · {formatTime(booking.time)} ·{" "}
-                {EVENT_LABEL[booking.eventType]} · {packageById(booking.packageId)?.name}
+                {bookingEventLabel(booking)} · {bookingPackageName(booking)}
               </p>
               <p className="text-sm text-muted-foreground">{booking.location}</p>
             </Link>

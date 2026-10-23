@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf"
 
-import { studio } from "@/lib/catalog"
-import { EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
+import { bookingEventLabel, studio } from "@/lib/catalog"
+import { formatDate, formatTime, rupiah } from "@/lib/format"
 import type { Booking } from "@/lib/types"
 
 export type InvoicePdfLine = {
@@ -195,7 +195,7 @@ export function buildInvoicePdf(input: InvoicePdfInput): Blob {
   y += 5
   doc.text(`${brand.accountName} · ${brand.accountNumber}`, margin, y)
   y += 5
-  doc.text(`Acara: ${EVENT_LABEL[booking.eventType]}`, margin, y)
+  doc.text(`Acara: ${bookingEventLabel(booking)}`, margin, y)
 
   if (booking.notes) {
     y += 8

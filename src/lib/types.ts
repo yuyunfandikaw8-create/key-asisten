@@ -43,6 +43,10 @@ export type Booking = {
   source: BookingSource
   attireReturned: boolean
   createdAt: string
+  /** Teks bebas dari owner bila tidak memakai opsi katalog. */
+  eventLabel?: string
+  packageName?: string
+  attireName?: string
 }
 
 export type Expense = {
