@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import {
+  BriefcaseBusiness,
   CalendarDays,
   ChevronRight,
   FileText,
@@ -18,6 +19,7 @@ import {
   Settings2,
   Shirt,
   Sparkles,
+  UserRound,
   Wallet,
 } from "lucide-react"
 
@@ -26,6 +28,7 @@ import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
 import { Input } from "@/components/ui/input"
 import { studio } from "@/lib/catalog"
+import { formatFieldsSummary } from "@/lib/onboarding"
 import { studioBrand } from "@/lib/studio-brand"
 import { cn } from "@/lib/utils"
 
@@ -83,6 +86,20 @@ const sections: MenuSection[] = [
         Icon: Inbox,
         tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
       },
+      {
+        href: "/studio/profil",
+        title: "Profil bisnis",
+        body: "Logo, nama, WhatsApp, Instagram, kota — seperti langkah 4 daftar",
+        Icon: UserRound,
+        tone: "bg-[oklch(0.94_0.03_15)] text-[oklch(0.48_0.1_15)]",
+      },
+      {
+        href: "/studio/layanan",
+        title: "Layanan & harga",
+        body: "Bidang, paket, harga, dan durasi — seperti langkah 5 daftar",
+        Icon: BriefcaseBusiness,
+        tone: "bg-[oklch(0.93_0.04_340)] text-[oklch(0.45_0.1_340)]",
+      },
     ],
   },
   {
@@ -124,9 +141,9 @@ const sections: MenuSection[] = [
         tone: "bg-[oklch(0.94_0.03_300)] text-[oklch(0.45_0.1_300)]",
       },
       {
-        href: `/p/${studio.slug}`,
+        href: "/studio/layanan",
         title: "Katalog layanan & harga",
-        body: "Paket Emas, Adat, Perak, Wisuda di pricelist",
+        body: "Kelola paket, harga, dan durasi milik bisnis kamu",
         Icon: Sparkles,
         tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
       },
@@ -158,9 +175,9 @@ const sections: MenuSection[] = [
         tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
       },
       {
-        href: "/studio/menu#identitas",
+        href: "/studio/profil",
         title: "Identitas & rekening",
-        body: "Nama studio, Instagram, dan rekening transfer",
+        body: "Nama studio, Instagram, dan profil bisnis",
         Icon: Settings2,
         tone: "bg-[oklch(0.94_0.02_80)] text-[oklch(0.42_0.05_60)]",
       },
@@ -290,10 +307,21 @@ export default function MenuPage() {
         </p>
       </section>
 
-      <section id="identitas" className="scroll-mt-24 grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <div className="flex items-center gap-2">
-          <Settings2 className="size-4 text-primary" />
-          <h2 className="text-2xl">Identitas & rekening</h2>
+            <section id="identitas" className="scroll-mt-24 grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Settings2 className="size-4 text-primary" />
+            <h2 className="text-2xl">Identitas & rekening</h2>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <Link href="/studio/profil" className="font-medium text-primary hover:underline">
+              Edit profil
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <Link href="/studio/layanan" className="font-medium text-primary hover:underline">
+              Edit layanan
+            </Link>
+          </div>
         </div>
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
@@ -317,11 +345,13 @@ export default function MenuPage() {
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Mode bisnis</dt>
+            <dt className="text-muted-foreground">Layanan terdaftar</dt>
             <dd className="font-medium">
-              Make Up Artist · Hijab & Hair · Decsets · Attire · Foto · Content
+              {user?.services?.length
+                ? `${user.services.length} paket / layanan`
+                : "Belum ada — tambah di Layanan & harga"}
             </dd>
-            <dd>Kombo partner per kota</dd>
+            <dd>{formatFieldsSummary(user?.businessFields)}</dd>
           </div>
         </dl>
       </section>

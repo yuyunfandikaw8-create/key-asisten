@@ -191,6 +191,9 @@ function userFromMetadata(
   const businessFields = Array.isArray(metadata?.business_fields)
     ? (metadata.business_fields as BusinessFieldId[])
     : undefined
+  const services = Array.isArray(metadata?.services)
+    ? (metadata.services as BusinessService[])
+    : undefined
   return {
     id,
     email,
@@ -206,6 +209,7 @@ function userFromMetadata(
     instagram,
     address,
     businessFields,
+    services,
   }
 }
 
@@ -647,6 +651,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 instagram: nextUser.instagram,
                 address: nextUser.address,
                 business_fields: nextUser.businessFields,
+                services: nextUser.services,
               },
             })
             .catch(() => {

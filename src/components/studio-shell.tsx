@@ -178,41 +178,43 @@ function DataModeSwitcher() {
   }, [open])
 
   return (
-    <div ref={rootRef} className="relative flex items-center gap-2">
+    <div ref={rootRef} className="relative flex items-center gap-1.5">
       {isDemo ? (
-        <span className="inline-flex h-8 items-center gap-1 rounded-full bg-primary px-2.5 text-xs font-semibold text-primary-foreground">
-          Data Contoh
+        <>
+          <span className="inline-flex h-8 items-center rounded-full bg-primary px-3 text-xs font-semibold text-primary-foreground">
+            Data Contoh
+          </span>
           <button
             type="button"
-            className="rounded-full p-0.5 hover:bg-primary-foreground/15"
+            className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
             aria-label="Keluar dari data contoh"
             title="Kembali ke data bisnis saya"
             onClick={showReal}
           >
             <X className="size-3.5" />
           </button>
-        </span>
+        </>
       ) : null}
 
       <div className="relative">
         <button
           type="button"
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-full border bg-card px-3 text-xs font-semibold sm:text-sm",
-            open ? "border-primary/40 ring-2 ring-primary/15" : "border-border"
+            "inline-flex h-8 items-center gap-1.5 rounded-full border border-border/80 bg-[oklch(0.97_0.01_20)] px-3 text-xs font-semibold text-foreground sm:text-sm",
+            open && "border-primary/35 ring-2 ring-primary/10"
           )}
           aria-haspopup="menu"
           aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
         >
-          {isDemo ? "Key Partner" : "Data Saya"}
-          <ChevronDown className={cn("size-3.5 transition", open && "rotate-180")} />
+          Data Saya
+          <ChevronDown className={cn("size-3.5 opacity-70 transition", open && "rotate-180")} />
         </button>
 
         {open ? (
           <div
             role="menu"
-            className="absolute top-full right-0 z-50 mt-1.5 w-56 overflow-hidden rounded-xl border bg-card py-1 shadow-lg"
+            className="absolute top-full right-0 z-50 mt-1.5 w-56 overflow-hidden rounded-2xl border border-border/70 bg-card py-1 shadow-lg"
           >
             <button
               type="button"
@@ -220,7 +222,9 @@ function DataModeSwitcher() {
               aria-checked={!isDemo}
               className={cn(
                 "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition",
-                !isDemo ? "bg-accent/70 font-medium" : "hover:bg-muted/70"
+                !isDemo
+                  ? "bg-[oklch(0.96_0.02_20)] font-medium"
+                  : "hover:bg-[oklch(0.97_0.015_20)]"
               )}
               onClick={() => {
                 showReal()
@@ -228,7 +232,7 @@ function DataModeSwitcher() {
               }}
             >
               <Check
-                className={cn("size-4", !isDemo ? "text-primary" : "text-transparent")}
+                className={cn("size-4 shrink-0", !isDemo ? "text-primary" : "text-transparent")}
               />
               <span>Data bisnis saya</span>
             </button>
@@ -238,14 +242,16 @@ function DataModeSwitcher() {
               aria-checked={isDemo}
               className={cn(
                 "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition",
-                isDemo ? "bg-accent/70 font-medium" : "hover:bg-muted/70"
+                isDemo
+                  ? "bg-[oklch(0.96_0.02_20)] font-medium"
+                  : "hover:bg-[oklch(0.97_0.015_20)]"
               )}
               onClick={() => {
                 showDemo()
                 setOpen(false)
               }}
             >
-              <FlaskConical className="size-4 text-primary" />
+              <FlaskConical className="size-4 shrink-0 text-primary" />
               <span>Coba data contoh</span>
             </button>
           </div>
