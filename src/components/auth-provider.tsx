@@ -605,9 +605,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        // Jangan await — updateUser Supabase sering menggantung di jaringan lambat
+        // dan membuat tombol "Menyimpan…" stuck. Profil lokal sudah cukup untuk masuk studio.
         if (supabase && !isDemoEmail(user.email)) {
-          try {
-            await supabase.auth.updateUser({
+          void supabase.auth
+            .updateUser({
               data: {
                 name: nextUser.name,
                 phone: nextUser.phone,
@@ -621,9 +623,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 business_fields: nextUser.businessFields,
               },
             })
-          } catch {
-            // Profil lokal sudah tersimpan; sinkron cloud boleh gagal.
-          }
+            .catch(() => {
+              // Sinkron cloud opsional.
+            })
         }
         return nextUser
       },

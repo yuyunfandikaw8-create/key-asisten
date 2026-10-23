@@ -212,7 +212,8 @@ export default function OnboardingPage() {
         return
       }
       if (updated.city) setCity(updated.city)
-      router.replace("/studio")
+      // Hard navigation supaya tidak tertahan di layar onboarding.
+      window.location.assign("/studio")
     } catch {
       setError("Gagal menyimpan. Periksa koneksi lalu coba lagi.")
       setPending(false)
