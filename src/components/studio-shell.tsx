@@ -2,20 +2,22 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import {
   CalendarDays,
+  Check,
+  ChevronDown,
   FileText,
+  FlaskConical,
   Handshake,
   Inbox,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
   MapPin,
-  RotateCcw,
   Shirt,
-  UserRound,
   Wallet,
+  X,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
@@ -133,7 +135,7 @@ function CityPicker() {
   if (!ownerOnly) {
     return (
       <span
-        className="inline-flex h-8 max-w-[9.5rem] items-center gap-1.5 truncate rounded-lg border border-border bg-card px-2.5 text-xs text-muted-foreground sm:max-w-[11rem] sm:text-sm"
+        className="inline-flex h-8 max-w-[9.5rem] items-center gap-1.5 truncate rounded-full border border-border bg-card px-2.5 text-xs text-muted-foreground sm:max-w-[11rem] sm:text-sm"
         title="Wilayah terkunci di data contoh. Ganti hanya di Data saya oleh owner."
       >
         <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden />
@@ -153,10 +155,110 @@ function CityPicker() {
   )
 }
 
+function DataModeSwitcher() {
+  const { viewMode, showDemo, showReal } = useStudio()
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const isDemo = viewMode === "demo"
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("mousedown", onPointerDown)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={rootRef} className="relative flex items-center gap-2">
+      {isDemo ? (
+        <span className="inline-flex h-8 items-center gap-1 rounded-full bg-primary px-2.5 text-xs font-semibold text-primary-foreground">
+          Data Contoh
+          <button
+            type="button"
+            className="rounded-full p-0.5 hover:bg-primary-foreground/15"
+            aria-label="Keluar dari data contoh"
+            title="Kembali ke data bisnis saya"
+            onClick={showReal}
+          >
+            <X className="size-3.5" />
+          </button>
+        </span>
+      ) : null}
+
+      <div className="relative">
+        <button
+          type="button"
+          className={cn(
+            "inline-flex h-8 items-center gap-1.5 rounded-full border bg-card px-3 text-xs font-semibold sm:text-sm",
+            open ? "border-primary/40 ring-2 ring-primary/15" : "border-border"
+          )}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {isDemo ? "Key Partner" : "Data Saya"}
+          <ChevronDown className={cn("size-3.5 transition", open && "rotate-180")} />
+        </button>
+
+        {open ? (
+          <div
+            role="menu"
+            className="absolute top-full right-0 z-50 mt-1.5 w-56 overflow-hidden rounded-xl border bg-card py-1 shadow-lg"
+          >
+            <button
+              type="button"
+              role="menuitemradio"
+              aria-checked={!isDemo}
+              className={cn(
+                "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition",
+                !isDemo ? "bg-accent/70 font-medium" : "hover:bg-muted/70"
+              )}
+              onClick={() => {
+                showReal()
+                setOpen(false)
+              }}
+            >
+              <Check
+                className={cn("size-4", !isDemo ? "text-primary" : "text-transparent")}
+              />
+              <span>Data bisnis saya</span>
+            </button>
+            <button
+              type="button"
+              role="menuitemradio"
+              aria-checked={isDemo}
+              className={cn(
+                "flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition",
+                isDemo ? "bg-accent/70 font-medium" : "hover:bg-muted/70"
+              )}
+              onClick={() => {
+                showDemo()
+                setOpen(false)
+              }}
+            >
+              <FlaskConical className="size-4 text-primary" />
+              <span>Coba data contoh</span>
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export function StudioShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, logout } = useAuth()
-  const { showDemo, showReal, viewMode, notice, dismissNotice, city } = useStudio()
+  const { viewMode, notice, dismissNotice, city } = useStudio()
   const brand = studioBrand(user, { demo: viewMode === "demo" })
   const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
   const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
@@ -191,34 +293,13 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           ) : null}
           <div className="relative z-50 ml-auto flex items-center gap-2 pointer-events-auto">
             <CityPicker />
+            <DataModeSwitcher />
             <Link
               href={`/p/${studio.slug}`}
               className="hidden text-sm font-medium text-primary hover:underline sm:inline"
             >
               Pricelist
             </Link>
-            <Button
-              type="button"
-              variant={viewMode === "demo" ? "default" : "outline"}
-              size="sm"
-              onClick={showDemo}
-              aria-label="Data contoh"
-              title="Lihat contoh studio yang sudah terisi"
-            >
-              <RotateCcw />
-              <span className="hidden sm:inline">Data contoh</span>
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === "real" ? "default" : "outline"}
-              size="sm"
-              onClick={showReal}
-              aria-label="Data saya"
-              title="Kembali ke data real akun ini"
-            >
-              <UserRound />
-              <span className="hidden sm:inline">Data saya</span>
-            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -243,17 +324,6 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               Masa trial kamu tinggal {trialDaysLeft} hari
               {trialEndsLabel ? ` (sampai ${trialEndsLabel})` : null}. Hubungi kami sebelum
               akses studio dinonaktifkan.
-            </div>
-          ) : null}
-          {viewMode === "demo" ? (
-            <div className="mb-4 flex flex-col gap-2 rounded-xl bg-[oklch(0.96_0.03_75)] px-4 py-3 text-sm text-[oklch(0.4_0.08_55)] ring-1 ring-[oklch(0.88_0.05_55)] sm:flex-row sm:items-center sm:justify-between">
-              <p>
-                Mode <span className="font-semibold">data contoh</span> — hanya untuk melihat
-                tampilan studio terisi. Data real tidak berubah.
-              </p>
-              <Button size="sm" variant="outline" className="bg-card" onClick={showReal}>
-                Ke data saya
-              </Button>
             </div>
           ) : null}
           {notice ? (
