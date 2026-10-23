@@ -1,5 +1,8 @@
 export type AuthProviderKind = "password" | "google"
 
+/** Owner mengelola studio; klien mencari vendor / booking. */
+export type AuthRole = "owner" | "client"
+
 export type AuthUser = {
   id: string
   name: string
@@ -8,9 +11,18 @@ export type AuthUser = {
   city: string
   studioName: string
   provider: AuthProviderKind
+  role: AuthRole
   avatar?: string
   /** ISO timestamp when the 14-day trial began */
   trialStartedAt?: string
+}
+
+export function normalizeRole(role: unknown): AuthRole {
+  return role === "client" ? "client" : "owner"
+}
+
+export function homePathForUser(user: Pick<AuthUser, "role"> | null | undefined) {
+  return user?.role === "client" ? "/klien" : "/studio"
 }
 
 export type StoredAccount = AuthUser & {
@@ -41,6 +53,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     studioName: "Key Partner",
     password: "laras123",
     provider: "password",
+    role: "owner",
   },
   {
     id: "user-suro",
@@ -51,6 +64,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     studioName: "Nadya Rias Surabaya",
     password: "suro123",
     provider: "password",
+    role: "owner",
   },
 ]
 
@@ -90,7 +104,7 @@ export const GOOGLE_CHOICES: GoogleChoice[] = [
 
 export function toPublicUser(account: StoredAccount): AuthUser {
   const { password: _password, ...user } = account
-  return user
+  return { ...user, role: normalizeRole(user.role) }
 }
 
 export function normalizeEmail(email: string) {

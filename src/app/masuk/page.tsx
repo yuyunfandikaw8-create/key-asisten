@@ -9,7 +9,17 @@ import { GoogleAuthButton } from "@/components/google-auth-button"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { homePathForUser, type AuthUser } from "@/lib/auth"
 import { cn } from "@/lib/utils"
+
+function resolveNextPath(requested: string, user: AuthUser) {
+  const home = homePathForUser(user)
+  if (!requested.startsWith("/")) return home
+  if (user.role === "client" && requested.startsWith("/studio")) return home
+  if (user.role === "owner" && requested.startsWith("/klien")) return home
+  return requested
+}
+
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
@@ -19,14 +29,16 @@ function LoginForm() {
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
 
-  const nextPath = (() => {
-    const next = params.get("next") || "/studio"
-    return next.startsWith("/") ? next : "/studio"
+  const requestedNext = (() => {
+    const next = params.get("next") || ""
+    return next.startsWith("/") ? next : ""
   })()
 
   useEffect(() => {
-    if (ready && user) router.replace(nextPath)
-  }, [nextPath, ready, router, user])
+    if (ready && user) {
+      router.replace(resolveNextPath(requestedNext || homePathForUser(user), user))
+    }
+  }, [ready, requestedNext, router, user])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -39,7 +51,9 @@ function LoginForm() {
       return
     }
     // Jangan setCity di sini — wilayah Data saya milik owner dan tidak diganti saat login.
-    router.replace(nextPath)
+    router.replace(
+      resolveNextPath(requestedNext || homePathForUser(result.user), result.user)
+    )
   }
 
   return (
@@ -58,9 +72,11 @@ function LoginForm() {
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
           mode="masuk"
-          nextPath={nextPath}
-          onSuccess={() => {
-            router.replace(nextPath)
+          nextPath={requestedNext || "/studio"}
+          onSuccess={(nextUser) => {
+            router.replace(
+              resolveNextPath(requestedNext || homePathForUser(nextUser), nextUser)
+            )
           }}
         />
         <div className="flex items-center gap-3 text-xs text-muted-foreground">

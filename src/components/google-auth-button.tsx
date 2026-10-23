@@ -5,7 +5,12 @@ import { useState } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { GOOGLE_CHOICES, type AuthUser, type GoogleChoice } from "@/lib/auth"
+import {
+  GOOGLE_CHOICES,
+  type AuthRole,
+  type AuthUser,
+  type GoogleChoice,
+} from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 function GoogleMark({ className }: { className?: string }) {
@@ -52,11 +57,14 @@ function choiceFromEmail(email: string): GoogleChoice {
 export function GoogleAuthButton({
   mode,
   nextPath = "/studio",
+  role = "owner",
   onSuccess,
   className,
 }: {
   mode: "masuk" | "daftar"
   nextPath?: string
+  /** Dipakai saat daftar akun baru lewat Google. */
+  role?: AuthRole
   onSuccess: (user: AuthUser) => void
   className?: string
 }) {
@@ -70,7 +78,10 @@ export function GoogleAuthButton({
     setError("")
     setPending(true)
     try {
-      const result = await continueWithGoogle(choice)
+      const result = await continueWithGoogle(
+        choice,
+        mode === "daftar" ? role : undefined
+      )
       if (!result.ok) {
         setError(result.error)
         return
@@ -87,6 +98,9 @@ export function GoogleAuthButton({
     if (googleEnabled) {
       setPending(true)
       try {
+        if (mode === "daftar" && typeof window !== "undefined") {
+          sessionStorage.setItem("key-assistant.register-role", role)
+        }
         const result = await startGoogleOAuth(nextPath)
         if (result.ok) {
           onSuccess(result.user)

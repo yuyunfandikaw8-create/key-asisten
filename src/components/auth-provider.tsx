@@ -14,7 +14,9 @@ import {
   AUTH_STORAGE_KEY,
   DEMO_ACCOUNTS,
   normalizeEmail,
+  normalizeRole,
   toPublicUser,
+  type AuthRole,
   type AuthUser,
   type GoogleChoice,
   type StoredAccount,
@@ -37,8 +39,9 @@ type AuthContextValue = {
     city: string
     studioName: string
     password: string
+    role: AuthRole
   }) => Promise<AuthResult>
-  continueWithGoogle: (choice: GoogleChoice) => Promise<AuthResult>
+  continueWithGoogle: (choice: GoogleChoice, role?: AuthRole) => Promise<AuthResult>
   startGoogleOAuth: (nextPath?: string) => Promise<AuthResult>
   /** Owner-only: persist studio wilayah on the account profile. */
   updateOwnerCity: (city: string) => Promise<void>
@@ -85,6 +88,7 @@ function userFromMetadata(
     (typeof metadata?.studioName === "string" && metadata.studioName) ||
     name
   const phone = typeof metadata?.phone === "string" ? metadata.phone : ""
+  const role = normalizeRole(metadata?.role)
   const trialStartedAt =
     typeof metadata?.trial_started_at === "string" && metadata.trial_started_at
       ? metadata.trial_started_at
@@ -97,6 +101,7 @@ function userFromMetadata(
     studioName,
     phone,
     provider,
+    role,
     trialStartedAt,
   }
 }
@@ -104,6 +109,25 @@ function userFromMetadata(
 function withTrial(user: AuthUser): AuthUser {
   if (user.trialStartedAt) return user
   return { ...user, trialStartedAt: nowIso() }
+}
+
+/** Ambil pilihan role dari halaman daftar sebelum OAuth Google redirect. */
+function withPendingRegisterRole(user: AuthUser): AuthUser {
+  if (typeof window === "undefined") return user
+  try {
+    const pending = sessionStorage.getItem("key-assistant.register-role")
+    if (!pending) return user
+    sessionStorage.removeItem("key-assistant.register-role")
+    const role = normalizeRole(pending)
+    if (role === user.role) return user
+    const next = { ...user, role }
+    if (supabase && !isDemoEmail(user.email)) {
+      void supabase.auth.updateUser({ data: { role } })
+    }
+    return next
+  } catch {
+    return user
+  }
 }
 
 function persistAccountTrial(email: string, trialStartedAt: string) {
@@ -142,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const next = withTrial({
             ...parsed,
             provider: parsed.provider ?? "password",
+            role: normalizeRole(parsed.role),
           })
           setUser(next)
           persistAccountTrial(next.email, next.trialStartedAt!)
@@ -181,11 +206,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const sessionUser = data.session?.user
         if (active && sessionUser?.email) {
           setUser(
-            userFromMetadata(
-              sessionUser.id,
-              sessionUser.email,
-              sessionUser.user_metadata as Record<string, unknown>,
-              sessionUser.app_metadata?.provider === "google" ? "google" : "password"
+            withPendingRegisterRole(
+              userFromMetadata(
+                sessionUser.id,
+                sessionUser.email,
+                sessionUser.user_metadata as Record<string, unknown>,
+                sessionUser.app_metadata?.provider === "google" ? "google" : "password"
+              )
             )
           )
           localStorage.removeItem(AUTH_STORAGE_KEY)
@@ -199,11 +226,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const next = session?.user
         if (next?.email) {
           setUser(
-            userFromMetadata(
-              next.id,
-              next.email,
-              next.user_metadata as Record<string, unknown>,
-              next.app_metadata?.provider === "google" ? "google" : "password"
+            withPendingRegisterRole(
+              userFromMetadata(
+                next.id,
+                next.email,
+                next.user_metadata as Record<string, unknown>,
+                next.app_metadata?.provider === "google" ? "google" : "password"
+              )
             )
           )
           localStorage.removeItem(AUTH_STORAGE_KEY)
@@ -296,6 +325,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           studioName: name,
           password: pass,
           provider: "password",
+          role: "owner",
           trialStartedAt: nowIso(),
         }
         writeAccounts([...accounts, account])
@@ -318,6 +348,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, error: "Email ini sudah terdaftar. Silakan masuk." }
         }
 
+        const role = normalizeRole(input.role)
         const trialStartedAt = nowIso()
         const account: StoredAccount = {
           id: crypto.randomUUID(),
@@ -325,9 +356,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email,
           phone: input.phone.trim(),
           city: input.city.trim() || "Bandung",
-          studioName: input.studioName.trim() || input.name.trim(),
+          studioName:
+            role === "client"
+              ? input.name.trim()
+              : input.studioName.trim() || input.name.trim(),
           password: input.password.trim(),
           provider: "password",
+          role,
           trialStartedAt,
         }
 
@@ -346,7 +381,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 name: input.name.trim(),
                 phone: input.phone.trim(),
                 city: input.city.trim() || "Bandung",
-                studio_name: input.studioName.trim() || input.name.trim(),
+                studio_name: account.studioName,
+                role,
                 trial_started_at: trialStartedAt,
               },
               emailRedirectTo:
@@ -357,7 +393,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return { ok: true, user: publicUser }
       },
-      continueWithGoogle: async (choice) => {
+      continueWithGoogle: async (choice, role = "owner") => {
         const email = normalizeEmail(choice.email)
         if (!email) {
           return { ok: false, error: "Email Google tidak valid." }
@@ -370,6 +406,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               ...existing,
               provider: "google",
               name: existing.name || choice.name,
+              role: normalizeRole(existing.role),
             })
           )
           if (!existing.trialStartedAt && publicUser.trialStartedAt) {
@@ -379,15 +416,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
           return { ok: true, user: publicUser }
         }
+        const nextRole = normalizeRole(role)
         const account: StoredAccount = {
           id: crypto.randomUUID(),
           name: choice.name,
           email,
           phone: choice.phone,
           city: choice.city,
-          studioName: choice.studioName,
+          studioName: nextRole === "client" ? choice.name : choice.studioName,
           password: `google:${email}`,
           provider: "google",
+          role: nextRole,
           avatar: choice.initial,
           trialStartedAt: nowIso(),
         }
