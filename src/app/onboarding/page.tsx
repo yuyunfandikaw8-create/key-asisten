@@ -49,8 +49,6 @@ export default function OnboardingPage() {
   const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>()
   const [services, setServices] = useState<BusinessService[]>([])
   const [draftName, setDraftName] = useState("")
-  const [draftPrice, setDraftPrice] = useState("")
-  const [draftDuration, setDraftDuration] = useState("")
   const [draftField, setDraftField] = useState<BusinessFieldId | "">("")
   const [showCustomForm, setShowCustomForm] = useState(false)
 
@@ -148,17 +146,20 @@ export default function OnboardingPage() {
           id: crypto.randomUUID(),
           fieldId,
           name: preset.name,
-          price: preset.price,
-          durationHours: preset.durationHours,
+          price: 0,
+          durationHours: 0,
         },
       ]
     })
   }
 
-  function applyPresetToDraft(preset: ServicePreset) {
-    setDraftName(preset.name)
-    setDraftPrice(String(preset.price))
-    setDraftDuration(String(preset.durationHours))
+  function updateService(
+    id: string,
+    patch: Partial<Pick<BusinessService, "price" | "durationHours" | "name">>
+  ) {
+    setServices((current) =>
+      current.map((service) => (service.id === id ? { ...service, ...patch } : service))
+    )
   }
 
   function addService() {
@@ -170,12 +171,6 @@ export default function OnboardingPage() {
       setError("Layanan ini sudah ditambahkan.")
       return
     }
-    const price = Number(draftPrice.replace(/\D/g, "")) || 0
-    const durationHours = Number(draftDuration.replace(",", ".")) || 0
-    if (!price) {
-      setError("Isi harga layanan.")
-      return
-    }
     setError("")
     setServices((current) => [
       ...current,
@@ -183,13 +178,11 @@ export default function OnboardingPage() {
         id: crypto.randomUUID(),
         fieldId: draftField,
         name: draftName.trim(),
-        price,
-        durationHours,
+        price: 0,
+        durationHours: 0,
       },
     ])
     setDraftName("")
-    setDraftPrice("")
-    setDraftDuration("")
   }
 
   async function finish() {
@@ -470,90 +463,40 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl">Atur layanan bisnis kamu</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Centang layanan dari daftar, atau tulis sendiri jika belum ada. Langkah
+              Pilih nama layanan, lalu isi harga dan waktu di tabel di bawah. Langkah
               ini boleh dilewati.
             </p>
           </div>
 
           {selectedFields.map((field) => {
-            const items = services.filter((service) => service.fieldId === field.id)
             const presets = presetsForField(field.id)
             return (
               <div key={field.id} className="grid gap-3">
                 <p className="font-medium">
                   {field.emoji} {field.label}
                 </p>
-                <div className="max-h-56 space-y-1.5 overflow-y-auto rounded-xl bg-background p-2 ring-1 ring-foreground/10">
+                <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl bg-background p-2 ring-1 ring-foreground/10">
                   {presets.map((preset) => {
                     const checked = hasService(field.id, preset.name)
                     return (
                       <label
                         key={preset.name}
                         className={cn(
-                          "flex cursor-pointer items-start gap-3 rounded-lg px-2.5 py-2 transition",
-                          checked ? "bg-primary/8" : "hover:bg-muted/60"
+                          "flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition",
+                          checked ? "bg-primary/8 font-medium" : "hover:bg-muted/60"
                         )}
                       >
                         <input
                           type="checkbox"
                           checked={checked}
                           onChange={() => togglePreset(field.id, preset)}
-                          className="mt-0.5 size-4 accent-primary"
+                          className="size-4 accent-primary"
                         />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium">{preset.name}</span>
-                          <span className="block text-xs text-muted-foreground">
-                            {rupiah(preset.price)}
-                            {preset.durationHours > 0
-                              ? ` · Durasi ${preset.durationHours} jam`
-                              : " · Tanpa durasi tetap"}
-                          </span>
-                        </span>
+                        <span>{preset.name}</span>
                       </label>
                     )
                   })}
                 </div>
-                {items.length ? (
-                  <ul className="grid gap-2">
-                    {items
-                      .filter(
-                        (service) =>
-                          !presets.some(
-                            (preset) =>
-                              preset.name.toLowerCase() === service.name.trim().toLowerCase()
-                          )
-                      )
-                      .map((service) => (
-                        <li
-                          key={service.id}
-                          className="flex items-start justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2"
-                        >
-                          <div>
-                            <p className="text-sm font-medium">{service.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {rupiah(service.price)}
-                              {service.durationHours > 0
-                                ? ` · Durasi ${service.durationHours} jam`
-                                : ""}{" "}
-                              · kustom
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            className="text-muted-foreground hover:text-destructive"
-                            onClick={() =>
-                              setServices((current) =>
-                                current.filter((item) => item.id !== service.id)
-                              )
-                            }
-                            aria-label={`Hapus ${service.name}`}
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
-                        </li>
-                      ))}
-                  </ul>
-                ) : null}
               </div>
             )
           })}
@@ -579,8 +522,6 @@ export default function OnboardingPage() {
                   onChange={(event) => {
                     setDraftField(event.target.value as BusinessFieldId)
                     setDraftName("")
-                    setDraftPrice("")
-                    setDraftDuration("")
                   }}
                   className="h-10 rounded-lg border bg-background px-3 text-sm"
                 >
@@ -606,15 +547,9 @@ export default function OnboardingPage() {
                           key={preset.name}
                           type="button"
                           className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
-                          onClick={() => applyPresetToDraft(preset)}
+                          onClick={() => setDraftName(preset.name)}
                         >
-                          <span className="font-medium">{preset.name}</span>
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
-                            {rupiah(preset.price)}
-                            {preset.durationHours > 0
-                              ? ` · ${preset.durationHours} jam`
-                              : ""}
-                          </span>
+                          {preset.name}
                         </button>
                       ))}
                       {!exactPresetMatch ? (
@@ -625,34 +560,108 @@ export default function OnboardingPage() {
                     </div>
                   ) : null}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    value={draftPrice}
-                    onChange={(event) =>
-                      setDraftPrice(event.target.value.replace(/\D/g, ""))
-                    }
-                    placeholder="Harga"
-                    inputMode="numeric"
-                    className="h-10 bg-background"
-                  />
-                  <Input
-                    value={draftDuration}
-                    onChange={(event) => setDraftDuration(event.target.value)}
-                    placeholder="Durasi (jam)"
-                    inputMode="decimal"
-                    className="h-10 bg-background"
-                  />
-                </div>
                 <button
                   type="button"
                   className={cn(buttonVariants({ variant: "outline" }), "h-10")}
                   onClick={addService}
                 >
                   <Plus className="size-4" />
-                  Tambahkan Layanan
+                  Tambahkan ke tabel
                 </button>
               </>
             ) : null}
+          </div>
+
+          <div className="grid gap-2">
+            <div>
+              <p className="font-medium">Harga & waktu layanan</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Isi harga (Rp) dan waktu/durasi (jam) secara manual untuk setiap layanan
+                yang dipilih.
+              </p>
+            </div>
+            {services.length ? (
+              <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
+                <table className="w-full min-w-[28rem] border-collapse text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="px-3 py-2.5 font-medium">Layanan</th>
+                      <th className="w-32 px-3 py-2.5 font-medium">Harga (Rp)</th>
+                      <th className="w-28 px-3 py-2.5 font-medium">Waktu (jam)</th>
+                      <th className="w-12 px-2 py-2.5" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {services.map((service) => {
+                      const field = fieldById(service.fieldId)
+                      return (
+                        <tr
+                          key={service.id}
+                          className="border-t border-foreground/10 bg-background"
+                        >
+                          <td className="px-3 py-2 align-top">
+                            <p className="font-medium">{service.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {field ? `${field.emoji} ${field.short}` : service.fieldId}
+                            </p>
+                          </td>
+                          <td className="px-3 py-2 align-top">
+                            <Input
+                              value={service.price ? String(service.price) : ""}
+                              onChange={(event) =>
+                                updateService(service.id, {
+                                  price: Number(event.target.value.replace(/\D/g, "")) || 0,
+                                })
+                              }
+                              inputMode="numeric"
+                              placeholder="0"
+                              className="h-9 bg-background"
+                              aria-label={`Harga ${service.name}`}
+                            />
+                          </td>
+                          <td className="px-3 py-2 align-top">
+                            <Input
+                              value={
+                                service.durationHours ? String(service.durationHours) : ""
+                              }
+                              onChange={(event) =>
+                                updateService(service.id, {
+                                  durationHours:
+                                    Number(event.target.value.replace(",", ".")) || 0,
+                                })
+                              }
+                              inputMode="decimal"
+                              placeholder="0"
+                              className="h-9 bg-background"
+                              aria-label={`Waktu ${service.name}`}
+                            />
+                          </td>
+                          <td className="px-2 py-2 align-top">
+                            <button
+                              type="button"
+                              className="text-muted-foreground hover:text-destructive"
+                              onClick={() =>
+                                setServices((current) =>
+                                  current.filter((item) => item.id !== service.id)
+                                )
+                              }
+                              aria-label={`Hapus ${service.name}`}
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="rounded-xl bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+                Belum ada layanan dipilih. Centang dari daftar di atas, lalu isi harga dan
+                waktu di sini.
+              </p>
+            )}
           </div>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -661,7 +670,13 @@ export default function OnboardingPage() {
               type="button"
               className={cn(buttonVariants(), "h-11")}
               disabled={pending}
-              onClick={() => void goTo(6, { services })}
+              onClick={() => {
+                if (services.some((service) => !service.price)) {
+                  setError("Isi harga untuk semua layanan di tabel, atau hapus yang kosong.")
+                  return
+                }
+                void goTo(6, { services })
+              }}
             >
               {pending ? "Menyimpan…" : "Lanjutkan"}
             </button>
