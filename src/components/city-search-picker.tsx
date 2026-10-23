@@ -160,34 +160,36 @@ function CompactCitySearchPicker({
       >
         <TriggerLabel value={value} placeholder={placeholder} />
       </Button>
-      <DialogContent className="gap-3 sm:max-w-md" showCloseButton>
-        <DialogHeader>
-          <DialogTitle>Pilih wilayah</DialogTitle>
-          <DialogDescription>
-            Cari kabupaten atau kota untuk partner dan inbox.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
-          <Search className="size-4 shrink-0 text-muted-foreground" />
-          <Input
-            autoFocus
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Ketik nama kota / kabupaten…"
-            className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-            autoComplete="off"
-          />
-        </div>
-        <div className="overflow-hidden rounded-xl border">
-          <CityResults
-            listId={listId}
-            value={value}
-            query={query}
-            results={results}
-            onPick={pick}
-          />
-        </div>
-      </DialogContent>
+      {open ? (
+        <DialogContent className="gap-3 sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Pilih wilayah</DialogTitle>
+            <DialogDescription>
+              Cari kabupaten atau kota untuk partner dan inbox.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+            <Search className="size-4 shrink-0 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Ketik nama kota / kabupaten…"
+              className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+              autoComplete="off"
+            />
+          </div>
+          <div className="overflow-hidden rounded-xl border">
+            <CityResults
+              listId={listId}
+              value={value}
+              query={query}
+              results={results}
+              onPick={pick}
+            />
+          </div>
+        </DialogContent>
+      ) : null}
     </Dialog>
   )
 }

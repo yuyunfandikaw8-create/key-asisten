@@ -124,14 +124,21 @@ function MobileNav() {
 }
 
 function CityPicker() {
-  const { city, setCity } = useStudio()
+  const { city, setCity, viewMode } = useStudio()
+  const ownerOnly = viewMode === "real"
   return (
     <CitySearchPicker
       value={city}
       onChange={setCity}
       compact
+      disabled={!ownerOnly}
       placeholder="Cari wilayah"
-      aria-label="Pilih wilayah aktif"
+      aria-label={
+        ownerOnly
+          ? "Pilih wilayah studio (hanya owner)"
+          : "Wilayah terkunci di data contoh — ganti di Data saya"
+      }
+      className={!ownerOnly ? "opacity-70" : undefined}
     />
   )
 }

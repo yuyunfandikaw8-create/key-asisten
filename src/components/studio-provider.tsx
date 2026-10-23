@@ -152,7 +152,7 @@ function hasStudioData(state: StudioState | null | undefined) {
 }
 
 export function StudioProvider({ children }: { children: ReactNode }) {
-  const { ready: authReady, user } = useAuth()
+  const { ready: authReady, user, updateOwnerCity } = useAuth()
   const userId = user?.id ?? null
   const userCity = user?.city ?? "Bandung"
   const [state, setState] = useState<StudioState | null>(null)
@@ -213,18 +213,18 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready || !state || !storageKey || skipPersist.current) return
     if (viewMode !== "real") return
-    // Never persist demo/seed rows as "Data saya".
+    // Never persist demo/seed rows as "Data saya", but always keep owner city.
     const toSave = isSampleOrEmptyReal(state)
-      ? createEmptyStudio(state.city)
+      ? { ...createEmptyStudio(state.city), city: state.city }
       : stripSampleRows(state)
     localStorage.setItem(storageKey, JSON.stringify(toSave))
   }, [ready, state, storageKey, viewMode])
 
-  // Guard: if real mode somehow still holds only sample seed, wipe it.
+  // Guard: if real mode somehow still holds only sample seed, wipe rows but keep city.
   useEffect(() => {
     if (!ready || viewMode !== "real" || !state) return
     if (!hasStudioData(state) || !isSampleOrEmptyReal(state)) return
-    const empty = createEmptyStudio(state.city)
+    const empty = { ...createEmptyStudio(state.city), city: state.city }
     skipPersist.current = true
     setState(empty)
     stateRef.current = empty
@@ -294,8 +294,18 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       viewMode,
       city: state?.city ?? userCity,
       setCity: (city) => {
-        withRealBase((base) => ({ ...base, city }))
-        setNotice(`Lokasi aktif diganti ke ${city}. Partner dan inbox hanya menampilkan kota ini.`)
+        const next = city.trim()
+        if (!next) return
+        // Wilayah studio hanya diganti owner di Data saya — jangan ikut berubah dari Data contoh / login.
+        if (viewModeRef.current === "demo") {
+          setNotice(
+            "Wilayah hanya bisa diganti di Data saya oleh owner. Klik “Data saya” dulu, lalu pilih wilayah."
+          )
+          return
+        }
+        withRealBase((base) => ({ ...base, city: next }))
+        void updateOwnerCity(next)
+        setNotice(`Wilayah studio diganti ke ${next}. Hanya owner yang bisa mengubah ini.`)
       },
       bookings: state?.bookings ?? [],
       expenses: state?.expenses ?? [],
@@ -419,10 +429,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       showDemo: enterDemo,
       showReal: () => {
         const key = storageKeyRef.current
-        const city = stateRef.current?.city ?? userCity
         purgeLegacyStudioKeys(userId)
-        // Always open Data saya as empty studio (sample data stays in Data contoh only).
-        const real = createEmptyStudio(city)
+        // Pulihkan Data saya apa adanya (termasuk wilayah owner) — jangan timpa kota dari data contoh.
+        const stored = key ? readStoredState(key, userCity) : null
+        const real = stored ?? createEmptyStudio(userCity)
         skipPersist.current = true
         viewModeRef.current = "real"
         setViewMode("real")
@@ -432,7 +442,11 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(previewFlagKey(key), "1")
           localStorage.setItem(key, JSON.stringify(real))
         }
-        setNotice("Kembali ke data saya. Studio kosong — siap diisi booking dan invoice asli.")
+        setNotice(
+          hasStudioData(real)
+            ? "Kembali ke data saya (real)."
+            : "Kembali ke data saya. Studio kosong — wilayah tetap milik owner."
+        )
         window.setTimeout(() => {
           skipPersist.current = false
         }, 0)
@@ -456,7 +470,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         }, 0)
       },
     }
-  }, [notice, ready, state, userCity, viewMode])
+  }, [notice, ready, state, updateOwnerCity, userCity, userId, viewMode])
 
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>
 }

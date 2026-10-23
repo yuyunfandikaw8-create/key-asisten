@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
 import { GoogleAuthButton } from "@/components/google-auth-button"
-import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,7 +14,6 @@ function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
   const { ready, user, login } = useAuth()
-  const { setCity } = useStudio()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -40,7 +38,7 @@ function LoginForm() {
       setPending(false)
       return
     }
-    setCity(result.user.city)
+    // Jangan setCity di sini — wilayah Data saya milik owner dan tidak diganti saat login.
     router.replace(nextPath)
   }
 
@@ -61,8 +59,7 @@ function LoginForm() {
         <GoogleAuthButton
           mode="masuk"
           nextPath={nextPath}
-          onSuccess={(nextUser) => {
-            setCity(nextUser.city)
+          onSuccess={() => {
             router.replace(nextPath)
           }}
         />

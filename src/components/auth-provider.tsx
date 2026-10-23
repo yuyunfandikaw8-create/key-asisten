@@ -40,6 +40,8 @@ type AuthContextValue = {
   }) => Promise<AuthResult>
   continueWithGoogle: (choice: GoogleChoice) => Promise<AuthResult>
   startGoogleOAuth: (nextPath?: string) => Promise<AuthResult>
+  /** Owner-only: persist studio wilayah on the account profile. */
+  updateOwnerCity: (city: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -418,6 +420,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           ok: false,
           error: "Mengalihkan ke Google…",
+        }
+      },
+      updateOwnerCity: async (city) => {
+        const nextCity = city.trim()
+        if (!nextCity || !user) return
+        const nextUser = { ...user, city: nextCity }
+        setUser(nextUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser))
+
+        const accounts = readAccounts()
+        const index = accounts.findIndex((item) => item.email === normalizeEmail(user.email))
+        if (index >= 0) {
+          const nextAccounts = [...accounts]
+          nextAccounts[index] = { ...nextAccounts[index], city: nextCity }
+          writeAccounts(nextAccounts)
+        }
+
+        if (supabase && !isDemoEmail(user.email)) {
+          void supabase.auth.updateUser({ data: { city: nextCity } })
         }
       },
       logout: async () => {

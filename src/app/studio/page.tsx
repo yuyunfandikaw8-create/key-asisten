@@ -515,8 +515,8 @@ export default function StudioHomePage() {
         </section>
       ) : (
         <EmptyState
-          title="Tidak ada yang menunggumu"
-          body="Tidak ada bentrok, gaun telat, atau tagihan H-7. Jadwal yang akan datang tetap ada di bawah."
+          title="Semua aman untuk sekarang ✨"
+          body="Tidak ada bentrok jadwal, gaun yang terlambat, atau tagihan H-7 yang perlu ditindaklanjuti. Jadwal mendatang tetap ada di bawah."
         />
       )}
 
