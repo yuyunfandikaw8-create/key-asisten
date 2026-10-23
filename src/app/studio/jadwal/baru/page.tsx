@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { ImagePlus, LoaderCircle, X } from "lucide-react"
 
 import { ScheduleFields } from "@/components/schedule-fields"
+import { SuggestInput, type SuggestOption } from "@/components/suggest-input"
+import { useAuth } from "@/components/auth-provider"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,8 +21,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { attires, packages, SAMPLE_CHAT } from "@/lib/catalog"
-import { EVENT_LABEL, formatDate, formatTime } from "@/lib/format"
+import { EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
 import { conflictsFor } from "@/lib/metrics"
+import { fieldById } from "@/lib/onboarding"
 import { parseChat } from "@/lib/parse-chat"
 import { extractTextFromChatImage, isChatImageFile } from "@/lib/read-chat-image"
 import type { EventType } from "@/lib/types"
@@ -53,7 +56,8 @@ function resolveAttire(label: string) {
 
 export default function NewBookingPage() {
   const router = useRouter()
-  const { ready, bookings, addBooking } = useStudio()
+  const { user } = useAuth()
+  const { ready, bookings, addBooking, viewMode } = useStudio()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [chat, setChat] = useState("")
   const [found, setFound] = useState<string[]>([])
@@ -77,6 +81,86 @@ export default function NewBookingPage() {
   const [readingImage, setReadingImage] = useState(false)
   const [dragging, setDragging] = useState(false)
 
+  const ownerServices = user?.services ?? []
+  const demoMode = viewMode === "demo"
+
+  const acaraOptions = useMemo<SuggestOption[]>(() => {
+    const fromEvents = (Object.values(EVENT_LABEL) as string[]).map((label) => ({
+      value: label,
+      label,
+    }))
+    const fromFields = (user?.businessFields ?? [])
+      .map((id) => fieldById(id))
+      .filter(Boolean)
+      .map((field) => ({
+        value: field!.label,
+        label: `${field!.emoji} ${field!.label}`,
+      }))
+    const fromServices = ownerServices.map((service) => ({
+      value: service.name,
+      label: service.name,
+      hint: fieldById(service.fieldId)?.short,
+    }))
+    const merged = [...fromEvents, ...fromFields, ...fromServices]
+    const seen = new Set<string>()
+    return merged.filter((option) => {
+      const key = option.value.toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [ownerServices, user?.businessFields])
+
+  const paketOptions = useMemo<SuggestOption[]>(() => {
+    if (ownerServices.length && !demoMode) {
+      return ownerServices.map((service) => ({
+        value: service.name,
+        label: service.name,
+        hint: `${rupiah(service.price)}${
+          service.durationHours > 0 ? ` · ${service.durationHours} jam` : ""
+        } · ${fieldById(service.fieldId)?.short ?? service.fieldId}`,
+      }))
+    }
+    return packages.map((item) => ({
+      value: item.name,
+      label: item.name,
+      hint: rupiah(item.price),
+    }))
+  }, [demoMode, ownerServices])
+
+  const hargaOptions = useMemo<SuggestOption[]>(() => {
+    const amounts = new Set<number>()
+    if (ownerServices.length && !demoMode) {
+      for (const service of ownerServices) {
+        if (service.price > 0) amounts.add(service.price)
+      }
+    } else {
+      for (const item of packages) amounts.add(item.price)
+    }
+    return [...amounts]
+      .sort((a, b) => a - b)
+      .map((amount) => ({
+        value: String(amount),
+        label: rupiah(amount),
+      }))
+  }, [demoMode, ownerServices])
+
+  const gaunOptions = useMemo<SuggestOption[]>(() => {
+    const fromOwner = ownerServices
+      .filter((service) => service.fieldId === "baju")
+      .map((service) => ({
+        value: service.name,
+        label: service.name,
+        hint: service.price > 0 ? rupiah(service.price) : undefined,
+      }))
+    if (fromOwner.length && !demoMode) return fromOwner
+    return attires.map((item) => ({
+      value: item.name,
+      label: item.name,
+      hint: item.category,
+    }))
+  }, [demoMode, ownerServices])
+
   const matchedAttire = resolveAttire(gaun)
   const clashes = useMemo(() => {
     if (!date || !time) return []
@@ -86,6 +170,21 @@ export default function NewBookingPage() {
       attireId: matchedAttire?.id ?? null,
     })
   }, [bookings, date, matchedAttire?.id, time])
+
+  function pickPaket(option: SuggestOption) {
+    setPaket(option.value)
+    const fromOwner = ownerServices.find(
+      (service) => service.name.toLowerCase() === option.value.toLowerCase()
+    )
+    if (fromOwner?.price) {
+      setPriceAmount(String(fromOwner.price))
+      return
+    }
+    const fromCatalog = packages.find(
+      (item) => item.name.toLowerCase() === option.value.toLowerCase()
+    )
+    if (fromCatalog) setPriceAmount(String(fromCatalog.price))
+  }
 
   useEffect(() => {
     return () => {
@@ -395,33 +494,38 @@ export default function NewBookingPage() {
           />
           <div className="grid gap-1.5">
             <Label htmlFor="acara">Acara</Label>
-            <Input
+            <SuggestInput
               id="acara"
               value={acara}
-              onChange={(event) => setAcara(event.target.value)}
-              placeholder="Contoh: Rias pengantin"
-              className="h-10 bg-background"
+              onChange={setAcara}
+              options={acaraOptions}
+              placeholder="Pilih atau ketik acara"
+              aria-label="Acara"
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="paket">Paket</Label>
-            <Input
+            <SuggestInput
               id="paket"
               value={paket}
-              onChange={(event) => setPaket(event.target.value)}
-              placeholder="Contoh: Paket Emas"
-              className="h-10 bg-background"
+              onChange={setPaket}
+              onPick={pickPaket}
+              options={paketOptions}
+              placeholder="Pilih layanan/paket atau ketik sendiri"
+              aria-label="Paket"
             />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="harga">Harga paket</Label>
-            <Input
+            <SuggestInput
               id="harga"
               value={priceAmount}
-              onChange={(event) => setPriceAmount(event.target.value.replace(/\D/g, ""))}
+              onChange={setPriceAmount}
+              options={hargaOptions}
+              placeholder="Pilih atau isi nominal harga"
               inputMode="numeric"
-              placeholder="Nominal harga"
-              className="h-10 bg-background"
+              filterDigits
+              aria-label="Harga paket"
             />
           </div>
           <div className="grid gap-1.5">
@@ -437,12 +541,13 @@ export default function NewBookingPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="gaun">Gaun</Label>
-            <Input
+            <SuggestInput
               id="gaun"
               value={gaun}
-              onChange={(event) => setGaun(event.target.value)}
-              placeholder="Kosongkan jika tidak pakai gaun studio"
-              className="h-10 bg-background"
+              onChange={setGaun}
+              options={gaunOptions}
+              placeholder="Pilih gaun/attire atau ketik sendiri"
+              aria-label="Gaun"
             />
           </div>
           <div className="grid gap-1.5">
