@@ -29,7 +29,7 @@ function SparkMark({ className }: { className?: string }) {
 const features = [
   {
     icon: MessageSquareText,
-    title: "Tempel chat atau screenshot"
+    title: "Tempel chat atau screenshot",
     body: "Nama, tanggal, jam, lokasi, dan paket diambil dari chat klien. Kamu tinggal mengoreksi sebelum disimpan.",
   },
   {

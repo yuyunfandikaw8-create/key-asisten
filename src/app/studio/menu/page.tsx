@@ -65,7 +65,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/jadwal/baru",
         title: "Booking baru",
-        body: "Tempel chat / screenshot WA·IG, atau isi manual"
+        body: "Tempel chat / screenshot WA·IG, atau isi manual",
         Icon: Plus,
         tone: "bg-[oklch(0.93_0.05_145)] text-[oklch(0.4_0.1_145)]",
       },
