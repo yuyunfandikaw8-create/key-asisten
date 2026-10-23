@@ -50,10 +50,7 @@ export default function RegisterPage() {
         <Link href="/" className="font-display text-2xl">
           Key Assistant
         </Link>
-        <p className="mt-4 text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-          Step 1 — Buat akun
-        </p>
-        <h1 className="mt-2 text-4xl">Buat akun kamu</h1>
+        <h1 className="mt-4 text-4xl">Buat akun kamu</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Kelola bisnis beauty, wedding & event dalam satu tempat.
         </p>
