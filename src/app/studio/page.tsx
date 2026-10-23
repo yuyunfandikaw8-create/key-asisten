@@ -152,11 +152,13 @@ function compactMoney(value: number) {
 }
 
 export default function StudioHomePage() {
-  const { user } = useAuth()
+  const router = useRouter()
+  const { user, updateProfile } = useAuth()
   const brand = studioBrand(user)
   const { ready, city, bookings, expenses, partnerships, combos, messages } = useStudio()
   const [selectedDate, setSelectedDate] = useState(() => todayISO())
   const [incomePeriod, setIncomePeriod] = useState<IncomePeriod>("bulan")
+  const [reopening, setReopening] = useState(false)
 
   const markedDates = useMemo(
     () => [...new Set(bookings.map((booking) => booking.date))],
@@ -167,6 +169,16 @@ export default function StudioHomePage() {
     () => incomeSeries(bookings, incomePeriod, todayISO()),
     [bookings, incomePeriod]
   )
+
+  async function reopenBiodata() {
+    setReopening(true)
+    const updated = await updateProfile({ onboardingStep: 2 })
+    if (!updated) {
+      setReopening(false)
+      return
+    }
+    router.push("/onboarding")
+  }
 
   if (!ready) return <StudioLoading />
 
