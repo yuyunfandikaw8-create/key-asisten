@@ -66,6 +66,12 @@ export default function OnboardingPage() {
     setDraftField(user.businessFields?.[0] ?? "")
   }, [user])
 
+  useEffect(() => {
+    if (ready && user && !needsOnboarding(user)) {
+      router.replace("/studio")
+    }
+  }, [ready, router, user])
+
   const step = stepNumber(user?.onboardingStep)
   const selectedFields = useMemo(
     () => BUSINESS_FIELDS.filter((field) => fields.includes(field.id)),
@@ -198,14 +204,19 @@ export default function OnboardingPage() {
   async function finish() {
     setPending(true)
     setError("")
-    const updated = await updateProfile({ onboardingStep: "done" })
-    setPending(false)
-    if (!updated) {
-      setError("Gagal menyelesaikan onboarding.")
-      return
+    try {
+      const updated = await updateProfile({ onboardingStep: "done" })
+      if (!updated) {
+        setError("Gagal menyelesaikan onboarding. Coba lagi.")
+        setPending(false)
+        return
+      }
+      if (updated.city) setCity(updated.city)
+      router.replace("/studio")
+    } catch {
+      setError("Gagal menyimpan. Periksa koneksi lalu coba lagi.")
+      setPending(false)
     }
-    if (updated.city) setCity(updated.city)
-    router.replace("/studio")
   }
 
   return (

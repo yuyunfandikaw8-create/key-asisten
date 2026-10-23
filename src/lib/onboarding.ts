@@ -53,10 +53,25 @@ export function needsOnboarding(
 
 export function normalizeOnboardingStep(value: unknown): OnboardingStep | undefined {
   if (value === "done") return "done"
-  if (value === 2 || value === 3 || value === 4 || value === 5 || value === 6) {
-    return value
-  }
+  // JSON / Supabase kadang mengirim angka sebagai string.
+  if (value === 2 || value === "2") return 2
+  if (value === 3 || value === "3") return 3
+  if (value === 4 || value === "4") return 4
+  if (value === 5 || value === "5") return 5
+  if (value === 6 || value === "6") return 6
   return undefined
+}
+
+/** Jangan mundur dari "done" ke step angka saat hydrate remote. */
+export function preferOnboardingStep(
+  local: OnboardingStep | undefined,
+  remote: OnboardingStep | undefined
+): OnboardingStep | undefined {
+  if (local === "done" || remote === "done") return "done"
+  const localNum = typeof local === "number" ? local : 0
+  const remoteNum = typeof remote === "number" ? remote : 0
+  const max = Math.max(localNum, remoteNum)
+  return max > 0 ? (max as OnboardingStep) : undefined
 }
 
 export function formatFieldsSummary(fieldIds: BusinessFieldId[] | undefined) {

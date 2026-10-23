@@ -21,7 +21,12 @@ import {
   type GoogleChoice,
   type StoredAccount,
 } from "@/lib/auth"
-import { normalizeOnboardingStep } from "@/lib/onboarding"
+import {
+  normalizeOnboardingStep,
+  preferOnboardingStep,
+  type BusinessFieldId,
+  type BusinessService,
+} from "@/lib/onboarding"
 import { supabase, supabaseConfigured } from "@/lib/supabase"
 import { nowIso } from "@/lib/trial"
 
@@ -71,6 +76,79 @@ function writeAccounts(accounts: StoredAccount[]) {
   localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(extras))
 }
 
+function readLocalAuthUser(): AuthUser | null {
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as AuthUser
+    if (!parsed?.email || !parsed?.id) return null
+    return {
+      ...parsed,
+      provider: parsed.provider ?? "password",
+      role: normalizeRole(parsed.role),
+      onboardingStep: normalizeOnboardingStep(parsed.onboardingStep),
+    }
+  } catch {
+    return null
+  }
+}
+
+function findStoredAccount(email: string): StoredAccount | undefined {
+  return readAccounts().find((item) => item.email === normalizeEmail(email))
+}
+
+function persistAuthUser(nextUser: AuthUser) {
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser))
+    return
+  } catch {
+    // Logo base64 bisa melebihi kuota — simpan tanpa logo.
+    try {
+      const slim = { ...nextUser, logoDataUrl: undefined }
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(slim))
+    } catch {
+      // Biarkan sesi tetap di memori.
+    }
+  }
+}
+
+function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUser {
+  if (!local || normalizeEmail(local.email) !== normalizeEmail(remote.email)) {
+    return remote
+  }
+  return {
+    ...remote,
+    name: local.name || remote.name,
+    phone: local.phone || remote.phone,
+    city: local.city || remote.city,
+    studioName: local.studioName || remote.studioName,
+    role: normalizeRole(local.role || remote.role),
+    trialStartedAt: local.trialStartedAt || remote.trialStartedAt,
+    onboardingStep: preferOnboardingStep(local.onboardingStep, remote.onboardingStep),
+    businessEmail: local.businessEmail || remote.businessEmail,
+    instagram: local.instagram || remote.instagram,
+    address: local.address || remote.address,
+    logoDataUrl: local.logoDataUrl || remote.logoDataUrl,
+    businessFields:
+      (local.businessFields as BusinessFieldId[] | undefined) || remote.businessFields,
+    services: (local.services as BusinessService[] | undefined) || remote.services,
+    avatar: local.avatar || remote.avatar,
+  }
+}
+
+function resolveSessionUser(
+  id: string,
+  email: string,
+  metadata: Record<string, unknown> | undefined,
+  provider: AuthUser["provider"]
+): AuthUser {
+  const remote = userFromMetadata(id, email, metadata, provider)
+  const localSession = readLocalAuthUser()
+  const stored = findStoredAccount(email)
+  const local = localSession ?? (stored ? toPublicUser(stored) : null)
+  return withTrial(mergeRemoteWithLocal(remote, local))
+}
+
 function userFromMetadata(
   id: string,
   email: string,
@@ -81,11 +159,11 @@ function userFromMetadata(
     (typeof metadata?.name === "string" && metadata.name) ||
     (typeof metadata?.full_name === "string" && metadata.full_name) ||
     email.split("@")[0]
-  const city = typeof metadata?.city === "string" && metadata.city ? metadata.city : "Bandung"
+  const city = typeof metadata?.city === "string" && metadata.city ? metadata.city : ""
   const studioName =
     (typeof metadata?.studio_name === "string" && metadata.studio_name) ||
     (typeof metadata?.studioName === "string" && metadata.studioName) ||
-    name
+    ""
   const phone = typeof metadata?.phone === "string" ? metadata.phone : ""
   const role = normalizeRole(metadata?.role)
   const trialStartedAt =
@@ -93,6 +171,13 @@ function userFromMetadata(
       ? metadata.trial_started_at
       : nowIso()
   const onboardingStep = normalizeOnboardingStep(metadata?.onboarding_step)
+  const businessEmail =
+    typeof metadata?.business_email === "string" ? metadata.business_email : undefined
+  const instagram = typeof metadata?.instagram === "string" ? metadata.instagram : undefined
+  const address = typeof metadata?.address === "string" ? metadata.address : undefined
+  const businessFields = Array.isArray(metadata?.business_fields)
+    ? (metadata.business_fields as BusinessFieldId[])
+    : undefined
   return {
     id,
     email,
@@ -104,6 +189,10 @@ function userFromMetadata(
     role,
     trialStartedAt,
     onboardingStep,
+    businessEmail,
+    instagram,
+    address,
+    businessFields,
   }
 }
 
@@ -207,17 +296,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await supabase.auth.getSession()
         const sessionUser = data.session?.user
         if (active && sessionUser?.email) {
-          setUser(
-            withPendingRegisterRole(
-              userFromMetadata(
-                sessionUser.id,
-                sessionUser.email,
-                sessionUser.user_metadata as Record<string, unknown>,
-                sessionUser.app_metadata?.provider === "google" ? "google" : "password"
-              )
+          const merged = withPendingRegisterRole(
+            resolveSessionUser(
+              sessionUser.id,
+              sessionUser.email,
+              sessionUser.user_metadata as Record<string, unknown>,
+              sessionUser.app_metadata?.provider === "google" ? "google" : "password"
             )
           )
-          localStorage.removeItem(AUTH_STORAGE_KEY)
+          setUser(merged)
+          persistAuthUser(merged)
         }
       } catch {
         // Tetap pakai sesi lokal.
@@ -227,17 +315,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active) return
         const next = session?.user
         if (next?.email) {
-          setUser(
-            withPendingRegisterRole(
-              userFromMetadata(
-                next.id,
-                next.email,
-                next.user_metadata as Record<string, unknown>,
-                next.app_metadata?.provider === "google" ? "google" : "password"
-              )
+          const merged = withPendingRegisterRole(
+            resolveSessionUser(
+              next.id,
+              next.email,
+              next.user_metadata as Record<string, unknown>,
+              next.app_metadata?.provider === "google" ? "google" : "password"
             )
           )
-          localStorage.removeItem(AUTH_STORAGE_KEY)
+          setUser(merged)
+          persistAuthUser(merged)
           return
         }
         restoreLocalUser()
@@ -495,31 +582,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ),
         }
         setUser(nextUser)
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser))
+        persistAuthUser(nextUser)
 
         const accounts = readAccounts()
         const index = accounts.findIndex((item) => item.email === normalizeEmail(user.email))
         if (index >= 0) {
           const nextAccounts = [...accounts]
           nextAccounts[index] = { ...nextAccounts[index], ...nextUser }
-          writeAccounts(nextAccounts)
+          try {
+            writeAccounts(nextAccounts)
+          } catch {
+            const slimAccounts = nextAccounts.map((account) =>
+              account.email === normalizeEmail(user.email)
+                ? { ...account, logoDataUrl: undefined }
+                : account
+            )
+            try {
+              writeAccounts(slimAccounts)
+            } catch {
+              // Sesi memori tetap dipakai.
+            }
+          }
         }
 
         if (supabase && !isDemoEmail(user.email)) {
-          void supabase.auth.updateUser({
-            data: {
-              name: nextUser.name,
-              phone: nextUser.phone,
-              city: nextUser.city,
-              studio_name: nextUser.studioName,
-              role: nextUser.role,
-              onboarding_step: nextUser.onboardingStep,
-              business_email: nextUser.businessEmail,
-              instagram: nextUser.instagram,
-              address: nextUser.address,
-              business_fields: nextUser.businessFields,
-            },
-          })
+          try {
+            await supabase.auth.updateUser({
+              data: {
+                name: nextUser.name,
+                phone: nextUser.phone,
+                city: nextUser.city,
+                studio_name: nextUser.studioName,
+                role: nextUser.role,
+                onboarding_step: nextUser.onboardingStep,
+                business_email: nextUser.businessEmail,
+                instagram: nextUser.instagram,
+                address: nextUser.address,
+                business_fields: nextUser.businessFields,
+              },
+            })
+          } catch {
+            // Profil lokal sudah tersimpan; sinkron cloud boleh gagal.
+          }
         }
         return nextUser
       },
