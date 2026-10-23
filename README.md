@@ -53,6 +53,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
 - Partner di `/studio/partner`. Saring Make Up Artist, Hijab & Hair, Decsets, Attire, Photografer & Videografer, atau Content Creator di kota aktif, ajak kerja sama, lalu susun kombo.
 - Inbox di `/studio/inbox`. Chat partner sesuai lokasi aktif (contoh: pilih Surabaya untuk melihat partner Surabaya saja).
 - Menu di `/studio/menu`. Pintasan ke jadwal, partner, invoice, aset, lokasi, dan identitas studio.
+- Operasional juga punya **Profil bisnis** (`/studio/profil`, seperti langkah 4) dan **Layanan & harga** (`/studio/layanan`, seperti langkah 5) supaya owner bisa menambah/mengubah layanan tanpa mengulang biodata penuh.
 
 Data tersimpan di browser (`localStorage`). Tombol **Data contoh** mengembalikan studio Key Partner.
 
