@@ -407,7 +407,7 @@ export default function StudioHomePage() {
           </span>
           <span>
             <span className="block text-lg font-semibold">Buat booking</span>
-            <span className="text-sm text-white/85">Tempel chat atau isi manual</span>
+            <span className="text-sm text-white/85">Tempel chat, screenshot, atau isi manual</span>
           </span>
         </Link>
         <Link
