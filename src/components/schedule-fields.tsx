@@ -167,9 +167,7 @@ export function ScheduleFields({
           </div>
         </div>
 
-        <p className={cn("text-xs", dateError ? "text-destructive" : "text-muted-foreground")}>
-          {dateError || "Di HP pakai kalender; di komputer bisa ketik atau ikon kalender"}
-        </p>
+        {dateError ? <p className="text-xs text-destructive">{dateError}</p> : null}
       </div>
 
       <div className="grid gap-1.5">
@@ -243,9 +241,7 @@ export function ScheduleFields({
           </div>
         </div>
 
-        <p className={cn("text-xs", timeError ? "text-destructive" : "text-muted-foreground")}>
-          {timeError || "Di HP pakai picker jam; di komputer bisa ketik atau ikon jam"}
-        </p>
+        {timeError ? <p className="text-xs text-destructive">{timeError}</p> : null}
       </div>
     </div>
   )
