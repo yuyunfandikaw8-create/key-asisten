@@ -15,11 +15,14 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   BUSINESS_FIELDS,
   fieldById,
+  filterServicePresets,
   formatFieldsSummary,
   needsOnboarding,
+  presetsForField,
   type BusinessFieldId,
   type BusinessService,
   type OnboardingStep,
+  type ServicePreset,
 } from "@/lib/onboarding"
 import { rupiah } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -49,6 +52,7 @@ export default function OnboardingPage() {
   const [draftPrice, setDraftPrice] = useState("")
   const [draftDuration, setDraftDuration] = useState("")
   const [draftField, setDraftField] = useState<BusinessFieldId | "">("")
+  const [showCustomForm, setShowCustomForm] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -70,6 +74,16 @@ export default function OnboardingPage() {
     () => BUSINESS_FIELDS.filter((field) => fields.includes(field.id)),
     [fields]
   )
+  const filteredPresets = useMemo(() => {
+    if (!draftField) return []
+    return filterServicePresets(draftField, draftName)
+  }, [draftField, draftName])
+  const exactPresetMatch = useMemo(() => {
+    if (!draftField || !draftName.trim()) return false
+    return presetsForField(draftField).some(
+      (preset) => preset.name.toLowerCase() === draftName.trim().toLowerCase()
+    )
+  }, [draftField, draftName])
 
   if (!ready || !user) return <StudioLoading />
   if (!needsOnboarding(user)) return <StudioLoading />
@@ -109,15 +123,57 @@ export default function OnboardingPage() {
     reader.readAsDataURL(file)
   }
 
+  function hasService(fieldId: BusinessFieldId, name: string) {
+    const needle = name.trim().toLowerCase()
+    return services.some(
+      (service) =>
+        service.fieldId === fieldId && service.name.trim().toLowerCase() === needle
+    )
+  }
+
+  function togglePreset(fieldId: BusinessFieldId, preset: ServicePreset) {
+    setError("")
+    setServices((current) => {
+      const existing = current.find(
+        (service) =>
+          service.fieldId === fieldId &&
+          service.name.trim().toLowerCase() === preset.name.toLowerCase()
+      )
+      if (existing) {
+        return current.filter((service) => service.id !== existing.id)
+      }
+      return [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          fieldId,
+          name: preset.name,
+          price: preset.price,
+          durationHours: preset.durationHours,
+        },
+      ]
+    })
+  }
+
+  function applyPresetToDraft(preset: ServicePreset) {
+    setDraftName(preset.name)
+    setDraftPrice(String(preset.price))
+    setDraftDuration(String(preset.durationHours))
+  }
+
   function addService() {
     if (!draftField || !draftName.trim()) {
       setError("Pilih bidang dan isi nama layanan.")
       return
     }
+    if (hasService(draftField, draftName)) {
+      setError("Layanan ini sudah ditambahkan.")
+      return
+    }
     const price = Number(draftPrice.replace(/\D/g, "")) || 0
     const durationHours = Number(draftDuration.replace(",", ".")) || 0
-    if (!price || !durationHours) {
-      setError("Isi harga dan durasi layanan.")
+    if (!price) {
+      setError("Isi harga layanan.")
       return
     }
     setError("")
@@ -414,96 +470,189 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl">Atur layanan bisnis kamu</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tambahkan layanan yang ingin kamu kelola. Langkah ini boleh dilewati.
+              Centang layanan dari daftar, atau tulis sendiri jika belum ada. Langkah
+              ini boleh dilewati.
             </p>
           </div>
 
           {selectedFields.map((field) => {
             const items = services.filter((service) => service.fieldId === field.id)
+            const presets = presetsForField(field.id)
             return (
-              <div key={field.id} className="grid gap-2">
+              <div key={field.id} className="grid gap-3">
                 <p className="font-medium">
                   {field.emoji} {field.label}
                 </p>
+                <div className="max-h-56 space-y-1.5 overflow-y-auto rounded-xl bg-background p-2 ring-1 ring-foreground/10">
+                  {presets.map((preset) => {
+                    const checked = hasService(field.id, preset.name)
+                    return (
+                      <label
+                        key={preset.name}
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 rounded-lg px-2.5 py-2 transition",
+                          checked ? "bg-primary/8" : "hover:bg-muted/60"
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => togglePreset(field.id, preset)}
+                          className="mt-0.5 size-4 accent-primary"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium">{preset.name}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {rupiah(preset.price)}
+                            {preset.durationHours > 0
+                              ? ` · Durasi ${preset.durationHours} jam`
+                              : " · Tanpa durasi tetap"}
+                          </span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
                 {items.length ? (
                   <ul className="grid gap-2">
-                    {items.map((service) => (
-                      <li
-                        key={service.id}
-                        className="flex items-start justify-between gap-2 rounded-xl bg-background px-3 py-2 ring-1 ring-foreground/10"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">{service.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {rupiah(service.price)} · Durasi {service.durationHours} jam
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={() =>
-                            setServices((current) =>
-                              current.filter((item) => item.id !== service.id)
-                            )
-                          }
-                          aria-label={`Hapus ${service.name}`}
+                    {items
+                      .filter(
+                        (service) =>
+                          !presets.some(
+                            (preset) =>
+                              preset.name.toLowerCase() === service.name.trim().toLowerCase()
+                          )
+                      )
+                      .map((service) => (
+                        <li
+                          key={service.id}
+                          className="flex items-start justify-between gap-2 rounded-xl bg-muted/40 px-3 py-2"
                         >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </li>
-                    ))}
+                          <div>
+                            <p className="text-sm font-medium">{service.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {rupiah(service.price)}
+                              {service.durationHours > 0
+                                ? ` · Durasi ${service.durationHours} jam`
+                                : ""}{" "}
+                              · kustom
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() =>
+                              setServices((current) =>
+                                current.filter((item) => item.id !== service.id)
+                              )
+                            }
+                            aria-label={`Hapus ${service.name}`}
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </li>
+                      ))}
                   </ul>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Belum ada layanan.</p>
-                )}
+                ) : null}
               </div>
             )
           })}
 
           <div className="grid gap-2 rounded-xl bg-muted/40 p-3">
-            <p className="text-sm font-medium">Tambah layanan</p>
-            <select
-              value={draftField}
-              onChange={(event) => setDraftField(event.target.value as BusinessFieldId)}
-              className="h-10 rounded-lg border bg-background px-3 text-sm"
-            >
-              <option value="">Pilih bidang</option>
-              {selectedFields.map((field) => (
-                <option key={field.id} value={field.id}>
-                  {field.emoji} {field.label}
-                </option>
-              ))}
-            </select>
-            <Input
-              value={draftName}
-              onChange={(event) => setDraftName(event.target.value)}
-              placeholder="Contoh: Wedding Makeup"
-              className="h-10 bg-background"
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                value={draftPrice}
-                onChange={(event) => setDraftPrice(event.target.value.replace(/\D/g, ""))}
-                placeholder="Harga"
-                inputMode="numeric"
-                className="h-10 bg-background"
-              />
-              <Input
-                value={draftDuration}
-                onChange={(event) => setDraftDuration(event.target.value)}
-                placeholder="Durasi (jam)"
-                inputMode="decimal"
-                className="h-10 bg-background"
-              />
-            </div>
             <button
               type="button"
-              className={cn(buttonVariants({ variant: "outline" }), "h-10")}
-              onClick={addService}
+              className="flex items-center justify-between text-left text-sm font-medium"
+              onClick={() => setShowCustomForm((open) => !open)}
             >
-              <Plus className="size-4" />
-              Tambahkan Layanan
+              <span>Tidak ada di daftar? Tulis layanan sendiri</span>
+              <Plus
+                className={cn(
+                  "size-4 transition",
+                  showCustomForm ? "rotate-45" : "rotate-0"
+                )}
+              />
             </button>
+            {showCustomForm ? (
+              <>
+                <select
+                  value={draftField}
+                  onChange={(event) => {
+                    setDraftField(event.target.value as BusinessFieldId)
+                    setDraftName("")
+                    setDraftPrice("")
+                    setDraftDuration("")
+                  }}
+                  className="h-10 rounded-lg border bg-background px-3 text-sm"
+                >
+                  <option value="">Pilih bidang</option>
+                  {selectedFields.map((field) => (
+                    <option key={field.id} value={field.id}>
+                      {field.emoji} {field.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="grid gap-1.5">
+                  <Input
+                    value={draftName}
+                    onChange={(event) => setDraftName(event.target.value)}
+                    placeholder="Cari atau ketik nama layanan"
+                    className="h-10 bg-background"
+                    disabled={!draftField}
+                  />
+                  {draftField && draftName.trim() ? (
+                    <div className="max-h-36 overflow-y-auto rounded-lg border bg-background">
+                      {filteredPresets.slice(0, 8).map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
+                          onClick={() => applyPresetToDraft(preset)}
+                        >
+                          <span className="font-medium">{preset.name}</span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {rupiah(preset.price)}
+                            {preset.durationHours > 0
+                              ? ` · ${preset.durationHours} jam`
+                              : ""}
+                          </span>
+                        </button>
+                      ))}
+                      {!exactPresetMatch ? (
+                        <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+                          Pakai nama kustom: “{draftName.trim()}”
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    value={draftPrice}
+                    onChange={(event) =>
+                      setDraftPrice(event.target.value.replace(/\D/g, ""))
+                    }
+                    placeholder="Harga"
+                    inputMode="numeric"
+                    className="h-10 bg-background"
+                  />
+                  <Input
+                    value={draftDuration}
+                    onChange={(event) => setDraftDuration(event.target.value)}
+                    placeholder="Durasi (jam)"
+                    inputMode="decimal"
+                    className="h-10 bg-background"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className={cn(buttonVariants({ variant: "outline" }), "h-10")}
+                  onClick={addService}
+                >
+                  <Plus className="size-4" />
+                  Tambahkan Layanan
+                </button>
+              </>
+            ) : null}
           </div>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
