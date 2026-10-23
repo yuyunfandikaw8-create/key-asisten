@@ -22,6 +22,9 @@ import {
   type StoredAccount,
 } from "@/lib/auth"
 import {
+  clearOnboardingDone,
+  isOnboardingMarkedDone,
+  markOnboardingDone,
   normalizeOnboardingStep,
   preferOnboardingStep,
   type BusinessFieldId,
@@ -113,9 +116,19 @@ function persistAuthUser(nextUser: AuthUser) {
 }
 
 function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUser {
+  const email = normalizeEmail(local?.email || remote.email)
+  const markedDone = isOnboardingMarkedDone(email)
   if (!local || normalizeEmail(local.email) !== normalizeEmail(remote.email)) {
-    return remote
+    return {
+      ...remote,
+      onboardingStep: markedDone
+        ? "done"
+        : normalizeOnboardingStep(remote.onboardingStep),
+    }
   }
+  const step = markedDone
+    ? "done"
+    : preferOnboardingStep(local.onboardingStep, remote.onboardingStep)
   return {
     ...remote,
     name: local.name || remote.name,
@@ -124,7 +137,7 @@ function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUse
     studioName: local.studioName || remote.studioName,
     role: normalizeRole(local.role || remote.role),
     trialStartedAt: local.trialStartedAt || remote.trialStartedAt,
-    onboardingStep: preferOnboardingStep(local.onboardingStep, remote.onboardingStep),
+    onboardingStep: step,
     businessEmail: local.businessEmail || remote.businessEmail,
     instagram: local.instagram || remote.instagram,
     address: local.address || remote.address,
@@ -253,11 +266,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!raw) return false
         const parsed = JSON.parse(raw) as AuthUser
         if (parsed?.email && parsed?.id) {
+          const markedDone = isOnboardingMarkedDone(parsed.email)
           const next = withTrial({
             ...parsed,
             provider: parsed.provider ?? "password",
             role: normalizeRole(parsed.role),
-            onboardingStep: normalizeOnboardingStep(parsed.onboardingStep),
+            onboardingStep: markedDone
+              ? "done"
+              : normalizeOnboardingStep(parsed.onboardingStep),
           })
           setUser(next)
           persistAccountTrial(next.email, next.trialStartedAt!)
@@ -343,7 +359,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return
     if (user) {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user))
+      persistAuthUser(user)
     } else {
       localStorage.removeItem(AUTH_STORAGE_KEY)
     }
@@ -570,6 +586,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       updateProfile: async (patch) => {
         if (!user) return null
+        const nextStep = normalizeOnboardingStep(
+          patch.onboardingStep ?? user.onboardingStep
+        )
+        if (nextStep === "done") {
+          markOnboardingDone(user.email)
+        } else if (typeof nextStep === "number") {
+          clearOnboardingDone(user.email)
+        }
         const nextUser: AuthUser = {
           ...user,
           ...patch,
@@ -577,9 +601,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: user.email,
           provider: user.provider,
           role: normalizeRole(patch.role ?? user.role),
-          onboardingStep: normalizeOnboardingStep(
-            patch.onboardingStep ?? user.onboardingStep
-          ),
+          onboardingStep: isOnboardingMarkedDone(user.email) ? "done" : nextStep,
+        }
+        // Jika baru di-mark done di atas, pastikan step "done".
+        if (nextStep === "done") {
+          nextUser.onboardingStep = "done"
         }
         setUser(nextUser)
         persistAuthUser(nextUser)

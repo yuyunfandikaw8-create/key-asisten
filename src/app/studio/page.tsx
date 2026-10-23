@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { clearOnboardingDone } from "@/lib/onboarding"
 import { EmptyState, StudioLoading, StatusBadge } from "@/components/studio-bits"
 import { StudioMonthCalendar } from "@/components/studio-month-calendar"
 import { useStudio } from "@/components/studio-provider"
@@ -172,6 +173,7 @@ export default function StudioHomePage() {
 
   async function reopenBiodata() {
     setReopening(true)
+    clearOnboardingDone(user?.email)
     const updated = await updateProfile({ onboardingStep: 2 })
     if (!updated) {
       setReopening(false)

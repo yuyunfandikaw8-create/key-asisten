@@ -44,10 +44,46 @@ export function fieldById(id: BusinessFieldId) {
   return BUSINESS_FIELDS.find((field) => field.id === id)
 }
 
+/** Flag kecil terpisah — tidak ikut gagal karena kuota logo di auth storage. */
+export const ONBOARDING_DONE_PREFIX = "key-assistant.onboarding-done.v1:"
+
+export function onboardingDoneStorageKey(email: string) {
+  return `${ONBOARDING_DONE_PREFIX}${email.trim().toLowerCase()}`
+}
+
+export function markOnboardingDone(email: string | undefined | null) {
+  if (!email || typeof window === "undefined") return
+  try {
+    localStorage.setItem(onboardingDoneStorageKey(email), "1")
+  } catch {
+    // ignore
+  }
+}
+
+export function clearOnboardingDone(email: string | undefined | null) {
+  if (!email || typeof window === "undefined") return
+  try {
+    localStorage.removeItem(onboardingDoneStorageKey(email))
+  } catch {
+    // ignore
+  }
+}
+
+export function isOnboardingMarkedDone(email: string | undefined | null) {
+  if (!email || typeof window === "undefined") return false
+  try {
+    return localStorage.getItem(onboardingDoneStorageKey(email)) === "1"
+  } catch {
+    return false
+  }
+}
+
 export function needsOnboarding(
-  user: { role?: string; onboardingStep?: OnboardingStep } | null | undefined
+  user: { email?: string; role?: string; onboardingStep?: OnboardingStep } | null | undefined
 ) {
   if (!user || user.role !== "owner") return false
+  if (user.onboardingStep === "done") return false
+  if (isOnboardingMarkedDone(user.email)) return false
   return typeof user.onboardingStep === "number"
 }
 

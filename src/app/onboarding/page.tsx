@@ -17,6 +17,7 @@ import {
   fieldById,
   filterServicePresets,
   formatFieldsSummary,
+  markOnboardingDone,
   needsOnboarding,
   presetsForField,
   type BusinessFieldId,
@@ -204,19 +205,21 @@ export default function OnboardingPage() {
   async function finish() {
     setPending(true)
     setError("")
+    // Flag kecil dulu — ini yang mencegah redirect balik ke /onboarding.
+    markOnboardingDone(user.email)
     try {
+      if (city.trim()) setCity(city.trim())
       const updated = await updateProfile({ onboardingStep: "done" })
       if (!updated) {
-        setError("Gagal menyelesaikan onboarding. Coba lagi.")
-        setPending(false)
+        // Flag sudah terpasang; tetap coba masuk studio.
+        window.location.href = "/studio"
         return
       }
       if (updated.city) setCity(updated.city)
-      // Hard navigation supaya tidak tertahan di layar onboarding.
-      window.location.assign("/studio")
+      window.location.href = "/studio"
     } catch {
-      setError("Gagal menyimpan. Periksa koneksi lalu coba lagi.")
-      setPending(false)
+      // Meskipun update gagal, flag done sudah ada — masuk studio.
+      window.location.href = "/studio"
     }
   }
 
