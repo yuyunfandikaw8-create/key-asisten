@@ -24,7 +24,6 @@ import {
   type OnboardingStep,
   type ServicePreset,
 } from "@/lib/onboarding"
-import { rupiah } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 function stepNumber(step: OnboardingStep | undefined): number {
