@@ -206,7 +206,7 @@ export default function OnboardingPage() {
     setPending(true)
     setError("")
     // Flag kecil dulu — ini yang mencegah redirect balik ke /onboarding.
-    markOnboardingDone(user.email)
+    markOnboardingDone(user?.email)
     try {
       if (city.trim()) setCity(city.trim())
       const updated = await updateProfile({ onboardingStep: "done" })
