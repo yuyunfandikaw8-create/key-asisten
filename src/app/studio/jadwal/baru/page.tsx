@@ -51,6 +51,7 @@ export default function NewBookingPage() {
   const [time, setTime] = useState("")
   const [location, setLocation] = useState("")
   const [packageId, setPackageId] = useState("emas")
+  const [dpAmount, setDpAmount] = useState(() => String(dpFor(packages[0]?.price ?? 0)))
   const [attireId, setAttireId] = useState("none")
   const [notes, setNotes] = useState("")
   const [screenshotName, setScreenshotName] = useState("")
@@ -92,7 +93,11 @@ export default function NewBookingPage() {
     if (parsed.date) setDate(parsed.date)
     if (parsed.time) setTime(parsed.time)
     if (parsed.location) setLocation(parsed.location)
-    if (parsed.packageId) setPackageId(parsed.packageId)
+    if (parsed.packageId) {
+      setPackageId(parsed.packageId)
+      const pkg = packageById(parsed.packageId)
+      if (pkg) setDpAmount(String(dpFor(pkg.price)))
+    }
   }
 
   async function readScreenshot(file: File) {
@@ -148,6 +153,7 @@ export default function NewBookingPage() {
   }
 
   function commit() {
+    const dpValue = Number(dpAmount.replace(/\D/g, "")) || 0
     const booking = addBooking({
       clientName: clientName.trim(),
       phone: phone.trim(),
@@ -158,7 +164,7 @@ export default function NewBookingPage() {
       packageId: selected.id,
       attireId: attireId === "none" ? null : attireId,
       price: selected.price,
-      dp: dpFor(selected.price),
+      dp: Math.min(dpValue, selected.price),
       paid: 0,
       notes: notes.trim(),
       source: chat.trim() || screenshotName ? "chat" : "studio",
@@ -173,7 +179,7 @@ export default function NewBookingPage() {
         <h1 className="text-4xl">Booking baru</h1>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
           Tempel chat WhatsApp/Instagram, atau unggah screenshot — lalu periksa isiannya dan
-          simpan. DP tercatat 30% dan statusnya belum dibayar.
+          simpan.
         </p>
       </div>
 
@@ -366,7 +372,15 @@ export default function NewBookingPage() {
           </div>
           <div className="grid gap-1.5">
             <Label>Paket</Label>
-            <Select value={packageId} onValueChange={(value) => setPackageId(value ?? "emas")}>
+            <Select
+              value={packageId}
+              onValueChange={(value) => {
+                const nextId = value ?? "emas"
+                setPackageId(nextId)
+                const pkg = packageById(nextId)
+                if (pkg) setDpAmount(String(dpFor(pkg.price)))
+              }}
+            >
               <SelectTrigger className="h-10 w-full bg-background">
                 <SelectValue>
                   {(value) => {
@@ -383,7 +397,20 @@ export default function NewBookingPage() {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">DP {rupiah(dpFor(selected.price))}</p>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="dp">DP</Label>
+            <Input
+              id="dp"
+              value={dpAmount}
+              onChange={(event) => setDpAmount(event.target.value.replace(/\D/g, ""))}
+              inputMode="numeric"
+              placeholder="1950000"
+              className="h-10 bg-background"
+            />
+            <p className="text-xs text-muted-foreground">
+              {dpAmount ? rupiah(Number(dpAmount) || 0) : "Isi nominal DP"}
+            </p>
           </div>
           <div className="grid gap-1.5">
             <Label>Gaun</Label>
