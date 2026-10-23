@@ -72,7 +72,8 @@ export function formatDateInput(iso: string) {
 }
 
 /**
- * Terima ketikan manual: `22/10/2026`, `22-10-2026`, atau `2026-10-22`.
+ * Terima ketikan manual: `22/10/2026`, `22-10-2026`, `2026-10-22`,
+ * atau digit saja `22102026` (umum di keypad HP).
  * Mengembalikan ISO `YYYY-MM-DD` atau null jika tidak valid.
  */
 export function parseDateInput(value: string): string | null {
@@ -85,6 +86,8 @@ export function parseDateInput(value: string): string | null {
 
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw)
   const dmy = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(raw)
+  const digits = raw.replace(/\D/g, "")
+  const compact = digits.length === 8 ? /^(\d{2})(\d{2})(\d{4})$/.exec(digits) : null
   if (iso) {
     year = Number(iso[1])
     month = Number(iso[2])
@@ -93,6 +96,10 @@ export function parseDateInput(value: string): string | null {
     day = Number(dmy[1])
     month = Number(dmy[2])
     year = Number(dmy[3])
+  } else if (compact) {
+    day = Number(compact[1])
+    month = Number(compact[2])
+    year = Number(compact[3])
   } else {
     return null
   }
@@ -107,6 +114,14 @@ export function parseDateInput(value: string): string | null {
     return null
   }
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+}
+
+/** Format ketikan digit jadi `DD/MM/YYYY` agar mudah di keypad HP. */
+export function maskDateDigits(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 8)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
 }
 
 /**

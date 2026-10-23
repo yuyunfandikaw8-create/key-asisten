@@ -1,12 +1,17 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { CalendarDays, Clock3 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { formatDateInput, formatTime, parseDateInput, parseTimeInput } from "@/lib/format"
+import {
+  formatDateInput,
+  formatTime,
+  maskDateDigits,
+  parseDateInput,
+  parseTimeInput,
+} from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 type ScheduleFieldsProps = {
@@ -20,19 +25,8 @@ type ScheduleFieldsProps = {
   inputClassName?: string
 }
 
-function openNativePicker(input: HTMLInputElement | null) {
-  if (!input) return
-  try {
-    if (typeof input.showPicker === "function") {
-      input.showPicker()
-      return
-    }
-  } catch {
-    // Some browsers block showPicker without a direct gesture; fall through.
-  }
-  input.focus()
-  input.click()
-}
+const fieldClass =
+  "h-10 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
 
 export function ScheduleFields({
   date,
@@ -44,8 +38,6 @@ export function ScheduleFields({
   className,
   inputClassName,
 }: ScheduleFieldsProps) {
-  const datePickerRef = useRef<HTMLInputElement>(null)
-  const timePickerRef = useRef<HTMLInputElement>(null)
   const [dateText, setDateText] = useState(() => formatDateInput(date))
   const [timeText, setTimeText] = useState(() => formatTime(time))
   const [dateError, setDateError] = useState("")
@@ -62,9 +54,15 @@ export function ScheduleFields({
   }, [time])
 
   function commitDate(raw: string) {
+    if (!raw.trim()) {
+      setDateError("")
+      setDateText("")
+      if (date) onDateChange("")
+      return
+    }
     const parsed = parseDateInput(raw)
     if (!parsed) {
-      setDateError("Contoh: 22/10/2026 atau 2026-10-22")
+      setDateError("Contoh: 22/10/2026 atau ketik 22102026")
       setDateText(formatDateInput(date))
       return
     }
@@ -74,6 +72,12 @@ export function ScheduleFields({
   }
 
   function commitTime(raw: string) {
+    if (!raw.trim()) {
+      setTimeError("")
+      setTimeText("")
+      if (time) onTimeChange("")
+      return
+    }
     const parsed = parseTimeInput(raw)
     if (!parsed) {
       setTimeError("Contoh: 08.00 atau 08:00")
@@ -89,9 +93,31 @@ export function ScheduleFields({
     <div className={cn("grid gap-3 sm:grid-cols-2", className)}>
       <div className="grid gap-1.5">
         <Label htmlFor={dateId}>Tanggal jadwal</Label>
-        <div className="relative flex gap-2">
-          <Input
+
+        {/* HP: pakai date native — paling andal di Safari/Chrome mobile */}
+        <div className="relative sm:hidden">
+          <CalendarDays
+            className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <input
             id={dateId}
+            type="date"
+            value={date}
+            onChange={(event) => {
+              const next = event.target.value
+              setDateError("")
+              setDateText(next ? formatDateInput(next) : "")
+              onDateChange(next)
+            }}
+            className={cn(fieldClass, "pl-10", inputClassName)}
+          />
+        </div>
+
+        {/* Desktop: ketik + ikon kalender (input date menumpuk di ikon) */}
+        <div className="relative hidden gap-2 sm:flex">
+          <Input
+            id={`${dateId}-text`}
             type="text"
             inputMode="numeric"
             autoComplete="off"
@@ -99,8 +125,11 @@ export function ScheduleFields({
             placeholder="22/10/2026"
             value={dateText}
             onChange={(event) => {
-              setDateText(event.target.value)
+              const next = maskDateDigits(event.target.value)
+              setDateText(next)
               if (dateError) setDateError("")
+              const parsed = parseDateInput(next)
+              if (parsed && parsed !== date) onDateChange(parsed)
             }}
             onBlur={(event) => commitDate(event.target.value)}
             onKeyDown={(event) => {
@@ -112,42 +141,62 @@ export function ScheduleFields({
             className={cn("h-10 min-w-0 flex-1", inputClassName)}
             aria-invalid={Boolean(dateError)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className={cn("h-10 w-10 shrink-0", inputClassName)}
-            aria-label="Pilih tanggal dari kalender"
-            onClick={() => openNativePicker(datePickerRef.current)}
-          >
-            <CalendarDays className="size-4" />
-          </Button>
-          <input
-            ref={datePickerRef}
-            type="date"
-            value={date}
-            tabIndex={-1}
-            aria-hidden
-            className="sr-only"
-            onChange={(event) => {
-              const next = event.target.value
-              if (!next) return
-              setDateError("")
-              setDateText(formatDateInput(next))
-              onDateChange(next)
-            }}
-          />
+          <div className="relative h-10 w-10 shrink-0">
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-border bg-background",
+                inputClassName
+              )}
+              aria-hidden
+            >
+              <CalendarDays className="size-4" />
+            </span>
+            <input
+              type="date"
+              value={date}
+              aria-label="Pilih tanggal dari kalender"
+              onChange={(event) => {
+                const next = event.target.value
+                if (!next) return
+                setDateError("")
+                setDateText(formatDateInput(next))
+                onDateChange(next)
+              }}
+              className="absolute inset-0 z-10 cursor-pointer opacity-0"
+            />
+          </div>
         </div>
+
         <p className={cn("text-xs", dateError ? "text-destructive" : "text-muted-foreground")}>
-          {dateError || "Ketik manual atau pakai ikon kalender"}
+          {dateError || "Di HP pakai kalender; di komputer bisa ketik atau ikon kalender"}
         </p>
       </div>
 
       <div className="grid gap-1.5">
         <Label htmlFor={timeId}>Jam</Label>
-        <div className="relative flex gap-2">
-          <Input
+
+        <div className="relative sm:hidden">
+          <Clock3
+            className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <input
             id={timeId}
+            type="time"
+            value={time}
+            onChange={(event) => {
+              const next = event.target.value
+              setTimeError("")
+              setTimeText(next ? formatTime(next) : "")
+              onTimeChange(next)
+            }}
+            className={cn(fieldClass, "pl-10", inputClassName)}
+          />
+        </div>
+
+        <div className="relative hidden gap-2 sm:flex">
+          <Input
+            id={`${timeId}-text`}
             type="text"
             inputMode="numeric"
             autoComplete="off"
@@ -168,34 +217,34 @@ export function ScheduleFields({
             className={cn("h-10 min-w-0 flex-1", inputClassName)}
             aria-invalid={Boolean(timeError)}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className={cn("h-10 w-10 shrink-0", inputClassName)}
-            aria-label="Pilih jam dari picker"
-            onClick={() => openNativePicker(timePickerRef.current)}
-          >
-            <Clock3 className="size-4" />
-          </Button>
-          <input
-            ref={timePickerRef}
-            type="time"
-            value={time}
-            tabIndex={-1}
-            aria-hidden
-            className="sr-only"
-            onChange={(event) => {
-              const next = event.target.value
-              if (!next) return
-              setTimeError("")
-              setTimeText(formatTime(next))
-              onTimeChange(next)
-            }}
-          />
+          <div className="relative h-10 w-10 shrink-0">
+            <span
+              className={cn(
+                "pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-border bg-background",
+                inputClassName
+              )}
+              aria-hidden
+            >
+              <Clock3 className="size-4" />
+            </span>
+            <input
+              type="time"
+              value={time}
+              aria-label="Pilih jam dari picker"
+              onChange={(event) => {
+                const next = event.target.value
+                if (!next) return
+                setTimeError("")
+                setTimeText(formatTime(next))
+                onTimeChange(next)
+              }}
+              className="absolute inset-0 z-10 cursor-pointer opacity-0"
+            />
+          </div>
         </div>
+
         <p className={cn("text-xs", timeError ? "text-destructive" : "text-muted-foreground")}>
-          {timeError || "Ketik manual atau pakai ikon jam"}
+          {timeError || "Di HP pakai picker jam; di komputer bisa ketik atau ikon jam"}
         </p>
       </div>
     </div>
