@@ -108,6 +108,10 @@ export function parseChat(text: string): ParsedChat {
   const wordDate = flat.match(
     new RegExp(`(\\d{1,2})\\s+(${monthPattern})\\s+(\\d{4})`, "i")
   )
+  // Screenshot IG/WA sering tanpa tahun: "20 Nov" / "20 November"
+  const wordDateNoYear = flat.match(
+    new RegExp(`(\\d{1,2})\\s+(${monthPattern})(?!\\s*\\d{4})`, "i")
+  )
   const numericDate = flat.match(/\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b/)
   if (wordDate) {
     const month = MONTHS[wordDate[2].toLowerCase()]
@@ -118,6 +122,10 @@ export function parseChat(text: string): ParsedChat {
       Number(numericDate[2]),
       Number(numericDate[1])
     )
+  } else if (wordDateNoYear) {
+    const month = MONTHS[wordDateNoYear[2].toLowerCase()]
+    const year = new Date().getFullYear()
+    result.date = isoDate(year, month, Number(wordDateNoYear[1]))
   } else if (/\blusa\b/i.test(flat)) {
     result.date = addDays(todayISO(), 2)
   } else if (/\bbesok\b/i.test(flat)) {

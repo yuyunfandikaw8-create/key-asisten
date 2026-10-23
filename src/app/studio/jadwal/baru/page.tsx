@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { ImagePlus, LoaderCircle, X } from "lucide-react"
 
 import { ScheduleFields } from "@/components/schedule-fields"
 import { useStudio } from "@/components/studio-provider"
@@ -28,13 +29,16 @@ import { attires, packageById, packages, SAMPLE_CHAT } from "@/lib/catalog"
 import { dpFor, EVENT_LABEL, formatDate, formatTime, rupiah } from "@/lib/format"
 import { conflictsFor } from "@/lib/metrics"
 import { parseChat } from "@/lib/parse-chat"
+import { extractTextFromChatImage, isChatImageFile } from "@/lib/read-chat-image"
 import type { EventType } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const events = Object.keys(EVENT_LABEL) as EventType[]
 
 export default function NewBookingPage() {
   const router = useRouter()
   const { ready, bookings, addBooking } = useStudio()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [chat, setChat] = useState("")
   const [found, setFound] = useState<string[]>([])
   const [parseError, setParseError] = useState("")
@@ -49,6 +53,11 @@ export default function NewBookingPage() {
   const [packageId, setPackageId] = useState("emas")
   const [attireId, setAttireId] = useState("none")
   const [notes, setNotes] = useState("")
+  const [screenshotName, setScreenshotName] = useState("")
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
+  const [ocrProgress, setOcrProgress] = useState<number | null>(null)
+  const [readingImage, setReadingImage] = useState(false)
+  const [dragging, setDragging] = useState(false)
 
   const selected = packageById(packageId) ?? packages[0]
   const clashes = useMemo(() => {
@@ -60,11 +69,19 @@ export default function NewBookingPage() {
     })
   }, [attireId, bookings, date, time])
 
+  useEffect(() => {
+    return () => {
+      if (screenshotPreview) URL.revokeObjectURL(screenshotPreview)
+    }
+  }, [screenshotPreview])
+
   function applyChat(source: string) {
     const parsed = parseChat(source)
     if (!parsed.found.length) {
       setFound([])
-      setParseError("Chat ini belum kebaca. Sertakan nama, tanggal, dan jam.")
+      setParseError(
+        "Belum kebaca. Pastikan screenshot/teks memuat nama, tanggal, atau jam — atau isi form manual."
+      )
       return
     }
     setParseError("")
@@ -76,6 +93,45 @@ export default function NewBookingPage() {
     if (parsed.time) setTime(parsed.time)
     if (parsed.location) setLocation(parsed.location)
     if (parsed.packageId) setPackageId(parsed.packageId)
+  }
+
+  async function readScreenshot(file: File) {
+    if (!isChatImageFile(file)) {
+      setParseError("Unggah file gambar (PNG, JPG, atau WEBP).")
+      return
+    }
+
+    if (screenshotPreview) URL.revokeObjectURL(screenshotPreview)
+    const preview = URL.createObjectURL(file)
+    setScreenshotPreview(preview)
+    setScreenshotName(file.name || "screenshot-chat")
+    setReadingImage(true)
+    setOcrProgress(0)
+    setParseError("")
+    setFound([])
+
+    try {
+      const text = await extractTextFromChatImage(file, setOcrProgress)
+      if (!text.trim()) {
+        setParseError(
+          "Teks di screenshot tidak terbaca. Coba foto lebih terang/jelas, atau tempel chat sebagai teks."
+        )
+        return
+      }
+      setChat(text)
+      applyChat(text)
+    } catch {
+      setParseError("Gagal membaca screenshot. Coba lagi atau tempel chat sebagai teks.")
+    } finally {
+      setReadingImage(false)
+      setOcrProgress(null)
+    }
+  }
+
+  function clearScreenshot() {
+    if (screenshotPreview) URL.revokeObjectURL(screenshotPreview)
+    setScreenshotPreview(null)
+    setScreenshotName("")
   }
 
   function save() {
@@ -105,7 +161,7 @@ export default function NewBookingPage() {
       dp: dpFor(selected.price),
       paid: 0,
       notes: notes.trim(),
-      source: chat.trim() ? "chat" : "studio",
+      source: chat.trim() || screenshotName ? "chat" : "studio",
       attireReturned: false,
     })
     router.push(`/studio/invoice/${booking.id}`)
@@ -116,28 +172,132 @@ export default function NewBookingPage() {
       <div>
         <h1 className="text-4xl">Booking baru</h1>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-          Tempel chat klien, periksa isiannya, lalu simpan. DP tercatat 30% dan statusnya belum dibayar.
+          Tempel chat WhatsApp/Instagram, atau unggah screenshot — lalu periksa isiannya dan
+          simpan. DP tercatat 30% dan statusnya belum dibayar.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-          <Label htmlFor="chat">Chat WhatsApp</Label>
+          <Label htmlFor="chat">Chat WhatsApp / Instagram</Label>
+
+          <div
+            className={cn(
+              "rounded-xl border border-dashed px-3 py-3 transition",
+              dragging
+                ? "border-primary bg-accent/50"
+                : "border-foreground/15 bg-background"
+            )}
+            onDragEnter={(event) => {
+              event.preventDefault()
+              setDragging(true)
+            }}
+            onDragOver={(event) => {
+              event.preventDefault()
+              setDragging(true)
+            }}
+            onDragLeave={(event) => {
+              event.preventDefault()
+              if (event.currentTarget.contains(event.relatedTarget as Node)) return
+              setDragging(false)
+            }}
+            onDrop={(event) => {
+              event.preventDefault()
+              setDragging(false)
+              const file = event.dataTransfer.files?.[0]
+              if (file) void readScreenshot(file)
+            }}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9"
+                disabled={readingImage || !ready}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImagePlus className="size-4" />
+                Unggah screenshot
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  event.target.value = ""
+                  if (file) void readScreenshot(file)
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                WA atau Instagram · tarik gambar ke sini, tempel (Ctrl+V), atau pilih file
+              </p>
+            </div>
+
+            {screenshotPreview ? (
+              <div className="relative mt-3 overflow-hidden rounded-lg ring-1 ring-foreground/10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={screenshotPreview}
+                  alt={screenshotName || "Screenshot chat"}
+                  className="max-h-48 w-full object-contain bg-[oklch(0.97_0.01_20)]"
+                />
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 rounded-full bg-background/90 p-1.5 ring-1 ring-foreground/10"
+                  onClick={clearScreenshot}
+                  aria-label="Hapus screenshot"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : null}
+
+            {readingImage ? (
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                <LoaderCircle className="size-4 animate-spin" />
+                Membaca screenshot
+                {typeof ocrProgress === "number" ? ` · ${ocrProgress}%` : "…"}
+              </p>
+            ) : null}
+          </div>
+
           <Textarea
             id="chat"
             value={chat}
             onChange={(event) => setChat(event.target.value)}
-            placeholder="Tempel chat klien di sini"
-            className="min-h-48 bg-background"
+            onPaste={(event) => {
+              const items = event.clipboardData?.items
+              if (!items) return
+              for (const item of items) {
+                if (item.type.startsWith("image/")) {
+                  event.preventDefault()
+                  const file = item.getAsFile()
+                  if (file) void readScreenshot(file)
+                  return
+                }
+              }
+            }}
+            placeholder="Tempel chat teks di sini, atau tempel/unggah screenshot WA maupun Instagram"
+            className="min-h-40 bg-background"
+            disabled={readingImage}
           />
           <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => applyChat(chat)} disabled={!chat.trim() || !ready}>
+            <Button
+              type="button"
+              onClick={() => applyChat(chat)}
+              disabled={!chat.trim() || !ready || readingImage}
+            >
               Baca chat
             </Button>
             <Button
               type="button"
               variant="outline"
+              disabled={readingImage}
               onClick={() => {
+                clearScreenshot()
                 setChat(SAMPLE_CHAT)
                 applyChat(SAMPLE_CHAT)
               }}
@@ -160,11 +320,22 @@ export default function NewBookingPage() {
         >
           <div className="grid gap-1.5">
             <Label htmlFor="nama">Nama klien</Label>
-            <Input id="nama" value={clientName} onChange={(event) => setClientName(event.target.value)} className="h-10 bg-background" />
+            <Input
+              id="nama"
+              value={clientName}
+              onChange={(event) => setClientName(event.target.value)}
+              className="h-10 bg-background"
+            />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="hp">WhatsApp</Label>
-            <Input id="hp" value={phone} onChange={(event) => setPhone(event.target.value)} className="h-10 bg-background" placeholder="08…" />
+            <Input
+              id="hp"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              className="h-10 bg-background"
+              placeholder="08…"
+            />
           </div>
           <ScheduleFields
             date={date}
@@ -175,9 +346,14 @@ export default function NewBookingPage() {
           />
           <div className="grid gap-1.5">
             <Label>Acara</Label>
-            <Select value={eventType} onValueChange={(value) => setEventType((value ?? "pengantin") as EventType)}>
+            <Select
+              value={eventType}
+              onValueChange={(value) => setEventType((value ?? "pengantin") as EventType)}
+            >
               <SelectTrigger className="h-10 w-full bg-background">
-                <SelectValue>{(value) => EVENT_LABEL[(value as EventType) ?? "pengantin"]}</SelectValue>
+                <SelectValue>
+                  {(value) => EVENT_LABEL[(value as EventType) ?? "pengantin"]}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {events.map((event) => (
@@ -233,19 +409,30 @@ export default function NewBookingPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="lokasi">Lokasi</Label>
-            <Input id="lokasi" value={location} onChange={(event) => setLocation(event.target.value)} className="h-10 bg-background" />
+            <Input
+              id="lokasi"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              className="h-10 bg-background"
+            />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="catatan">Catatan</Label>
-            <Textarea id="catatan" value={notes} onChange={(event) => setNotes(event.target.value)} className="min-h-20 bg-background" />
+            <Textarea
+              id="catatan"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              className="min-h-20 bg-background"
+            />
           </div>
           {clashes.length ? (
             <p className="text-sm text-destructive">
-              Bentrok dengan {clashes.map((item) => item.clientName).join(", ")} pada {formatDate(date)} pukul {formatTime(time)}.
+              Bentrok dengan {clashes.map((item) => item.clientName).join(", ")} pada{" "}
+              {formatDate(date)} pukul {formatTime(time)}.
             </p>
           ) : null}
           {formError ? <p className="text-sm text-destructive">{formError}</p> : null}
-          <Button type="submit" disabled={!ready} className="h-10">
+          <Button type="submit" disabled={!ready || readingImage} className="h-10">
             Simpan jadwal
           </Button>
         </form>
@@ -256,7 +443,8 @@ export default function NewBookingPage() {
           <DialogHeader>
             <DialogTitle>Jadwal ini bentrok</DialogTitle>
             <DialogDescription>
-              {clashes.map((item) => item.clientName).join(", ")} sudah ada di tanggal yang sama. Simpan hanya kalau klien ini memang disengaja.
+              {clashes.map((item) => item.clientName).join(", ")} sudah ada di tanggal yang sama.
+              Simpan hanya kalau klien ini memang disengaja.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
