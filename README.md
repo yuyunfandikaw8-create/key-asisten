@@ -11,9 +11,9 @@ npm run dev
 
 Buka [http://127.0.0.1:43123](http://127.0.0.1:43123) (server listen di `0.0.0.0:43123` supaya preview Cursor bisa menjangkau).
 
-## Login
+## Login & onboarding
 
-Studio dilindungi login. Coba di `/masuk` atau daftar di `/daftar`.
+Studio dilindungi login. Daftar di `/daftar` (Step 1: akun), lalu lanjut `/onboarding` (workspace → bidang bisnis multi-select → profil → layanan opsional → dashboard). Akun contoh di bawah sudah selesai onboarding.
 
 Akun contoh (tersimpan di browser):
 
