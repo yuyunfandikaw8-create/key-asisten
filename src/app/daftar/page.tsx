@@ -5,65 +5,43 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
-import { CitySearchPicker } from "@/components/city-search-picker"
 import { GoogleAuthButton } from "@/components/google-auth-button"
-import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { homePathForUser } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 export default function RegisterPage() {
   const router = useRouter()
   const { ready, user, register } = useAuth()
-  const { setCity } = useStudio()
   const [name, setName] = useState("")
-  const [studioName, setStudioName] = useState("")
   const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [city, setCityField] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState("")
-  const [info, setInfo] = useState("")
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
-    if (ready && user) router.replace("/studio")
+    if (ready && user) router.replace(homePathForUser(user))
   }, [ready, router, user])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     setPending(true)
     setError("")
-    setInfo("")
-    if (!city) {
-      setError("Pilih kota dulu.")
+    if (!accepted) {
+      setError("Setujui Syarat & Ketentuan dan Kebijakan Privasi dulu.")
       setPending(false)
       return
     }
-    if (password !== confirmPassword) {
-      setError("Konfirmasi kata sandi belum sama.")
-      setPending(false)
-      return
-    }
-    const result = await register({
-      name,
-      email,
-      phone,
-      city,
-      studioName,
-      password,
-      role: "owner",
-    })
+    const result = await register({ name, email, password })
     if (!result.ok) {
-      if (result.error.includes("konfirmasi")) setInfo(result.error)
-      else setError(result.error)
+      setError(result.error)
       setPending(false)
       return
     }
-    setCity(result.user.city)
-    router.replace("/studio")
+    router.replace("/onboarding")
   }
 
   return (
@@ -72,46 +50,39 @@ export default function RegisterPage() {
         <Link href="/" className="font-display text-2xl">
           Key Assistant
         </Link>
-        <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
+        <p className="mt-4 text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+          Step 1 — Buat akun
+        </p>
+        <h1 className="mt-2 text-4xl">Buat akun kamu</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Coba gratis selama 14 hari. Kelola jadwal, klien, invoice, dan
-          keuangan bisnis kamu dalam satu tempat.
+          Kelola bisnis beauty, wedding & event dalam satu tempat.
         </p>
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
           mode="daftar"
+          nextPath="/onboarding"
           onSuccess={(nextUser) => {
-            setCity(nextUser.city)
-            router.replace("/studio")
+            router.replace(homePathForUser(nextUser))
           }}
         />
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="h-px flex-1 bg-border" />
-          atau daftar dengan email
+          atau
           <span className="h-px flex-1 bg-border" />
         </div>
+        <p className="text-center text-sm font-medium">Daftar dengan email</p>
         <form onSubmit={submit} className="grid gap-3">
           <div className="grid gap-1.5">
-            <Label htmlFor="name">Nama pemilik</Label>
+            <Label htmlFor="name">Nama lengkap</Label>
             <Input
               id="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="h-10"
-              placeholder="Masukkan nama kamu"
+              placeholder="Nama kamu"
               required
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="studio">Nama bisnis</Label>
-            <Input
-              id="studio"
-              value={studioName}
-              onChange={(event) => setStudioName(event.target.value)}
-              className="h-10"
-              placeholder="Masukkan nama bisnis kamu"
             />
           </div>
           <div className="grid gap-1.5">
@@ -122,65 +93,52 @@ export default function RegisterPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="h-10"
-              placeholder="Masukkan email kamu"
+              placeholder="nama@email.com"
               required
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="phone">WhatsApp</Label>
-            <Input
-              id="phone"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              className="h-10"
-              placeholder="Contoh: 0812xxxxxxxx"
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="city">Wilayah / Kota</Label>
-            <CitySearchPicker
-              id="city"
-              value={city}
-              onChange={setCityField}
-              placeholder="Cari wilayah / kota"
-              required
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="password">Kata sandi</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="h-10"
-              placeholder="Buat kata sandi"
+              placeholder="Minimal 8 karakter"
               required
-              minLength={6}
+              minLength={8}
             />
           </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="confirm-password">Konfirmasi kata sandi</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              className="h-10"
-              placeholder="Ulangi kata sandi"
-              required
-              minLength={6}
+          <label className="flex items-start gap-2 text-sm leading-snug">
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={(event) => setAccepted(event.target.checked)}
+              className="mt-1 size-4 accent-primary"
             />
-          </div>
+            <span>
+              Saya menyetujui{" "}
+              <Link href="/syarat" className="font-medium text-primary hover:underline">
+                Syarat & Ketentuan
+              </Link>{" "}
+              dan{" "}
+              <Link href="/privasi" className="font-medium text-primary hover:underline">
+                Kebijakan Privasi
+              </Link>
+            </span>
+          </label>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          {info ? <p className="text-sm text-primary">{info}</p> : null}
           <button
             type="submit"
-            className={cn(buttonVariants(), "h-10 w-full")}
+            className={cn(buttonVariants(), "h-11 w-full")}
             disabled={pending}
           >
             {pending ? "Menyimpan…" : "Buat Akun"}
           </button>
+          <p className="text-center text-sm text-muted-foreground">
+            Coba gratis 14 hari
+          </p>
         </form>
       </div>
 

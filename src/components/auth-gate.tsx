@@ -6,14 +6,18 @@ import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { homePathForUser } from "@/lib/auth"
+import { needsOnboarding } from "@/lib/onboarding"
 import { isTrialExpired } from "@/lib/trial"
 
 export function AuthGate({
   children,
   allowRole = "owner",
+  skipOnboardingRedirect = false,
 }: {
   children: React.ReactNode
   allowRole?: "owner" | "client" | "any"
+  /** Set true on /onboarding so incomplete owners are not bounced in a loop. */
+  skipOnboardingRedirect?: boolean
 }) {
   const { ready, user } = useAuth()
   const router = useRouter()
@@ -30,10 +34,22 @@ export function AuthGate({
       router.replace(homePathForUser(user))
       return
     }
+    if (!skipOnboardingRedirect && needsOnboarding(user)) {
+      router.replace("/onboarding")
+      return
+    }
+    if (
+      skipOnboardingRedirect &&
+      !needsOnboarding(user) &&
+      pathname.startsWith("/onboarding")
+    ) {
+      router.replace("/studio")
+      return
+    }
     if (user.role === "owner" && isTrialExpired(user.trialStartedAt)) {
       router.replace("/trial-berakhir")
     }
-  }, [allowRole, pathname, ready, router, user])
+  }, [allowRole, pathname, ready, router, skipOnboardingRedirect, user])
 
   // Keep children mounted so Next.js instant-nav validation does not drop
   // the studio page segment (which previously blocked clicks with an overlay).
@@ -49,6 +65,10 @@ export function AuthGate({
   }
 
   if (allowRole !== "any" && user.role !== allowRole) {
+    return <StudioLoading />
+  }
+
+  if (!skipOnboardingRedirect && needsOnboarding(user)) {
     return <StudioLoading />
   }
 

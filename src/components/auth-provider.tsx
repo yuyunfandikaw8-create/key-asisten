@@ -21,6 +21,7 @@ import {
   type GoogleChoice,
   type StoredAccount,
 } from "@/lib/auth"
+import { normalizeOnboardingStep } from "@/lib/onboarding"
 import { supabase, supabaseConfigured } from "@/lib/supabase"
 import { nowIso } from "@/lib/trial"
 
@@ -35,16 +36,14 @@ type AuthContextValue = {
   register: (input: {
     name: string
     email: string
-    phone: string
-    city: string
-    studioName: string
     password: string
-    role: AuthRole
   }) => Promise<AuthResult>
   continueWithGoogle: (choice: GoogleChoice, role?: AuthRole) => Promise<AuthResult>
   startGoogleOAuth: (nextPath?: string) => Promise<AuthResult>
   /** Owner-only: persist studio wilayah on the account profile. */
   updateOwnerCity: (city: string) => Promise<void>
+  /** Merge profile / onboarding fields into the signed-in account. */
+  updateProfile: (patch: Partial<AuthUser>) => Promise<AuthUser | null>
   logout: () => Promise<void>
 }
 
@@ -93,6 +92,7 @@ function userFromMetadata(
     typeof metadata?.trial_started_at === "string" && metadata.trial_started_at
       ? metadata.trial_started_at
       : nowIso()
+  const onboardingStep = normalizeOnboardingStep(metadata?.onboarding_step)
   return {
     id,
     email,
@@ -103,6 +103,7 @@ function userFromMetadata(
     provider,
     role,
     trialStartedAt,
+    onboardingStep,
   }
 }
 
@@ -167,6 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...parsed,
             provider: parsed.provider ?? "password",
             role: normalizeRole(parsed.role),
+            onboardingStep: normalizeOnboardingStep(parsed.onboardingStep),
           })
           setUser(next)
           persistAccountTrial(next.email, next.trialStartedAt!)
@@ -321,11 +323,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name,
           email: normalized,
           phone: "",
-          city: "Bandung",
-          studioName: name,
+          city: "",
+          studioName: "",
           password: pass,
           provider: "password",
           role: "owner",
+          onboardingStep: 2,
           trialStartedAt: nowIso(),
         }
         writeAccounts([...accounts, account])
@@ -339,8 +342,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!input.name.trim() || !email || !input.password.trim()) {
           return { ok: false, error: "Nama, email, dan kata sandi wajib diisi." }
         }
-        if (input.password.trim().length < 6) {
-          return { ok: false, error: "Kata sandi minimal 6 karakter." }
+        if (input.password.trim().length < 8) {
+          return { ok: false, error: "Kata sandi minimal 8 karakter." }
         }
 
         const accounts = readAccounts()
@@ -348,21 +351,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, error: "Email ini sudah terdaftar. Silakan masuk." }
         }
 
-        const role = normalizeRole(input.role)
         const trialStartedAt = nowIso()
         const account: StoredAccount = {
           id: crypto.randomUUID(),
           name: input.name.trim(),
           email,
-          phone: input.phone.trim(),
-          city: input.city.trim() || "Bandung",
-          studioName:
-            role === "client"
-              ? input.name.trim()
-              : input.studioName.trim() || input.name.trim(),
+          phone: "",
+          city: "",
+          studioName: "",
           password: input.password.trim(),
           provider: "password",
-          role,
+          role: "owner",
+          onboardingStep: 2,
+          businessEmail: email,
           trialStartedAt,
         }
 
@@ -379,10 +380,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             options: {
               data: {
                 name: input.name.trim(),
-                phone: input.phone.trim(),
-                city: input.city.trim() || "Bandung",
-                studio_name: account.studioName,
-                role,
+                role: "owner",
+                onboarding_step: 2,
                 trial_started_at: trialStartedAt,
               },
               emailRedirectTo:
@@ -421,13 +420,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           name: choice.name,
           email,
-          phone: choice.phone,
-          city: choice.city,
-          studioName: nextRole === "client" ? choice.name : choice.studioName,
+          phone: "",
+          city: "",
+          studioName: "",
           password: `google:${email}`,
           provider: "google",
           role: nextRole,
           avatar: choice.initial,
+          onboardingStep: nextRole === "owner" ? 2 : undefined,
+          businessEmail: email,
           trialStartedAt: nowIso(),
         }
         writeAccounts([...accounts, account])
@@ -479,6 +480,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (supabase && !isDemoEmail(user.email)) {
           void supabase.auth.updateUser({ data: { city: nextCity } })
         }
+      },
+      updateProfile: async (patch) => {
+        if (!user) return null
+        const nextUser: AuthUser = {
+          ...user,
+          ...patch,
+          id: user.id,
+          email: user.email,
+          provider: user.provider,
+          role: normalizeRole(patch.role ?? user.role),
+          onboardingStep: normalizeOnboardingStep(
+            patch.onboardingStep ?? user.onboardingStep
+          ),
+        }
+        setUser(nextUser)
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser))
+
+        const accounts = readAccounts()
+        const index = accounts.findIndex((item) => item.email === normalizeEmail(user.email))
+        if (index >= 0) {
+          const nextAccounts = [...accounts]
+          nextAccounts[index] = { ...nextAccounts[index], ...nextUser }
+          writeAccounts(nextAccounts)
+        }
+
+        if (supabase && !isDemoEmail(user.email)) {
+          void supabase.auth.updateUser({
+            data: {
+              name: nextUser.name,
+              phone: nextUser.phone,
+              city: nextUser.city,
+              studio_name: nextUser.studioName,
+              role: nextUser.role,
+              onboarding_step: nextUser.onboardingStep,
+              business_email: nextUser.businessEmail,
+              instagram: nextUser.instagram,
+              address: nextUser.address,
+              business_fields: nextUser.businessFields,
+            },
+          })
+        }
+        return nextUser
       },
       logout: async () => {
         if (supabase) await supabase.auth.signOut()

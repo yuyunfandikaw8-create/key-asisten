@@ -1,3 +1,11 @@
+import {
+  needsOnboarding,
+  normalizeOnboardingStep,
+  type BusinessFieldId,
+  type BusinessService,
+  type OnboardingStep,
+} from "@/lib/onboarding"
+
 export type AuthProviderKind = "password" | "google"
 
 /** Owner mengelola studio; klien mencari vendor / booking. */
@@ -15,14 +23,24 @@ export type AuthUser = {
   avatar?: string
   /** ISO timestamp when the 14-day trial began */
   trialStartedAt?: string
+  /** Missing/`done` = selesai; angka = langkah onboarding aktif. */
+  onboardingStep?: OnboardingStep
+  businessEmail?: string
+  instagram?: string
+  address?: string
+  logoDataUrl?: string
+  businessFields?: BusinessFieldId[]
+  services?: BusinessService[]
 }
 
 export function normalizeRole(role: unknown): AuthRole {
   return role === "client" ? "client" : "owner"
 }
 
-export function homePathForUser(user: Pick<AuthUser, "role"> | null | undefined) {
-  return user?.role === "client" ? "/klien" : "/studio"
+export function homePathForUser(user: AuthUser | null | undefined) {
+  if (user?.role === "client") return "/klien"
+  if (needsOnboarding(user)) return "/onboarding"
+  return "/studio"
 }
 
 export type StoredAccount = AuthUser & {
@@ -54,6 +72,8 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     password: "laras123",
     provider: "password",
     role: "owner",
+    onboardingStep: "done",
+    businessFields: ["makeup", "hair", "baju"],
   },
   {
     id: "user-suro",
@@ -65,6 +85,8 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     password: "suro123",
     provider: "password",
     role: "owner",
+    onboardingStep: "done",
+    businessFields: ["makeup", "hair"],
   },
 ]
 
@@ -104,7 +126,11 @@ export const GOOGLE_CHOICES: GoogleChoice[] = [
 
 export function toPublicUser(account: StoredAccount): AuthUser {
   const { password: _password, ...user } = account
-  return { ...user, role: normalizeRole(user.role) }
+  return {
+    ...user,
+    role: normalizeRole(user.role),
+    onboardingStep: normalizeOnboardingStep(user.onboardingStep),
+  }
 }
 
 export function normalizeEmail(email: string) {

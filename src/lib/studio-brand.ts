@@ -14,12 +14,12 @@ export function studioBrand(user: AuthUser | null | undefined) {
     owner,
     city: user?.city?.trim() || studio.city,
     phone: user?.phone?.trim() || studio.phone,
-    instagram: studio.instagram,
+    instagram: user?.instagram?.trim() || studio.instagram,
     bank: studio.bank,
     accountName: owner,
     accountNumber: studio.accountNumber,
     slug: studio.slug,
-    address: studio.address,
+    address: user?.address?.trim() || studio.address,
     bio: studio.bio,
   }
 }
