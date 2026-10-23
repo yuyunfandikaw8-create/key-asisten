@@ -750,7 +750,7 @@ export default function OnboardingPage() {
             disabled={pending}
             onClick={() => void finish()}
           >
-            {pending ? "Membuka…" : "Masuk ke Dashboard"}
+            {pending ? "Menyimpan…" : "Simpan & masuk ke Dashboard"}
           </button>
         </section>
       ) : null}

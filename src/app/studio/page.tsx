@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import {
   AlertTriangle,
   CalendarDays,
   ChevronRight,
+  ClipboardList,
   FileText,
   Handshake,
   Inbox,
@@ -259,6 +261,26 @@ export default function StudioHomePage() {
           Buat booking
         </Link>
       </div>
+
+      <button
+        type="button"
+        onClick={() => void reopenBiodata()}
+        disabled={reopening}
+        className="flex w-full items-center gap-3 rounded-2xl bg-card px-4 py-3 text-left ring-1 ring-foreground/10 transition hover:bg-accent/40 disabled:opacity-60"
+      >
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+          <ClipboardList className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium">
+            {reopening ? "Membuka biodata…" : "Kembali isi biodata awal"}
+          </span>
+          <span className="block text-sm text-muted-foreground">
+            Perbarui data dari step 1–6: akun, bisnis, bidang, profil, dan layanan.
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+      </button>
 
       <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-sm">
         <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_auto] lg:items-end">
