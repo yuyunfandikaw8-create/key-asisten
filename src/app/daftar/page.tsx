@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { homePathForUser } from "@/lib/auth"
+import { needsOnboarding } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
 
 export default function RegisterPage() {
@@ -23,7 +24,10 @@ export default function RegisterPage() {
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
-    if (ready && user) router.replace(homePathForUser(user))
+    if (!ready || !user) return
+    // Mid-onboarding: biarkan lihat halaman ini (dari tombol Kembali step 2).
+    if (needsOnboarding(user)) return
+    router.replace(homePathForUser(user))
   }, [ready, router, user])
 
   async function submit(event: React.FormEvent) {
@@ -42,6 +46,34 @@ export default function RegisterPage() {
       return
     }
     router.replace("/onboarding")
+  }
+
+  if (ready && user && needsOnboarding(user)) {
+    return (
+      <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
+        <div>
+          <Link href="/" className="font-display text-2xl">
+            Key Assistant
+          </Link>
+          <h1 className="mt-4 text-4xl">Akun sudah dibuat</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Kamu sudah masuk sebagai {user.name || user.email}. Lanjutkan mengisi data
+            bisnis, atau kembali ke beranda.
+          </p>
+        </div>
+        <div className="grid gap-2 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+          <Link href="/onboarding" className={cn(buttonVariants(), "h-11 w-full")}>
+            Lanjutkan isi bisnis
+          </Link>
+          <Link
+            href="/"
+            className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
+          >
+            Kembali ke beranda
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ImagePlus, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, ImagePlus, Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { CitySearchPicker } from "@/components/city-search-picker"
@@ -95,6 +95,17 @@ export default function OnboardingPage() {
       return false
     }
     return true
+  }
+
+  async function goBack() {
+    setError("")
+    if (step <= 2) {
+      // Step sebelumnya adalah buat akun di /daftar
+      router.push("/daftar")
+      return
+    }
+    const previous = (step - 1) as 2 | 3 | 4 | 5
+    await goTo(previous)
   }
 
   function toggleField(id: BusinessFieldId) {
@@ -204,6 +215,18 @@ export default function OnboardingPage() {
         <p className="mt-3 text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
           Step {step} dari 6
         </p>
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            "-ml-2 mt-3 h-9 gap-1.5 px-2 text-muted-foreground"
+          )}
+          disabled={pending}
+          onClick={() => void goBack()}
+        >
+          <ArrowLeft className="size-4" />
+          Kembali
+        </button>
       </div>
 
       {step === 2 ? (
