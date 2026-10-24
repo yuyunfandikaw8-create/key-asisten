@@ -134,13 +134,13 @@ function InboxPageInner() {
             <div className="p-4">
               <EmptyState
                 title="Belum ada percakapan"
-                body="Ajakan kerja sama belum ada. Cari partner dulu, lalu inbox akan terisi di sini."
+                body="Kamu belum memiliki percakapan dengan partner."
               />
               <Link
                 href="/studio/partner"
                 className={cn(buttonVariants({ size: "sm" }), "mt-3 h-9 w-full")}
               >
-                Cari partner
+                Cari Partner
               </Link>
             </div>
           ) : (
@@ -247,11 +247,11 @@ function InboxPageInner() {
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
               <EmptyState
-                title="Belum ada yang diajak kerja sama"
-                body={`Inbox kosong sampai kamu mengajak partner di ${city}. Mulai dari menu Partner.`}
+                title="Belum ada partner"
+                body="Cari dan ajak partner untuk bekerja sama. Percakapan dengan partner akan muncul di sini."
               />
               <Link href="/studio/partner" className={cn(buttonVariants(), "h-10")}>
-                Buka Partner
+                Cari Partner
               </Link>
             </div>
           )}
