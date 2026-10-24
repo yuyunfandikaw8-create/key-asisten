@@ -33,7 +33,18 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
 - Akun contoh `@riasaja.id` dan pilihan Gmail demo → tetap lokal untuk coba cepat.
 - Google OAuth asli: aktifkan provider Google di Supabase Authentication, lalu tombol Google akan mengalihkan ke Google.
 - **Jangan** taruh `service_role` / `sb_secret_` di frontend atau sebagai `NEXT_PUBLIC_*`.
-- Jalankan `supabase/schema.sql` di SQL Editor agar tabel `studios` + RLS tersedia.
+- Jalankan `supabase/schema.sql` di SQL Editor agar tabel `studios`, `owner_data`, dan RLS tersedia.
+
+### Sinkron lintas perangkat (HP / laptop)
+
+Profil bisnis, layanan, dan data studio (booking, invoice, dll.) tersimpan ke akun email lewat tabel `owner_data` di Supabase — bukan hanya di browser satu HP.
+
+1. **Daftar** dengan email + kata sandi (bukan akun demo `@riasaja.id`).
+2. Jika diminta, **konfirmasi email** dari kotak masuk / spam.
+3. Selesaikan onboarding / pakai studio seperti biasa — data diunggah otomatis saat tersimpan.
+4. Di HP atau perangkat lain: buka app → **Masuk** dengan **email dan kata sandi yang sama**. Profil dan data studio ditarik dari cloud; tidak perlu mengulang onboarding jika sudah selesai.
+
+Tanpa Supabase (atau akun demo), data tetap hanya di `localStorage` perangkat itu.
 
 ### Deploy Vercel
 
@@ -55,6 +66,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
 - Menu di `/studio/menu`. Pintasan ke jadwal, partner, invoice, aset, lokasi, dan identitas studio.
 - Operasional juga punya **Profil bisnis** (`/studio/profil`, seperti langkah 4) dan **Layanan & harga** (`/studio/layanan`, seperti langkah 5) supaya owner bisa menambah/mengubah layanan tanpa mengulang biodata penuh.
 
-Data tersimpan di browser (`localStorage`). Tombol **Data contoh** mengembalikan studio Key Partner.
+Data demo / cache tetap di browser (`localStorage`). Akun email nyata menyimpan salinan ke Supabase (`owner_data`) supaya login di perangkat lain memulihkan data. Tombol **Data contoh** hanya menampilkan sampel Key Partner; tidak menimpa data cloud.
 
-Supabase project `iukerqusjdlkkoyxvgjs` belum disambungkan. Endpoint `/rest/v1/` menolak request tanpa anon key. Jangan menaruh service role key di aplikasi ini.
+Jangan menaruh service role key di aplikasi ini.

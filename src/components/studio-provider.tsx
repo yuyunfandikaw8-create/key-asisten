@@ -12,6 +12,13 @@ import {
 
 import { useAuth } from "@/components/auth-provider"
 import { createEmptyStudio, createSeed } from "@/lib/catalog"
+import {
+  canCloudSync,
+  pullOwnerCloud,
+  pushStudioCloud,
+  studioHasRows,
+} from "@/lib/cloud-sync"
+import { normalizeEmail } from "@/lib/auth"
 import { partnerById } from "@/lib/partners"
 import type {
   Booking,
@@ -80,7 +87,8 @@ type StudioContextValue = {
 
 const StudioContext = createContext<StudioContextValue | null>(null)
 
-function storageKeyFor(userId: string | null) {
+function storageKeyFor(userId: string | null, email?: string | null) {
+  if (email) return `${STORAGE_PREFIX}:email:${normalizeEmail(email)}`
   return `${STORAGE_PREFIX}:${userId ?? "guest"}`
 }
 
@@ -88,12 +96,25 @@ function previewFlagKey(storageKey: string) {
   return `${storageKey}:preview-done`
 }
 
-function purgeLegacyStudioKeys(userId: string | null) {
-  const suffix = userId ?? "guest"
-  for (const prefix of LEGACY_STORAGE_PREFIXES) {
-    const key = `${prefix}:${suffix}`
-    localStorage.removeItem(key)
-    localStorage.removeItem(previewFlagKey(key))
+function purgeLegacyStudioKeys(userId: string | null, email?: string | null) {
+  const suffixes = [userId ?? "guest"]
+  if (email) suffixes.push(`email:${normalizeEmail(email)}`)
+  for (const suffix of suffixes) {
+    for (const prefix of LEGACY_STORAGE_PREFIXES) {
+      const key = `${prefix}:${suffix}`
+      localStorage.removeItem(key)
+      localStorage.removeItem(previewFlagKey(key))
+    }
+  }
+  // Migrasi: salin data lama berbasis userId ke kunci email jika belum ada.
+  if (userId && email) {
+    const emailKey = storageKeyFor(userId, email)
+    const idKey = `${STORAGE_PREFIX}:${userId}`
+    if (!localStorage.getItem(emailKey) && localStorage.getItem(idKey)) {
+      localStorage.setItem(emailKey, localStorage.getItem(idKey)!)
+      const preview = localStorage.getItem(previewFlagKey(idKey))
+      if (preview) localStorage.setItem(previewFlagKey(emailKey), preview)
+    }
   }
 }
 
@@ -179,36 +200,57 @@ export function StudioProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!authReady) return
-    const key = storageKeyFor(userId)
+    let cancelled = false
+    const key = storageKeyFor(userId, user?.email)
     const city = user?.city ?? "Bandung"
-    purgeLegacyStudioKeys(userId)
-    const stored = readStoredState(key, city)
-    const previewDone = localStorage.getItem(previewFlagKey(key)) === "1"
+    purgeLegacyStudioKeys(userId, user?.email)
 
-    skipPersist.current = true
-    setStorageKey(key)
+    async function boot() {
+      let stored = readStoredState(key, city)
+      const previewDone = localStorage.getItem(previewFlagKey(key)) === "1"
 
-    if (!stored && !previewDone) {
-      setViewMode("demo")
-      viewModeRef.current = "demo"
-      setState(sampleState(city))
-      setNotice(
-        "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
-      )
-    } else {
-      const real = stored ?? createEmptyStudio(city)
-      setViewMode("real")
-      viewModeRef.current = "real"
-      setState(real)
-      localStorage.setItem(key, JSON.stringify(real))
+      // Perangkat baru: tarik studio dari cloud jika lokal kosong.
+      if ((!stored || !studioHasRows(stored)) && user && canCloudSync(user.email) && userId) {
+        const cloud = await pullOwnerCloud(userId)
+        if (cloud?.studio && studioHasRows(cloud.studio)) {
+          stored = normalizeState(cloud.studio, cloud.studio.city || city)
+          localStorage.setItem(key, JSON.stringify(stored))
+          localStorage.setItem(previewFlagKey(key), "1")
+        }
+      }
+
+      if (cancelled) return
+      skipPersist.current = true
+      setStorageKey(key)
+
+      const hasPreview = localStorage.getItem(previewFlagKey(key)) === "1" || previewDone
+      if (!stored && !hasPreview) {
+        setViewMode("demo")
+        viewModeRef.current = "demo"
+        setState(sampleState(city))
+        setNotice(
+          "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
+        )
+      } else {
+        const real = stored ?? createEmptyStudio(city)
+        setViewMode("real")
+        viewModeRef.current = "real"
+        setState(real)
+        localStorage.setItem(key, JSON.stringify(real))
+      }
+
+      setReady(true)
+      window.setTimeout(() => {
+        skipPersist.current = false
+      }, 0)
     }
 
-    setReady(true)
-    window.setTimeout(() => {
-      skipPersist.current = false
-    }, 0)
+    void boot()
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady, userId])
+  }, [authReady, userId, user?.email])
 
   useEffect(() => {
     if (!ready || !state || !storageKey || skipPersist.current) return
@@ -218,7 +260,10 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       ? { ...createEmptyStudio(state.city), city: state.city }
       : stripSampleRows(state)
     localStorage.setItem(storageKey, JSON.stringify(toSave))
-  }, [ready, state, storageKey, viewMode])
+    if (user && canCloudSync(user.email)) {
+      void pushStudioCloud(user, toSave)
+    }
+  }, [ready, state, storageKey, user, viewMode])
 
   // Guard: if real mode somehow still holds only sample seed, wipe rows but keep city.
   useEffect(() => {

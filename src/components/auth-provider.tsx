@@ -32,6 +32,12 @@ import {
   type BusinessFieldId,
   type BusinessService,
 } from "@/lib/onboarding"
+import {
+  applyCloudProfile,
+  canCloudSync,
+  pullOwnerCloud,
+  pushOwnerProfile,
+} from "@/lib/cloud-sync"
 import { supabase, supabaseConfigured } from "@/lib/supabase"
 import { nowIso } from "@/lib/trial"
 
@@ -326,20 +332,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) setGoogleEnabled(false)
       }
 
+      async function hydrateFromSession(
+        sessionUser: {
+          id: string
+          email?: string | null
+          user_metadata?: Record<string, unknown>
+          app_metadata?: { provider?: string }
+        }
+      ) {
+        if (!sessionUser.email) return
+        let merged = withPendingRegisterRole(
+          resolveSessionUser(
+            sessionUser.id,
+            sessionUser.email,
+            sessionUser.user_metadata as Record<string, unknown>,
+            sessionUser.app_metadata?.provider === "google" ? "google" : "password"
+          )
+        )
+        if (canCloudSync(merged.email)) {
+          const cloud = await pullOwnerCloud(sessionUser.id)
+          if (cloud?.profile) {
+            merged = applyCloudProfile(merged, cloud.profile)
+          } else if (
+            merged.onboardingStep === "done" ||
+            (merged.services && merged.services.length > 0) ||
+            merged.studioName
+          ) {
+            void pushOwnerProfile(merged)
+          }
+          if (merged.onboardingStep === "done") markOnboardingDone(merged.email)
+        }
+        if (!active) return
+        setUser(merged)
+        persistAuthUser(merged)
+      }
+
       try {
         const { data } = await supabase.auth.getSession()
-        const sessionUser = data.session?.user
-        if (active && sessionUser?.email) {
-          const merged = withPendingRegisterRole(
-            resolveSessionUser(
-              sessionUser.id,
-              sessionUser.email,
-              sessionUser.user_metadata as Record<string, unknown>,
-              sessionUser.app_metadata?.provider === "google" ? "google" : "password"
-            )
-          )
-          setUser(merged)
-          persistAuthUser(merged)
+        if (active && data.session?.user) {
+          await hydrateFromSession(data.session.user)
         }
       } catch {
         // Tetap pakai sesi lokal.
@@ -349,16 +380,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active) return
         const next = session?.user
         if (next?.email) {
-          const merged = withPendingRegisterRole(
-            resolveSessionUser(
-              next.id,
-              next.email,
-              next.user_metadata as Record<string, unknown>,
-              next.app_metadata?.provider === "google" ? "google" : "password"
-            )
-          )
-          setUser(merged)
-          persistAuthUser(merged)
+          void hydrateFromSession(next)
           return
         }
         restoreLocalUser()
@@ -401,6 +423,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const accounts = readAccounts()
         const localAccount = accounts.find((item) => item.email === normalized)
+
+        // Utamakan Auth Supabase agar profil + studio ikut email di HP / perangkat lain.
+        if (supabase && !isDemoEmail(normalized)) {
+          try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: normalized,
+              password: pass,
+            })
+            if (!error && data.user?.email) {
+              let publicUser = withTrial(
+                userFromMetadata(
+                  data.user.id,
+                  data.user.email,
+                  data.user.user_metadata as Record<string, unknown>,
+                  "password"
+                )
+              )
+              // Data lokal di perangkat ini mengisi gap metadata (id tetap dari Supabase).
+              if (localAccount && localAccount.password === pass) {
+                publicUser = applyCloudProfile(
+                  {
+                    ...toPublicUser(localAccount),
+                    id: data.user.id,
+                    email: data.user.email,
+                    provider: "password",
+                  },
+                  publicUser
+                )
+              }
+              if (canCloudSync(publicUser.email)) {
+                const cloud = await pullOwnerCloud(data.user.id)
+                if (cloud?.profile) {
+                  publicUser = applyCloudProfile(publicUser, cloud.profile)
+                } else {
+                  // Cloud masih kosong — unggah profil agar HP lain bisa tarik.
+                  void pushOwnerProfile(publicUser)
+                }
+                if (publicUser.onboardingStep === "done") {
+                  markOnboardingDone(publicUser.email)
+                }
+              }
+              // Cache akun lokal agar offline tetap bisa (password sama).
+              const nextAccounts = [...accounts]
+              const idx = nextAccounts.findIndex((item) => item.email === normalized)
+              const stored: StoredAccount = {
+                ...(idx >= 0 ? nextAccounts[idx] : { password: pass }),
+                ...publicUser,
+                password: pass,
+              }
+              if (idx >= 0) nextAccounts[idx] = stored
+              else nextAccounts.push(stored)
+              writeAccounts(nextAccounts)
+
+              setUser(publicUser)
+              persistAuthUser(publicUser)
+              return { ok: true, user: publicUser }
+            }
+            if (error?.message?.toLowerCase().includes("email not confirmed")) {
+              return {
+                ok: false,
+                error:
+                  "Email belum dikonfirmasi. Cek kotak masuk / spam, lalu konfirmasi sebelum masuk di HP lain.",
+              }
+            }
+            // Kata sandi / akun salah di cloud — jangan buat akun kosong baru.
+            if (error && !localAccount) {
+              const msg = error.message?.toLowerCase() || ""
+              if (msg.includes("invalid") || msg.includes("credentials")) {
+                return {
+                  ok: false,
+                  error:
+                    "Email atau kata sandi salah. Pakai email yang sama saat daftar, atau daftar dulu di /daftar.",
+                }
+              }
+              return { ok: false, error: error.message || "Gagal masuk." }
+            }
+          } catch {
+            // Jaringan gagal — coba akun lokal di bawah.
+          }
+        }
+
         if (localAccount) {
           if (localAccount.password !== pass) {
             return { ok: false, error: "Kata sandi salah." }
@@ -410,34 +513,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             persistAccountTrial(publicUser.email, publicUser.trialStartedAt)
           }
           setUser(publicUser)
-          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
+          persistAuthUser(publicUser)
           return { ok: true, user: publicUser }
         }
 
-        if (supabase && !isDemoEmail(normalized)) {
-          try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email: normalized,
-              password: pass,
-            })
-            if (!error && data.user?.email) {
-              const publicUser = withTrial(
-                userFromMetadata(
-                  data.user.id,
-                  data.user.email,
-                  data.user.user_metadata as Record<string, unknown>,
-                  "password"
-                )
-              )
-              setUser(publicUser)
-              return { ok: true, user: publicUser }
-            }
-          } catch {
-            // Lanjut ke pembuatan akun lokal di bawah.
+        // Tanpa Supabase / demo: buat sesi lokal agar bisa coba tanpa daftar ulang.
+        if (supabaseConfigured && !isDemoEmail(normalized)) {
+          return {
+            ok: false,
+            error:
+              "Akun tidak ditemukan. Daftar dulu dengan email ini di /daftar agar data tersimpan ke cloud dan bisa dibuka di HP lain.",
           }
         }
 
-        // Akun baru: buat sesi lokal langsung agar bisa masuk tanpa daftar ulang.
         const name = normalized.split("@")[0] || "Pengguna"
         const account: StoredAccount = {
           id: crypto.randomUUID(),
@@ -455,7 +543,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)
         setUser(publicUser)
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
+        persistAuthUser(publicUser)
         return { ok: true, user: publicUser }
       },
       register: async (input) => {
@@ -473,8 +561,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const trialStartedAt = nowIso()
+        let accountId = crypto.randomUUID()
+
+        // Utamakan Auth Supabase supaya ID sama di semua perangkat.
+        if (supabase && !isDemoEmail(email)) {
+          try {
+            const { data, error } = await supabase.auth.signUp({
+              email,
+              password: input.password.trim(),
+              options: {
+                data: {
+                  name: input.name.trim(),
+                  role: "owner",
+                  onboarding_step: 2,
+                  trial_started_at: trialStartedAt,
+                },
+                emailRedirectTo:
+                  typeof window !== "undefined" ? `${window.location.origin}/masuk` : undefined,
+              },
+            })
+            if (!error && data.user?.id) {
+              accountId = data.user.id
+            }
+          } catch {
+            // Tetap lanjut akun lokal.
+          }
+        }
+
         const account: StoredAccount = {
-          id: crypto.randomUUID(),
+          id: accountId,
           name: input.name.trim(),
           email,
           phone: "",
@@ -488,28 +603,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           trialStartedAt,
         }
 
-        // Langsung aktif di browser supaya tidak menunggu konfirmasi email Supabase.
         writeAccounts([...accounts, account])
         const publicUser = toPublicUser(account)
         setUser(publicUser)
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
-
-        if (supabase && !isDemoEmail(email)) {
-          void supabase.auth.signUp({
-            email,
-            password: input.password.trim(),
-            options: {
-              data: {
-                name: input.name.trim(),
-                role: "owner",
-                onboarding_step: 2,
-                trial_started_at: trialStartedAt,
-              },
-              emailRedirectTo:
-                typeof window !== "undefined" ? `${window.location.origin}/masuk` : undefined,
-            },
-          })
-        }
+        void pushOwnerProfile(publicUser)
 
         return { ok: true, user: publicUser }
       },
@@ -679,6 +777,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .catch(() => {
               // Sinkron cloud opsional.
             })
+          void pushOwnerProfile(nextUser)
         }
         return nextUser
       },
