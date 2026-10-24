@@ -64,6 +64,7 @@ function PartnerPageInner() {
     acceptPartner,
     addCombo,
     removeCombo,
+    viewMode,
   } = useStudio()
   const params = useSearchParams()
   const [query, setQuery] = useState("")
@@ -91,7 +92,12 @@ function PartnerPageInner() {
   const [comboNote, setComboNote] = useState("")
   const [comboError, setComboError] = useState("")
 
-  const localPartners = useMemo(() => partnersInCity(city), [city])
+  // Sementara: Data Saya kosong sampai owner lain mendaftar. Data contoh tetap pakai katalog.
+  const localPartners = useMemo(
+    () => (viewMode === "demo" ? partnersInCity(city) : []),
+    [city, viewMode]
+  )
+  const directoryEmpty = viewMode !== "demo"
   const statusOf = (id: string) => partnerships.find((item) => item.partnerId === id)?.status
   const accepted = useMemo(
     () =>
@@ -159,8 +165,9 @@ function PartnerPageInner() {
       <div>
         <h1 className="text-4xl">Cari partner</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Hanya partner di {city} yang tampil di sini: Make Up Artist, Hijab & Hair Stylist,
-          Decoration, Attire, Photografer & Videografer, dan Content Creator. Ganti lokasi di menu atas untuk kota lain.
+          {directoryEmpty
+            ? "Direktori partner masih kosong. Nanti owner lain yang mendaftar Key Assistant di kota yang sama bisa muncul di sini untuk diajak kerja sama."
+            : `Hanya partner di ${city} yang tampil di sini: Make Up Artist, Hijab & Hair Stylist, Decoration, Attire, Photografer & Videografer, dan Content Creator.`}
         </p>
       </div>
 
@@ -168,6 +175,17 @@ function PartnerPageInner() {
         <p className="rounded-xl bg-accent px-4 py-3 text-sm">{inviteMessage}</p>
       ) : null}
 
+      {directoryEmpty ? (
+        <section className="rounded-2xl bg-card p-6 ring-1 ring-foreground/10">
+          <EmptyState
+            title="Belum ada partner / owner terdaftar"
+            body={`Sementara daftar dikosongkan. Setelah ada owner lain di ${city} yang mendaftar, mereka bisa muncul di sini untuk diajak kerja sama. Coba Data contoh jika ingin melihat contoh alur partner.`}
+          />
+        </section>
+      ) : null}
+
+      {!directoryEmpty ? (
+      <>
       <section className="grid gap-3">
         <h2 className="text-2xl">Siap diajak di {city}</h2>
         {suggestions.length === 0 ? (
@@ -506,6 +524,8 @@ function PartnerPageInner() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </>
+      ) : null}
     </div>
   )
 }

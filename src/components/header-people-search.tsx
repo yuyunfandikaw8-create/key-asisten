@@ -46,42 +46,54 @@ function readStoredOwners(): AuthUser[] {
 export function HeaderPeopleSearch({ className }: { className?: string }) {
   const router = useRouter()
   const { user } = useAuth()
-  const { city } = useStudio()
+  const { city, viewMode } = useStudio()
   const rootRef = useRef<HTMLDivElement>(null)
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
+  const demoDirectory = viewMode === "demo"
+  const demoEmails = useMemo(
+    () => new Set(DEMO_ACCOUNTS.map((account) => normalizeEmail(account.email))),
+    []
+  )
 
   const owners = useMemo(() => {
     const map = new Map<string, AuthUser>()
-    for (const account of DEMO_ACCOUNTS) {
-      map.set(normalizeEmail(account.email), account)
+    // Data contoh: boleh tampilkan akun demo. Data saya: hanya owner yang benar-benar daftar.
+    if (demoDirectory) {
+      for (const account of DEMO_ACCOUNTS) {
+        map.set(normalizeEmail(account.email), account)
+      }
     }
     for (const account of readStoredOwners()) {
-      map.set(normalizeEmail(account.email), account)
+      const email = normalizeEmail(account.email)
+      if (!demoDirectory && demoEmails.has(email)) continue
+      map.set(email, account)
     }
     if (user) map.set(normalizeEmail(user.email), user)
     return [...map.values()]
-  }, [user])
+  }, [demoDirectory, demoEmails, user])
 
   const hits = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (needle.length < 1) return [] as SearchHit[]
 
-    const partnerHits: SearchHit[] = partners
-      .filter((partner) => {
-        const haystack =
-          `${partner.name} ${TRADE_LABEL[partner.trade]} ${partner.city} ${partner.area} ${partner.offer}`.toLowerCase()
-        return haystack.includes(needle)
-      })
-      .sort((a, b) => Number(b.city === city) - Number(a.city === city))
-      .slice(0, 6)
-      .map((partner) => ({
-        kind: "partner" as const,
-        id: partner.id,
-        title: partner.name,
-        subtitle: `${TRADE_LABEL[partner.trade]} · ${partner.city} · ${partner.area}`,
-        city: partner.city,
-      }))
+    const partnerHits: SearchHit[] = demoDirectory
+      ? partners
+          .filter((partner) => {
+            const haystack =
+              `${partner.name} ${TRADE_LABEL[partner.trade]} ${partner.city} ${partner.area} ${partner.offer}`.toLowerCase()
+            return haystack.includes(needle)
+          })
+          .sort((a, b) => Number(b.city === city) - Number(a.city === city))
+          .slice(0, 6)
+          .map((partner) => ({
+            kind: "partner" as const,
+            id: partner.id,
+            title: partner.name,
+            subtitle: `${TRADE_LABEL[partner.trade]} · ${partner.city} · ${partner.area}`,
+            city: partner.city,
+          }))
+      : []
 
     const ownerHits: SearchHit[] = owners
       .filter((owner) => {
@@ -100,7 +112,7 @@ export function HeaderPeopleSearch({ className }: { className?: string }) {
       }))
 
     return [...partnerHits, ...ownerHits]
-  }, [city, owners, query, user])
+  }, [city, demoDirectory, owners, query, user])
 
   useEffect(() => {
     if (!open) return
@@ -164,7 +176,9 @@ export function HeaderPeopleSearch({ className }: { className?: string }) {
         <div className="absolute top-full right-0 left-0 z-50 mt-1.5 max-h-72 overflow-y-auto rounded-2xl border border-border/70 bg-card py-1 shadow-lg">
           {hits.length === 0 ? (
             <p className="px-3 py-3 text-xs text-muted-foreground">
-              Tidak ada partner/owner untuk “{query.trim()}”.
+              {demoDirectory
+                ? `Tidak ada partner/owner untuk “${query.trim()}”.`
+                : `Belum ada owner terdaftar untuk “${query.trim()}”. Direktori partner masih kosong.`}
             </p>
           ) : (
             hits.map((hit) => (
