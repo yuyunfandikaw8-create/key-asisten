@@ -74,7 +74,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/invoice",
         title: "Invoice",
-        body: "Kelola tagihan dan pembayaran klien dengan lebih mudah",
+        body: "Kelola invoice dan pembayaran klien dengan lebih mudah",
         Icon: FileText,
         tone: "bg-[oklch(0.94_0.03_350)] text-[oklch(0.45_0.1_350)]",
       },
@@ -142,7 +142,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/keuangan",
         title: "Arus kas & laporan",
-        body: "Pemasukan, pengeluaran, dan sisa tagihan",
+        body: "Pemasukan, pengeluaran, dan Tagihan Klien",
         Icon: Wallet,
         tone: "bg-[oklch(0.93_0.04_160)] text-[oklch(0.4_0.09_160)]",
       },

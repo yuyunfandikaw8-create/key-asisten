@@ -60,9 +60,9 @@ Tanpa Supabase (atau akun demo), data tetap hanya di `localStorage` perangkat it
 
 - Studio demo di `/studio` (setelah masuk): laba, DP, bentrok jadwal, dan gaun yang telat kembali.
 - Booking baru di `/studio/jadwal/baru`. Tombol **Isi contoh chat** membaca nama, tanggal, jam, lokasi, paket, dan nomor.
-- Invoice di `/studio/invoice`: catat DP, tandai lunas, atau buka WhatsApp dengan pesan tagihan.
+- Invoice di `/studio/invoice`: catat DP, tandai lunas, atau buka WhatsApp dengan pesan invoice.
 - Gaun di `/studio/gaun`.
-- Pricelist publik di `/p/laras`. Pengajuan tanggal dan kombo masuk ke jadwal studio sebagai belum DP.
+- Pricelist publik di `/p/laras`. Pengajuan tanggal dan kombo masuk ke jadwal studio sebagai Belum Bayar DP.
 - Partner di `/studio/partner`. Saring Make Up Artist, Hijab & Hair, Decsets, Attire, Photografer & Videografer, atau Content Creator di kota aktif, ajak kerja sama, lalu susun kombo.
 - Inbox di `/studio/inbox`. Chat partner sesuai lokasi aktif (contoh: pilih Surabaya untuk melihat partner Surabaya saja).
 - Menu di `/studio/menu`. Pintasan ke jadwal, partner, invoice, aset, lokasi, dan identitas studio.

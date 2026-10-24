@@ -83,7 +83,7 @@ export function InvoiceDetail() {
     return (
       <EmptyState
         title="Invoice tidak ditemukan"
-        body="Tagihan ini tidak ada di browser ini. Mungkin sudah dihapus, atau data contoh baru saja dikembalikan."
+        body="Invoice ini tidak ada di browser ini. Mungkin sudah dihapus, atau data contoh baru saja dikembalikan."
       />
     )
   }
@@ -504,7 +504,7 @@ export function InvoiceDetail() {
           <DialogHeader>
             <DialogTitle>Catat Pembayaran</DialogTitle>
             <DialogDescription>
-              Sisa tagihan {rupiah(due)}. DP standar untuk jadwal ini {rupiah(booking.dp)}.
+              Sisa invoice {rupiah(due)}. DP standar untuk jadwal ini {rupiah(booking.dp)}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">

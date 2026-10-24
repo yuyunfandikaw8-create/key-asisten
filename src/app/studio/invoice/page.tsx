@@ -21,8 +21,7 @@ import { cn } from "@/lib/utils"
 
 const filters = [
   { id: "semua", label: "Semua" },
-  { id: "belum_dibayar", label: "Belum Dibayar" },
-  { id: "sudah_dp", label: "Sudah DP" },
+  { id: "belum_bayar_dp", label: "Belum Bayar DP" },
   { id: "belum_lunas", label: "Belum Lunas" },
   { id: "lunas", label: "Lunas" },
   { id: "terlambat", label: "Terlambat" },
@@ -39,12 +38,10 @@ function matchesFilter(booking: Booking, filter: InvoiceFilter) {
   switch (filter) {
     case "semua":
       return true
-    case "belum_dibayar":
+    case "belum_bayar_dp":
       return status === "belum_dp"
-    case "sudah_dp":
-      return status === "belum_lunas"
     case "belum_lunas":
-      return status !== "lunas"
+      return status === "belum_lunas"
     case "lunas":
       return status === "lunas"
     case "terlambat":
@@ -90,7 +87,7 @@ export default function InvoiceListPage() {
       <div>
         <h1 className="text-4xl">Invoice klien</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Kelola tagihan, DP, dan sisa pembayaran dalam satu tempat.
+          Kelola invoice, DP, dan sisa pembayaran dalam satu tempat.
         </p>
       </div>
 
@@ -124,7 +121,7 @@ export default function InvoiceListPage() {
             const status = paymentStatus(booking)
             const overdue = isOverdue(booking)
             const waMessage = [
-              `Halo ${booking.clientName}, pengingat tagihan Key Assistant.`,
+              `Halo ${booking.clientName}, pengingat invoice Key Assistant.`,
               invoiceNo(booking.date, booking.id),
               `${bookingEventLabel(booking)} · ${formatShortDate(booking.date)} ${formatTime(booking.time)}`,
               `Total ${rupiah(booking.price)}`,

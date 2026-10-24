@@ -259,7 +259,7 @@ export function Pricelist({ slug }: { slug: string }) {
         <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
           <h2 className="text-3xl">Ajukan tanggal</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pengajuan masuk ke studio sebagai belum DP. Jam sementara 08.00, studio yang mengunci jam akhirnya.
+            Pengajuan masuk ke studio sebagai Belum Bayar DP. Jam sementara 08.00, studio yang mengunci jam akhirnya.
           </p>
           {sent ? (
             <p className="mt-4 rounded-xl bg-accent px-4 py-3 text-sm">{sent}</p>

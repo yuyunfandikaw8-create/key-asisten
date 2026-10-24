@@ -262,7 +262,7 @@ export default function StudioHomePage() {
           <p className="mt-1 text-sm text-muted-foreground">{city}</p>
           {counts.partial > 0 ? (
             <p className="mt-2 text-sm text-primary">
-              {counts.partial} tagihan belum lunas · {reminders.length} perlu ditagih H-7
+              {counts.partial} invoice belum lunas · {reminders.length} perlu ditagih H-7
             </p>
           ) : null}
         </div>
@@ -348,8 +348,8 @@ export default function StudioHomePage() {
         <div className="grid grid-cols-2 border-t border-white/15 bg-black/5 text-sm sm:grid-cols-4">
           {[
             [counts.all, "Booking", "/studio/jadwal"],
-            [counts.dp, "Belum Dibayar", "/studio/jadwal?status=belum_dp"],
-            [counts.partial, "Sudah DP", "/studio/jadwal?status=belum_lunas"],
+            [counts.dp, "Belum Bayar DP", "/studio/jadwal?status=belum_dp"],
+            [counts.partial, "Belum Lunas", "/studio/jadwal?status=belum_lunas"],
             [counts.paid, "Lunas", "/studio/jadwal?status=lunas"],
           ].map(([value, label, href]) => (
             <Link
@@ -547,7 +547,7 @@ export default function StudioHomePage() {
       ) : (
         <EmptyState
           title="Semua aman untuk sekarang ✨"
-          body="Tidak ada bentrok jadwal, gaun yang terlambat, atau tagihan H-7 yang perlu ditindaklanjuti. Jadwal mendatang tetap ada di bawah."
+          body="Tidak ada bentrok jadwal, gaun yang terlambat, atau invoice H-7 yang perlu ditindaklanjuti. Jadwal mendatang tetap ada di bawah."
         />
       )}
 

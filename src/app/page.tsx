@@ -45,7 +45,7 @@ const features = [
   {
     icon: Wallet,
     title: "DP dan pelunasan",
-    body: "Yang belum DP, yang masih nyicil, dan yang sudah lunas terpisah. Pengingat muncul H-7.",
+    body: "Yang belum bayar DP, yang masih nyicil, dan yang sudah lunas terpisah. Pengingat muncul H-7.",
   },
   {
     icon: Shirt,
@@ -61,7 +61,7 @@ const features = [
 
 const beforeAfter = [
   ["Chat dan jadwal masih berantakan", "Chat dan jadwal lebih terorganisir"],
-  ["Sering lupa follow-up pembayaran", "Pengingat tagihan muncul tepat waktu"],
+  ["Sering lupa follow-up pembayaran", "Pengingat invoice muncul tepat waktu"],
   ["Invoice dibuat secara manual", "Invoice siap dikirim kapan saja"],
   ["Risiko jadwal atau pesanan bertabrakan", "Bentrok jadwal terdeteksi lebih awal"],
   [

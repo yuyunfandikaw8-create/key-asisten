@@ -319,7 +319,7 @@ export default function FinancePage() {
           <h2 className="text-2xl">Tagihan Klien {rupiah(summary.outstanding)}</h2>
           {outstanding.length === 0 ? (
             <EmptyState
-              title="Tidak ada tagihan klien"
+              title="Tidak ada Tagihan Klien"
               body="Semua jadwal tahun ini sudah lunas."
             />
           ) : (
