@@ -15,7 +15,6 @@ import {
   LayoutGrid,
   LogOut,
   MapPin,
-  Shirt,
   Wallet,
   X,
 } from "lucide-react"
@@ -41,7 +40,7 @@ const links = [
   { href: "/studio/invoice", label: "Invoice", icon: FileText },
   { href: "/studio/inbox", label: "Inbox", icon: Inbox },
   { href: "/studio/keuangan", label: "Keuangan", icon: Wallet },
-  { href: "/studio/gaun", label: "Gaun", icon: Shirt },
+  // Gaun disembunyikan sementara dari navigasi.
   { href: "/studio/partner", label: "Partner", icon: Handshake },
   { href: "/studio/menu", label: "Menu", icon: LayoutGrid },
 ]

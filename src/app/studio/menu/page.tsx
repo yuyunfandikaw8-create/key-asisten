@@ -17,7 +17,6 @@ import {
   Scissors,
   Search,
   Settings2,
-  Shirt,
   Sparkles,
   UserRound,
   Wallet,
@@ -134,13 +133,6 @@ const sections: MenuSection[] = [
     label: "Manajemen aset",
     items: [
       {
-        href: "/studio/gaun",
-        title: "Wardrobe & gaun",
-        body: "Kebaya, gaun, beskap, dan status pemakai",
-        Icon: Shirt,
-        tone: "bg-[oklch(0.94_0.03_300)] text-[oklch(0.45_0.1_300)]",
-      },
-      {
         href: "/studio/layanan",
         title: "Katalog layanan & harga",
         body: "Kelola paket, harga, dan durasi milik bisnis kamu",
@@ -234,7 +226,7 @@ export default function MenuPage() {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Cari menu, invoice, partner, gaun, lokasi…"
+          placeholder="Cari menu, invoice, partner, lokasi…"
           aria-label="Cari menu"
           className="h-11 bg-card pl-9"
         />

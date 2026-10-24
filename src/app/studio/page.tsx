@@ -13,7 +13,6 @@ import {
   Inbox,
   Plus,
   Receipt,
-  Shirt,
   Users,
   Wallet,
 } from "lucide-react"
@@ -25,7 +24,6 @@ import { StudioMonthCalendar } from "@/components/studio-month-calendar"
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import {
-  attires,
   bookingAttireName,
   bookingEventLabel,
   bookingPackageName,
@@ -42,7 +40,6 @@ import {
   todayISO,
 } from "@/lib/format"
 import {
-  attireStatus,
   collectionReminders,
   conflictLabel,
   conflictPairs,
@@ -202,8 +199,6 @@ export default function StudioHomePage() {
     0,
     4
   )
-  const heldAttire = attires.filter((attire) => attireStatus(attire.id, bookings).tone !== "free")
-    .length
   const acceptedPartners = partnerships.filter((item) => {
     const partner = partners.find((entry) => entry.id === item.partnerId)
     return item.status === "diterima" && partner?.city === city
@@ -490,12 +485,6 @@ export default function StudioHomePage() {
               body: "Taruh di bio Instagram. Klien ajukan tanggal sendiri.",
               Icon: Receipt,
             },
-            {
-              href: "/studio/gaun",
-              title: "Gaun & wardrobe",
-              body: `${heldAttire} sedang dipegang · ${attires.length} item`,
-              Icon: Shirt,
-            },
           ].map((item) => (
             <Link
               key={item.href}
@@ -533,7 +522,7 @@ export default function StudioHomePage() {
           {late.map((booking) => (
             <Link
               key={booking.id}
-              href="/studio/gaun"
+              href="/studio/jadwal"
               className="flex items-start gap-3 rounded-xl bg-accent px-4 py-3 text-sm"
             >
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
