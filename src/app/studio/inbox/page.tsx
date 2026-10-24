@@ -1,12 +1,13 @@
 "use client"
 
 import { Suspense, useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Inbox, MapPin, Send } from "lucide-react"
 
 import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { formatShortDate } from "@/lib/format"
 import { partnerById, partnersInCity, TRADE_LABEL } from "@/lib/partners"
@@ -26,7 +27,6 @@ function InboxPageInner() {
     partnerships,
     sendMessage,
     markThreadRead,
-    invitePartner,
   } = useStudio()
   const params = useSearchParams()
   const requested = params.get("partner")
@@ -39,12 +39,14 @@ function InboxPageInner() {
     [city, messages]
   )
 
+  // Hanya partner yang sudah diajak kerja sama / punya pesan — jangan isi daftar kota.
   const threads = useMemo(() => {
+    const partnerIds = new Set(partnerships.map((item) => item.partnerId))
     const ids = new Set<string>()
-    for (const message of localMessages) ids.add(message.partnerId)
-    for (const partner of localPartners) {
-      if (partnerships.some((item) => item.partnerId === partner.id)) ids.add(partner.id)
+    for (const message of localMessages) {
+      if (partnerIds.has(message.partnerId)) ids.add(message.partnerId)
     }
+    for (const partnerId of partnerIds) ids.add(partnerId)
     return [...ids]
       .map((partnerId) => {
         const partner = partnerById(partnerId)
@@ -59,17 +61,21 @@ function InboxPageInner() {
       })
       .filter((item): item is NonNullable<typeof item> => Boolean(item))
       .sort((a, b) => (b.last?.createdAt ?? "").localeCompare(a.last?.createdAt ?? ""))
-  }, [city, localMessages, localPartners, partnerships])
+  }, [city, localMessages, partnerships])
 
   useEffect(() => {
     if (!ready) return
-    if (requested && localPartners.some((partner) => partner.id === requested)) {
+    const requestedOk =
+      requested &&
+      threads.some((thread) => thread.partner.id === requested) &&
+      localPartners.some((partner) => partner.id === requested)
+    if (requestedOk) {
       setActiveId(requested)
       return
     }
     setActiveId((current) => {
       if (current && threads.some((thread) => thread.partner.id === current)) return current
-      return threads[0]?.partner.id ?? localPartners[0]?.id ?? null
+      return threads[0]?.partner.id ?? null
     })
   }, [localPartners, ready, requested, threads])
 
@@ -105,13 +111,16 @@ function InboxPageInner() {
       <div>
         <h1 className="text-4xl">Inbox</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Chat dengan partner di {city}. Ganti lokasi di atas supaya hanya orang di kota itu yang
-          tampil di sini.
+          Chat hanya dengan partner yang sudah kamu ajak kerja sama di {city}.
         </p>
         <p className="mt-2 flex items-center gap-2 text-sm text-primary">
           <MapPin className="size-4" />
           {city}
-          {unreadTotal ? ` · ${unreadTotal} belum dibaca` : " · semua sudah dibaca"}
+          {threads.length
+            ? unreadTotal
+              ? ` · ${unreadTotal} belum dibaca`
+              : " · semua sudah dibaca"
+            : " · belum ada percakapan"}
         </p>
       </div>
 
@@ -121,24 +130,22 @@ function InboxPageInner() {
             <Inbox className="size-4 text-primary" />
             Percakapan {city}
           </div>
-          {threads.length === 0 && localPartners.length === 0 ? (
+          {threads.length === 0 ? (
             <div className="p-4">
               <EmptyState
-                title={`Belum ada partner di ${city}`}
-                body="Ganti lokasi ke kota lain, atau buka menu Partner untuk melihat siapa yang tersedia."
+                title="Belum ada percakapan"
+                body="Ajakan kerja sama belum ada. Cari partner dulu, lalu inbox akan terisi di sini."
               />
+              <Link
+                href="/studio/partner"
+                className={cn(buttonVariants({ size: "sm" }), "mt-3 h-9 w-full")}
+              >
+                Cari partner
+              </Link>
             </div>
           ) : (
             <div className="max-h-64 overflow-y-auto lg:max-h-[32rem]">
-              {(threads.length
-                ? threads
-                : localPartners.map((partner) => ({
-                    partner,
-                    thread: [],
-                    last: undefined,
-                    unread: 0,
-                  }))
-              ).map((item) => (
+              {threads.map((item) => (
                 <button
                   key={item.partner.id}
                   type="button"
@@ -169,7 +176,7 @@ function InboxPageInner() {
         </aside>
 
         <section className="flex min-h-[22rem] flex-col">
-          {active && active.city === city ? (
+          {active && active.city === city && status ? (
             <>
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-foreground/10 px-4 py-3">
                 <div>
@@ -178,28 +185,16 @@ function InboxPageInner() {
                     {TRADE_LABEL[active.trade]} · {active.city} · {active.area} · {active.phone}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {!status ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => invitePartner(active.id, "Ajakan dari inbox", active.repliesFast)}
-                    >
-                      Ajak kerja sama
-                    </Button>
-                  ) : (
-                    <span className="rounded-full bg-accent px-3 py-1 text-xs">
-                      {status === "diterima" ? "Partner" : "Menunggu jawaban"}
-                    </span>
-                  )}
-                </div>
+                <span className="rounded-full bg-accent px-3 py-1 text-xs">
+                  {status === "diterima" ? "Partner" : "Menunggu jawaban"}
+                </span>
               </div>
 
               <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
                 {activeThread.length === 0 ? (
                   <EmptyState
                     title="Belum ada chat"
-                    body={`Kirim pesan pertama ke ${active.name}. Mereka hanya terlihat karena lokasimu ${city}.`}
+                    body={`Kirim pesan pertama ke ${active.name}.`}
                   />
                 ) : (
                   activeThread.map((message) => (
@@ -216,7 +211,9 @@ function InboxPageInner() {
                       <p
                         className={cn(
                           "mt-1 text-[11px]",
-                          message.sender === "studio" ? "text-primary-foreground/75" : "text-muted-foreground"
+                          message.sender === "studio"
+                            ? "text-primary-foreground/75"
+                            : "text-muted-foreground"
                         )}
                       >
                         {formatStamp(message.createdAt)}
@@ -248,11 +245,14 @@ function InboxPageInner() {
               </form>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-6">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
               <EmptyState
-                title={`Pilih partner di ${city}`}
-                body="Inbox ini mengikuti lokasi aktif. Ganti ke Surabaya untuk melihat partner Surabaya saja."
+                title="Belum ada yang diajak kerja sama"
+                body={`Inbox kosong sampai kamu mengajak partner di ${city}. Mulai dari menu Partner.`}
               />
+              <Link href="/studio/partner" className={cn(buttonVariants(), "h-10")}>
+                Buka Partner
+              </Link>
             </div>
           )}
         </section>
