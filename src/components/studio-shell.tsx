@@ -24,6 +24,7 @@ import { studio } from "@/lib/catalog"
 import { studioBrand } from "@/lib/studio-brand"
 import { useAuth } from "@/components/auth-provider"
 import { CitySearchPicker } from "@/components/city-search-picker"
+import { HeaderPeopleSearch } from "@/components/header-people-search"
 import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
@@ -284,7 +285,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             <Link
               href="/langganan"
               className={cn(
-                "hidden rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide transition sm:inline",
+                "hidden shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide transition sm:inline",
                 hasActiveSubscription(user)
                   ? "bg-accent text-primary hover:brightness-95"
                   : trialUrgent
@@ -304,7 +305,9 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
                 : trialStatusLabel(user.trialStartedAt)}
             </Link>
           ) : null}
-          <div className="relative z-50 ml-auto flex items-center gap-2 pointer-events-auto">
+          <HeaderPeopleSearch className="mx-1 hidden max-w-xs min-w-[10rem] flex-1 md:block lg:max-w-sm" />
+          <div className="relative z-50 ml-auto flex min-w-0 items-center gap-2 pointer-events-auto">
+            <HeaderPeopleSearch className="max-w-[9.5rem] sm:max-w-[12rem] md:hidden" />
             <CityPicker />
             <DataModeSwitcher />
             <Link

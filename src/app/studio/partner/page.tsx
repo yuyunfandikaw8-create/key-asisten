@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
@@ -53,7 +54,7 @@ function isBusy(partner: Partner, date: string, anchor: string) {
   return partner.busyOffsets.some((offset) => addDays(anchor, offset) === date)
 }
 
-export default function PartnerPage() {
+function PartnerPageInner() {
   const {
     ready,
     city,
@@ -64,6 +65,7 @@ export default function PartnerPage() {
     addCombo,
     removeCombo,
   } = useStudio()
+  const params = useSearchParams()
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState("semua")
   const [anchor, setAnchor] = useState("")
@@ -74,6 +76,11 @@ export default function PartnerPage() {
     setAnchor(iso)
     setFreeDate((current) => current || iso)
   }, [])
+
+  useEffect(() => {
+    const fromUrl = params.get("q")?.trim()
+    if (fromUrl) setQuery(fromUrl)
+  }, [params])
   const [inviteId, setInviteId] = useState<string | null>(null)
   const [note, setNote] = useState("")
   const [inviteMessage, setInviteMessage] = useState("")
@@ -500,5 +507,13 @@ export default function PartnerPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function PartnerPage() {
+  return (
+    <Suspense fallback={<StudioLoading />}>
+      <PartnerPageInner />
+    </Suspense>
   )
 }
