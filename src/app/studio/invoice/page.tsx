@@ -66,6 +66,12 @@ export default function InvoiceListPage() {
   if (rows.length === 0) {
     return (
       <div className="grid gap-5">
+        <div>
+          <h1 className="text-4xl">Invoice</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kelola tagihan dan pembayaran klien dengan lebih mudah.
+          </p>
+        </div>
         <EmptyState
           title="Belum ada invoice"
           body="Invoice akan muncul setelah kamu membuat booking untuk klien."
