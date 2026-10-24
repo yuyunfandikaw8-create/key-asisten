@@ -66,24 +66,24 @@ export default function InvoiceListPage() {
   if (rows.length === 0) {
     return (
       <div className="grid gap-5">
-        <div>
-          <h1 className="text-4xl">Invoice</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Kelola tagihan dan pembayaran klien dengan lebih mudah.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-4xl">Invoice</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Kelola tagihan dan pembayaran klien dengan lebih mudah.
+            </p>
+          </div>
+          <Link
+            href="/studio/jadwal/baru"
+            className={cn(buttonVariants({ size: "lg" }), "h-10 shrink-0 px-5")}
+          >
+            Buat Booking
+          </Link>
         </div>
         <EmptyState
           title="Belum ada invoice"
           body="Invoice akan muncul setelah kamu membuat booking untuk klien."
         />
-        <div className="flex justify-center">
-          <Link
-            href="/studio/jadwal/baru"
-            className={cn(buttonVariants({ size: "lg" }), "h-10 px-5")}
-          >
-            Buat Booking
-          </Link>
-        </div>
       </div>
     )
   }
