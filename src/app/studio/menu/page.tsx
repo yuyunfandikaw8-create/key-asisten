@@ -74,7 +74,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/invoice",
         title: "Invoice",
-        body: "Tagihan elegan, DP, dan kirim WhatsApp",
+        body: "Kelola tagihan dan pembayaran klien dengan lebih mudah",
         Icon: FileText,
         tone: "bg-[oklch(0.94_0.03_350)] text-[oklch(0.45_0.1_350)]",
       },

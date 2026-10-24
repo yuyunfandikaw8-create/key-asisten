@@ -10,8 +10,8 @@ export const EVENT_LABEL: Record<EventType, string> = {
 }
 
 export const PAYMENT_LABEL: Record<PaymentStatus, string> = {
-  belum_dp: "Belum DP",
-  belum_lunas: "Belum lunas",
+  belum_dp: "Belum Dibayar",
+  belum_lunas: "Sudah DP",
   lunas: "Lunas",
 }
 

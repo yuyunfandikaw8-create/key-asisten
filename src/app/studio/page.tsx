@@ -348,8 +348,8 @@ export default function StudioHomePage() {
         <div className="grid grid-cols-2 border-t border-white/15 bg-black/5 text-sm sm:grid-cols-4">
           {[
             [counts.all, "Booking", "/studio/jadwal"],
-            [counts.dp, "Belum DP", "/studio/jadwal?status=belum_dp"],
-            [counts.partial, "Belum lunas", "/studio/jadwal?status=belum_lunas"],
+            [counts.dp, "Belum Dibayar", "/studio/jadwal?status=belum_dp"],
+            [counts.partial, "Sudah DP", "/studio/jadwal?status=belum_lunas"],
             [counts.paid, "Lunas", "/studio/jadwal?status=lunas"],
           ].map(([value, label, href]) => (
             <Link

@@ -19,8 +19,8 @@ const filters: { id: string; label: string }[] = [
   { id: "semua", label: "Semua" },
   { id: "hari_ini", label: "Hari ini" },
   { id: "besok", label: "Besok" },
-  { id: "belum_dp", label: "Belum DP" },
-  { id: "belum_lunas", label: "Belum lunas" },
+  { id: "belum_dp", label: "Belum Dibayar" },
+  { id: "belum_lunas", label: "Sudah DP" },
   { id: "lunas", label: "Lunas" },
   { id: "bentrok", label: "Bentrok" },
 ]

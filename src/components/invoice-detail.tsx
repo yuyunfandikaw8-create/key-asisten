@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
 import { useAuth } from "@/components/auth-provider"
 import { EmptyState, StatusBadge, StudioLoading } from "@/components/studio-bits"
@@ -60,6 +60,7 @@ type LineItem = {
 export function InvoiceDetail() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const { ready, city, bookings, updateBooking, removeBooking, viewMode } = useStudio()
   const brand = studioBrand(user, { demo: viewMode === "demo" })
@@ -68,6 +69,12 @@ export function InvoiceDetail() {
   const [error, setError] = useState("")
   const [pdfBusy, setPdfBusy] = useState(false)
   const [pdfNotice, setPdfNotice] = useState("")
+  const openPay = searchParams.get("bayar") === "1"
+
+  useEffect(() => {
+    if (!ready) return
+    if (openPay) setOpen(true)
+  }, [openPay, ready])
 
   if (!ready) return <StudioLoading />
 
@@ -232,10 +239,10 @@ export function InvoiceDetail() {
           Unduh PDF
         </Button>
         <Button disabled={pdfBusy} onClick={() => void sendWhatsAppPdf()}>
-          {pdfBusy ? "Menyiapkan PDF…" : "Kirim WhatsApp (PDF)"}
+          {pdfBusy ? "Menyiapkan PDF…" : "Kirim ke WhatsApp"}
         </Button>
         <Button variant="outline" onClick={() => setOpen(true)}>
-          Catat bayar
+          Catat Pembayaran
         </Button>
         <Button
           variant="destructive"
@@ -495,7 +502,7 @@ export function InvoiceDetail() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Catat pembayaran</DialogTitle>
+            <DialogTitle>Catat Pembayaran</DialogTitle>
             <DialogDescription>
               Sisa tagihan {rupiah(due)}. DP standar untuk jadwal ini {rupiah(booking.dp)}.
             </DialogDescription>
