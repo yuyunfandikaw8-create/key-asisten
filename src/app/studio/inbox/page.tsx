@@ -111,7 +111,7 @@ function InboxPageInner() {
       <div>
         <h1 className="text-4xl">Inbox</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Chat hanya dengan partner yang sudah kamu ajak kerja sama di {city}.
+          Chat dengan partner yang sedang atau sudah bekerja sama denganmu.
         </p>
         <p className="mt-2 flex items-center gap-2 text-sm text-primary">
           <MapPin className="size-4" />
