@@ -111,8 +111,9 @@ export default function NewBookingPage() {
     })
   }, [ownerServices, user?.businessFields])
 
+  // Paket & harga hanya dari layanan step 5 owner. Data contoh tetap pakai katalog.
   const paketOptions = useMemo<SuggestOption[]>(() => {
-    if (ownerServices.length && !demoMode) {
+    if (!demoMode) {
       return ownerServices.map((service) => ({
         value: service.name,
         label: service.name,
@@ -130,7 +131,7 @@ export default function NewBookingPage() {
 
   const hargaOptions = useMemo<SuggestOption[]>(() => {
     const amounts = new Set<number>()
-    if (ownerServices.length && !demoMode) {
+    if (!demoMode) {
       for (const service of ownerServices) {
         if (service.price > 0) amounts.add(service.price)
       }
@@ -146,14 +147,15 @@ export default function NewBookingPage() {
   }, [demoMode, ownerServices])
 
   const gaunOptions = useMemo<SuggestOption[]>(() => {
-    const fromOwner = ownerServices
-      .filter((service) => service.fieldId === "baju")
-      .map((service) => ({
-        value: service.name,
-        label: service.name,
-        hint: service.price > 0 ? rupiah(service.price) : undefined,
-      }))
-    if (fromOwner.length && !demoMode) return fromOwner
+    if (!demoMode) {
+      return ownerServices
+        .filter((service) => service.fieldId === "baju")
+        .map((service) => ({
+          value: service.name,
+          label: service.name,
+          hint: service.price > 0 ? rupiah(service.price) : undefined,
+        }))
+    }
     return attires.map((item) => ({
       value: item.name,
       label: item.name,
@@ -180,6 +182,7 @@ export default function NewBookingPage() {
       setPriceAmount(String(fromOwner.price))
       return
     }
+    if (!demoMode) return
     const fromCatalog = packages.find(
       (item) => item.name.toLowerCase() === option.value.toLowerCase()
     )
@@ -263,9 +266,7 @@ export default function NewBookingPage() {
       setFormError("Isi nama paket dulu.")
       return
     }
-    const matchedPackage = resolvePackage(paket)
-    const priceValue =
-      matchedPackage?.price ?? (Number(priceAmount.replace(/\D/g, "")) || 0)
+    const priceValue = Number(priceAmount.replace(/\D/g, "")) || 0
     if (!priceValue) {
       setFormError("Isi harga paket dulu.")
       return
@@ -286,10 +287,16 @@ export default function NewBookingPage() {
     const acaraLabel = acara.trim()
     const paketLabel = paket.trim()
     const gaunLabel = gaun.trim()
-    const matchedPackage = resolvePackage(paketLabel)
+    const fromOwner = ownerServices.find(
+      (service) => service.name.toLowerCase() === paketLabel.toLowerCase()
+    )
+    const matchedPackage = demoMode ? resolvePackage(paketLabel) : undefined
     const attire = resolveAttire(gaunLabel)
     const priceValue =
-      matchedPackage?.price ?? (Number(priceAmount.replace(/\D/g, "")) || 0)
+      Number(priceAmount.replace(/\D/g, "")) ||
+      fromOwner?.price ||
+      matchedPackage?.price ||
+      0
     const dpValue = Number(dpAmount.replace(/\D/g, "")) || 0
     const eventType = resolveEventType(acaraLabel)
 
@@ -301,7 +308,7 @@ export default function NewBookingPage() {
       date,
       time,
       location: location.trim() || "Lokasi menyusul",
-      packageId: matchedPackage?.id ?? "custom",
+      packageId: matchedPackage?.id ?? (fromOwner ? fromOwner.id : "custom"),
       packageName: paketLabel,
       attireId: attire?.id ?? (gaunLabel ? "custom" : null),
       attireName: gaunLabel || undefined,
@@ -511,7 +518,16 @@ export default function NewBookingPage() {
               onChange={setPaket}
               onPick={pickPaket}
               options={paketOptions}
-              placeholder="Pilih layanan/paket atau ketik sendiri"
+              placeholder={
+                !demoMode && !ownerServices.length
+                  ? "Belum ada layanan — isi Manual atau tambah di Menu → Layanan"
+                  : "Pilih layanan/paket atau ketik sendiri"
+              }
+              emptyText={
+                !demoMode && !ownerServices.length
+                  ? "Belum ada layanan dari langkah 5. Ketik manual, atau tambah di Menu → Layanan & harga."
+                  : undefined
+              }
               aria-label="Paket"
             />
           </div>
@@ -522,7 +538,16 @@ export default function NewBookingPage() {
               value={priceAmount}
               onChange={setPriceAmount}
               options={hargaOptions}
-              placeholder="Pilih atau isi nominal harga"
+              placeholder={
+                !demoMode && !hargaOptions.length
+                  ? "Isi nominal — terisi otomatis jika pilih layanan"
+                  : "Pilih atau isi nominal harga"
+              }
+              emptyText={
+                !demoMode && !hargaOptions.length
+                  ? "Belum ada harga layanan. Isi nominal manual."
+                  : undefined
+              }
               inputMode="numeric"
               filterDigits
               aria-label="Harga paket"
