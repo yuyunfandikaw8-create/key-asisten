@@ -99,6 +99,16 @@ export function InvoiceDetail() {
     })
   }
 
+  const payLines: string[] = []
+  if (brand.payment.methods.includes("transfer")) {
+    payLines.push(
+      `Transfer ke ${brand.bank} a.n. ${brand.accountName} ${brand.accountNumber}`
+    )
+  }
+  if (brand.payment.methods.includes("qris")) payLines.push("Bisa bayar via QRIS (lihat invoice)")
+  if (brand.payment.methods.includes("ewallet")) payLines.push("E-Wallet diterima")
+  if (brand.payment.methods.includes("cash")) payLines.push("Cash / tunai diterima")
+
   const message = [
     `Halo ${booking.clientName}, ini invoice ${brand.name} dalam bentuk PDF.`,
     number,
@@ -107,7 +117,7 @@ export function InvoiceDetail() {
     `Total ${rupiah(booking.price)}`,
     `Sudah dibayar ${rupiah(booking.paid)}`,
     `Sisa ${rupiah(due)}`,
-    `Transfer ke ${brand.bank} a.n. ${brand.accountName} ${brand.accountNumber}`,
+    ...payLines,
   ].join("\n")
 
   const waFallbackMessage = [
@@ -332,10 +342,31 @@ export function InvoiceDetail() {
           <div className="relative mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
               <p className="text-xs font-semibold tracking-[0.18em] uppercase">Pay to</p>
-              <p className="mt-2 font-semibold">{brand.bank}</p>
-              <p className="text-sm">
-                {brand.accountName} · {brand.accountNumber}
-              </p>
+              {brand.payment.methods.includes("transfer") ? (
+                <>
+                  <p className="mt-2 font-semibold">{brand.bank}</p>
+                  <p className="text-sm">
+                    {brand.accountName} · {brand.accountNumber}
+                  </p>
+                </>
+              ) : null}
+              {brand.payment.methods.includes("qris") && brand.payment.qrisDataUrl ? (
+                <div className="mt-3">
+                  <p className="text-sm font-medium">QRIS</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={brand.payment.qrisDataUrl}
+                    alt="QRIS pembayaran"
+                    className="mt-2 size-36 rounded-xl object-cover ring-1 ring-foreground/10"
+                  />
+                </div>
+              ) : null}
+              {brand.payment.methods.includes("ewallet") ? (
+                <p className="mt-2 text-sm">E-Wallet diterima</p>
+              ) : null}
+              {brand.payment.methods.includes("cash") ? (
+                <p className="mt-2 text-sm">Cash / tunai diterima</p>
+              ) : null}
               {booking.notes ? (
                 <p className="mt-3 max-w-sm text-sm text-[oklch(0.48_0.03_30)]">{booking.notes}</p>
               ) : null}

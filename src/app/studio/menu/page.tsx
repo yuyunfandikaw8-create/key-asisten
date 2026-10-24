@@ -330,10 +330,24 @@ export default function MenuPage() {
             <dd>{brand.address}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Rekening transfer</dt>
-            <dd className="font-medium">{brand.bank}</dd>
+            <dt className="text-muted-foreground">Metode pembayaran</dt>
+            <dd className="font-medium">
+              {brand.payment.methods
+                .map((id) =>
+                  id === "transfer"
+                    ? "Transfer Bank"
+                    : id === "qris"
+                      ? "QRIS"
+                      : id === "ewallet"
+                        ? "E-Wallet"
+                        : "Cash"
+                )
+                .join(" · ") || "Belum diatur"}
+            </dd>
             <dd>
-              {brand.accountName} · {brand.accountNumber}
+              {brand.payment.methods.includes("transfer")
+                ? `${brand.bank} · ${brand.accountName} · ${brand.accountNumber}`
+                : "Atur di Menu → Keuangan"}
             </dd>
           </div>
           <div>

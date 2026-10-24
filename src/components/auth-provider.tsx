@@ -14,11 +14,13 @@ import {
   AUTH_STORAGE_KEY,
   DEMO_ACCOUNTS,
   normalizeEmail,
+  normalizePaymentSettings,
   normalizeRole,
   toPublicUser,
   type AuthRole,
   type AuthUser,
   type GoogleChoice,
+  type PaymentSettings,
   type StoredAccount,
 } from "@/lib/auth"
 import {
@@ -145,6 +147,7 @@ function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUse
     businessFields:
       (local.businessFields as BusinessFieldId[] | undefined) || remote.businessFields,
     services: (local.services as BusinessService[] | undefined) || remote.services,
+    paymentSettings: local.paymentSettings || remote.paymentSettings,
     avatar: local.avatar || remote.avatar,
   }
 }
@@ -194,6 +197,10 @@ function userFromMetadata(
   const services = Array.isArray(metadata?.services)
     ? (metadata.services as BusinessService[])
     : undefined
+  const paymentSettings =
+    metadata?.payment_settings && typeof metadata.payment_settings === "object"
+      ? normalizePaymentSettings(metadata.payment_settings as PaymentSettings)
+      : undefined
   return {
     id,
     email,
@@ -210,6 +217,7 @@ function userFromMetadata(
     address,
     businessFields,
     services,
+    paymentSettings,
   }
 }
 
@@ -652,6 +660,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 address: nextUser.address,
                 business_fields: nextUser.businessFields,
                 services: nextUser.services,
+                payment_settings: nextUser.paymentSettings
+                  ? {
+                      ...nextUser.paymentSettings,
+                      // QRIS base64 bisa besar — jangan kirim ke metadata auth.
+                      qrisDataUrl: undefined,
+                    }
+                  : undefined,
               },
             })
             .catch(() => {

@@ -11,6 +11,46 @@ export type AuthProviderKind = "password" | "google"
 /** Owner mengelola studio; klien mencari vendor / booking. */
 export type AuthRole = "owner" | "client"
 
+export type PaymentMethodId = "transfer" | "qris" | "ewallet" | "cash"
+
+export type PaymentSettings = {
+  methods: PaymentMethodId[]
+  bankName?: string
+  accountNumber?: string
+  accountHolder?: string
+  /** Data URL gambar QRIS. */
+  qrisDataUrl?: string
+}
+
+export const DEFAULT_PAYMENT_METHODS: PaymentMethodId[] = ["transfer", "qris"]
+
+export const PAYMENT_METHOD_OPTIONS: {
+  id: PaymentMethodId
+  label: string
+}[] = [
+  { id: "transfer", label: "Transfer Bank" },
+  { id: "qris", label: "QRIS" },
+  { id: "ewallet", label: "E-Wallet" },
+  { id: "cash", label: "Cash" },
+]
+
+export function normalizePaymentSettings(
+  value: PaymentSettings | undefined | null
+): PaymentSettings {
+  const methods = Array.isArray(value?.methods)
+    ? value!.methods.filter((id): id is PaymentMethodId =>
+        PAYMENT_METHOD_OPTIONS.some((option) => option.id === id)
+      )
+    : [...DEFAULT_PAYMENT_METHODS]
+  return {
+    methods: methods.length ? methods : [...DEFAULT_PAYMENT_METHODS],
+    bankName: value?.bankName?.trim() || "",
+    accountNumber: value?.accountNumber?.trim() || "",
+    accountHolder: value?.accountHolder?.trim() || "",
+    qrisDataUrl: value?.qrisDataUrl,
+  }
+}
+
 export type AuthUser = {
   id: string
   name: string
@@ -31,6 +71,7 @@ export type AuthUser = {
   logoDataUrl?: string
   businessFields?: BusinessFieldId[]
   services?: BusinessService[]
+  paymentSettings?: PaymentSettings
 }
 
 export function normalizeRole(role: unknown): AuthRole {
