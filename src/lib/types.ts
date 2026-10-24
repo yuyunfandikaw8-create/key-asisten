@@ -10,6 +10,9 @@ export type BookingSource = "studio" | "pricelist" | "chat"
 
 export type PaymentStatus = "belum_dp" | "belum_lunas" | "lunas"
 
+/** Metode pembayaran yang ditampilkan di invoice booking ini. */
+export type InvoicePaymentMethod = "transfer" | "qris" | "ewallet" | "cash"
+
 export type Package = {
   id: string
   name: string
@@ -47,6 +50,12 @@ export type Booking = {
   eventLabel?: string
   packageName?: string
   attireName?: string
+  /**
+   * Metode yang dipilih owner untuk invoice ini.
+   * Harus subset dari metode yang diaktifkan di Keuangan.
+   * Kosong/undefined = pakai semua metode aktif owner.
+   */
+  invoicePaymentMethods?: InvoicePaymentMethod[]
 }
 
 export type Expense = {

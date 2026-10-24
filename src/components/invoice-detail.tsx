@@ -40,8 +40,15 @@ import {
   invoicePdfFilename,
   shareOrDownloadInvoicePdf,
 } from "@/lib/invoice-pdf"
+import {
+  PAYMENT_METHOD_OPTIONS,
+  paymentMethodLabel,
+  resolveInvoicePaymentMethods,
+  type PaymentMethodId,
+} from "@/lib/auth"
 import { balance, paymentStatus } from "@/lib/metrics"
 import { studioBrand } from "@/lib/studio-brand"
+import { cn } from "@/lib/utils"
 
 type LineItem = {
   label: string
@@ -99,15 +106,21 @@ export function InvoiceDetail() {
     })
   }
 
+  const availableMethods = brand.payment.methods
+  const invoiceMethods = resolveInvoicePaymentMethods(
+    booking.invoicePaymentMethods,
+    availableMethods
+  )
+
   const payLines: string[] = []
-  if (brand.payment.methods.includes("transfer")) {
+  if (invoiceMethods.includes("transfer")) {
     payLines.push(
       `Transfer ke ${brand.bank} a.n. ${brand.accountName} ${brand.accountNumber}`
     )
   }
-  if (brand.payment.methods.includes("qris")) payLines.push("Bisa bayar via QRIS (lihat invoice)")
-  if (brand.payment.methods.includes("ewallet")) payLines.push("E-Wallet diterima")
-  if (brand.payment.methods.includes("cash")) payLines.push("Cash / tunai diterima")
+  if (invoiceMethods.includes("qris")) payLines.push("Bisa bayar via QRIS (lihat invoice)")
+  if (invoiceMethods.includes("ewallet")) payLines.push("E-Wallet diterima")
+  if (invoiceMethods.includes("cash")) payLines.push("Cash / tunai diterima")
 
   const message = [
     `Halo ${booking.clientName}, ini invoice ${brand.name} dalam bentuk PDF.`,
@@ -126,6 +139,18 @@ export function InvoiceDetail() {
     "File PDF invoice sudah diunduh di perangkat kamu. Lampirkan file tersebut di chat WhatsApp ini.",
   ].join("\n")
 
+  function toggleInvoiceMethod(id: PaymentMethodId) {
+    const current = resolveInvoicePaymentMethods(
+      booking.invoicePaymentMethods,
+      availableMethods
+    )
+    const next = current.includes(id)
+      ? current.filter((item) => item !== id)
+      : [...current, id]
+    if (!next.length) return
+    updateBooking(booking.id, { invoicePaymentMethods: next })
+  }
+
   function makePdfBlob() {
     return buildInvoicePdf({
       booking,
@@ -142,6 +167,8 @@ export function InvoiceDetail() {
         accountName: brand.accountName,
         accountNumber: brand.accountNumber,
         instagram: brand.instagram,
+        paymentMethods: invoiceMethods,
+        qrisDataUrl: brand.payment.qrisDataUrl,
       },
     })
   }
@@ -246,6 +273,57 @@ export function InvoiceDetail() {
         </p>
       </div>
 
+      <div className="no-print grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+        <div>
+          <p className="font-medium">Metode pembayaran di invoice</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pilih metode yang mau ditampilkan ke klien. Atur rekening/QRIS di{" "}
+            <Link href="/studio/keuangan" className="text-primary hover:underline">
+              Keuangan
+            </Link>
+            .
+          </p>
+        </div>
+        {availableMethods.length === 0 ? (
+          <p className="rounded-xl bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
+            Belum ada metode aktif. Centang Transfer/QRIS/dll di Keuangan dulu.
+          </p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {PAYMENT_METHOD_OPTIONS.filter((option) =>
+              availableMethods.includes(option.id)
+            ).map((option) => {
+              const checked = invoiceMethods.includes(option.id)
+              return (
+                <label
+                  key={option.id}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
+                    checked
+                      ? "bg-primary/8 ring-primary"
+                      : "bg-background ring-foreground/10 hover:bg-muted/50"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleInvoiceMethod(option.id)}
+                    className="size-4 accent-primary"
+                  />
+                  <span className="text-sm font-medium">{option.label}</span>
+                </label>
+              )
+            })}
+          </div>
+        )}
+        {invoiceMethods.length ? (
+          <p className="text-xs text-muted-foreground">
+            Tampil di invoice:{" "}
+            {invoiceMethods.map((id) => paymentMethodLabel(id)).join(" · ")}
+          </p>
+        ) : null}
+      </div>
+
       <article className="invoice-sheet mx-auto w-full max-w-3xl overflow-hidden rounded-[1.75rem] bg-white text-[oklch(0.32_0.03_40)] shadow-sm ring-1 ring-[oklch(0.88_0.03_20)]">
         <div className="relative px-6 py-8 sm:px-10 sm:py-10">
           <div
@@ -342,29 +420,41 @@ export function InvoiceDetail() {
           <div className="relative mt-8 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
               <p className="text-xs font-semibold tracking-[0.18em] uppercase">Pay to</p>
-              {brand.payment.methods.includes("transfer") ? (
-                <>
-                  <p className="mt-2 font-semibold">{brand.bank}</p>
+              {!invoiceMethods.length ? (
+                <p className="mt-2 text-sm text-[oklch(0.48_0.03_30)]">
+                  Belum ada metode pembayaran dipilih.
+                </p>
+              ) : null}
+              {invoiceMethods.includes("transfer") ? (
+                <div className="mt-2">
+                  <p className="text-sm font-medium">Transfer Bank</p>
+                  <p className="font-semibold">{brand.bank}</p>
                   <p className="text-sm">
                     {brand.accountName} · {brand.accountNumber}
                   </p>
-                </>
-              ) : null}
-              {brand.payment.methods.includes("qris") && brand.payment.qrisDataUrl ? (
-                <div className="mt-3">
-                  <p className="text-sm font-medium">QRIS</p>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={brand.payment.qrisDataUrl}
-                    alt="QRIS pembayaran"
-                    className="mt-2 size-36 rounded-xl object-cover ring-1 ring-foreground/10"
-                  />
                 </div>
               ) : null}
-              {brand.payment.methods.includes("ewallet") ? (
+              {invoiceMethods.includes("qris") ? (
+                <div className="mt-3">
+                  <p className="text-sm font-medium">QRIS</p>
+                  {brand.payment.qrisDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={brand.payment.qrisDataUrl}
+                      alt="QRIS pembayaran"
+                      className="mt-2 size-36 rounded-xl object-cover ring-1 ring-foreground/10"
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm text-[oklch(0.48_0.03_30)]">
+                      Gambar QRIS belum diunggah di Keuangan.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+              {invoiceMethods.includes("ewallet") ? (
                 <p className="mt-2 text-sm">E-Wallet diterima</p>
               ) : null}
-              {brand.payment.methods.includes("cash") ? (
+              {invoiceMethods.includes("cash") ? (
                 <p className="mt-2 text-sm">Cash / tunai diterima</p>
               ) : null}
               {booking.notes ? (

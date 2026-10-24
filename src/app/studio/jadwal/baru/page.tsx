@@ -318,6 +318,10 @@ export default function NewBookingPage() {
       notes: notes.trim(),
       source: chat.trim() || screenshotName ? "chat" : "studio",
       attireReturned: false,
+      // Default: semua metode aktif di Keuangan; bisa diubah di halaman invoice.
+      invoicePaymentMethods: demoMode
+        ? ["transfer", "qris"]
+        : [...(user?.paymentSettings?.methods ?? [])],
     })
     router.push(`/studio/invoice/${booking.id}`)
   }

@@ -51,6 +51,24 @@ export function normalizePaymentSettings(
   }
 }
 
+/** Metode yang tampil di invoice: pilihan booking ∩ metode aktif owner. */
+export function resolveInvoicePaymentMethods(
+  selected: PaymentMethodId[] | undefined,
+  available: PaymentMethodId[]
+): PaymentMethodId[] {
+  const allowed = available.filter((id) =>
+    PAYMENT_METHOD_OPTIONS.some((option) => option.id === id)
+  )
+  if (!allowed.length) return []
+  if (!selected?.length) return allowed
+  const picked = selected.filter((id) => allowed.includes(id))
+  return picked.length ? picked : allowed
+}
+
+export function paymentMethodLabel(id: PaymentMethodId) {
+  return PAYMENT_METHOD_OPTIONS.find((option) => option.id === id)?.label ?? id
+}
+
 export type AuthUser = {
   id: string
   name: string

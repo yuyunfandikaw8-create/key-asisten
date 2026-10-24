@@ -20,6 +20,9 @@ export type InvoicePdfBrand = {
   accountName: string
   accountNumber: string
   instagram?: string
+  /** Metode yang dipilih untuk invoice ini. */
+  paymentMethods?: Array<"transfer" | "qris" | "ewallet" | "cash">
+  qrisDataUrl?: string
 }
 
 export type InvoicePdfInput = {
@@ -186,15 +189,60 @@ export function buildInvoicePdf(input: InvoicePdfInput): Blob {
   doc.setTextColor(30)
   doc.setFont("helvetica", "bold")
   doc.setFontSize(10)
-  doc.text("Transfer ke", margin, y)
+  doc.text("Pembayaran", margin, y)
   y += 6
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...muted)
-  doc.text(brand.bank, margin, y)
-  y += 5
-  doc.text(`${brand.accountName} · ${brand.accountNumber}`, margin, y)
-  y += 5
+  const methods: Array<"transfer" | "qris" | "ewallet" | "cash"> =
+    brand.paymentMethods?.length ? brand.paymentMethods : ["transfer"]
+  if (methods.includes("transfer")) {
+    doc.setFont("helvetica", "bold")
+    doc.setTextColor(30)
+    doc.text("Transfer Bank", margin, y)
+    y += 5
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(...muted)
+    doc.text(brand.bank, margin, y)
+    y += 5
+    doc.text(`${brand.accountName} · ${brand.accountNumber}`, margin, y)
+    y += 5
+  }
+  if (methods.includes("qris")) {
+    doc.setFont("helvetica", "bold")
+    doc.setTextColor(30)
+    doc.text("QRIS", margin, y)
+    y += 5
+    if (brand.qrisDataUrl) {
+      try {
+        const format = brand.qrisDataUrl.includes("image/png") ? "PNG" : "JPEG"
+        doc.addImage(brand.qrisDataUrl, format, margin, y, 36, 36)
+        y += 40
+      } catch {
+        doc.setFont("helvetica", "normal")
+        doc.setTextColor(...muted)
+        doc.text("Scan QRIS pada invoice digital / chat studio.", margin, y)
+        y += 5
+      }
+    } else {
+      doc.setFont("helvetica", "normal")
+      doc.setTextColor(...muted)
+      doc.text("Scan QRIS pada invoice digital / chat studio.", margin, y)
+      y += 5
+    }
+  }
+  if (methods.includes("ewallet")) {
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(...muted)
+    doc.text("E-Wallet diterima", margin, y)
+    y += 5
+  }
+  if (methods.includes("cash")) {
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(...muted)
+    doc.text("Cash / tunai diterima", margin, y)
+    y += 5
+  }
   doc.text(`Acara: ${bookingEventLabel(booking)}`, margin, y)
 
   if (booking.notes) {
