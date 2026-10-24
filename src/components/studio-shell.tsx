@@ -30,6 +30,7 @@ import {
   TRIAL_DAYS,
   formatTrialEndsAt,
   getTrialDaysRemaining,
+  hasActiveSubscription,
   trialStatusLabel,
 } from "@/lib/trial"
 import { cn } from "@/lib/utils"
@@ -280,21 +281,28 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
             {brand.name}
           </span>
           {user ? (
-            <span
+            <Link
+              href="/langganan"
               className={cn(
-                "hidden rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide sm:inline",
-                trialUrgent
-                  ? "bg-[oklch(0.94_0.05_55)] text-[oklch(0.42_0.1_45)]"
-                  : "bg-accent text-primary"
+                "hidden rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide transition sm:inline",
+                hasActiveSubscription(user)
+                  ? "bg-accent text-primary hover:brightness-95"
+                  : trialUrgent
+                    ? "bg-[oklch(0.94_0.05_55)] text-[oklch(0.42_0.1_45)] hover:brightness-95"
+                    : "bg-accent text-primary hover:brightness-95"
               )}
               title={
-                trialEndsLabel
-                  ? `Trial ${TRIAL_DAYS} hari sampai ${trialEndsLabel}`
-                  : `Trial ${TRIAL_DAYS} hari`
+                hasActiveSubscription(user)
+                  ? `Paket ${user.subscription?.planName ?? "aktif"} — kelola langganan`
+                  : trialEndsLabel
+                    ? `Trial ${TRIAL_DAYS} hari sampai ${trialEndsLabel} — buka Paket & Langganan`
+                    : `Trial ${TRIAL_DAYS} hari — buka Paket & Langganan`
               }
             >
-              {trialStatusLabel(user.trialStartedAt)}
-            </span>
+              {hasActiveSubscription(user)
+                ? user.subscription?.planName || "Berlangganan"
+                : trialStatusLabel(user.trialStartedAt)}
+            </Link>
           ) : null}
           <div className="relative z-50 ml-auto flex items-center gap-2 pointer-events-auto">
             <CityPicker />
@@ -324,11 +332,22 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           <SideNav />
         </Suspense>
         <div className="studio-main min-w-0 pb-20 md:pb-0">
-          {user && trialDaysLeft > 0 && trialDaysLeft <= 3 ? (
-            <div className="mb-4 rounded-xl bg-[oklch(0.96_0.04_55)] px-4 py-3 text-sm text-[oklch(0.38_0.08_45)] ring-1 ring-[oklch(0.85_0.06_55)]">
-              Masa trial kamu tinggal {trialDaysLeft} hari
-              {trialEndsLabel ? ` (sampai ${trialEndsLabel})` : null}. Hubungi kami sebelum
-              akses studio dinonaktifkan.
+          {user &&
+          !hasActiveSubscription(user) &&
+          trialDaysLeft > 0 &&
+          trialDaysLeft <= 3 ? (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[oklch(0.96_0.04_55)] px-4 py-3 text-sm text-[oklch(0.38_0.08_45)] ring-1 ring-[oklch(0.85_0.06_55)]">
+              <p>
+                Masa trial kamu tinggal {trialDaysLeft} hari
+                {trialEndsLabel ? ` (sampai ${trialEndsLabel})` : null}. Pilih paket sebelum
+                akses studio dinonaktifkan.
+              </p>
+              <Link
+                href="/langganan"
+                className="shrink-0 font-semibold text-primary hover:underline"
+              >
+                Paket & Langganan
+              </Link>
             </div>
           ) : null}
           {notice ? (
@@ -341,7 +360,16 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           ) : null}
           <p className="mb-4 text-xs text-muted-foreground md:hidden">
             Lokasi aktif: {city}. Partner dan inbox mengikuti kota ini.
-            {user ? ` · ${trialStatusLabel(user.trialStartedAt)}.` : null}
+            {user ? (
+              <>
+                {" · "}
+                <Link href="/langganan" className="font-medium text-primary hover:underline">
+                  {hasActiveSubscription(user)
+                    ? user.subscription?.planName || "Berlangganan"
+                    : trialStatusLabel(user.trialStartedAt)}
+                </Link>
+              </>
+            ) : null}
           </p>
           {children}
         </div>

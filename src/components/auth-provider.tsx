@@ -148,6 +148,7 @@ function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUse
       (local.businessFields as BusinessFieldId[] | undefined) || remote.businessFields,
     services: (local.services as BusinessService[] | undefined) || remote.services,
     paymentSettings: local.paymentSettings || remote.paymentSettings,
+    subscription: local.subscription || remote.subscription,
     avatar: local.avatar || remote.avatar,
   }
 }
@@ -201,6 +202,10 @@ function userFromMetadata(
     metadata?.payment_settings && typeof metadata.payment_settings === "object"
       ? normalizePaymentSettings(metadata.payment_settings as PaymentSettings)
       : undefined
+  const subscription =
+    metadata?.subscription && typeof metadata.subscription === "object"
+      ? (metadata.subscription as AuthUser["subscription"])
+      : undefined
   return {
     id,
     email,
@@ -218,6 +223,7 @@ function userFromMetadata(
     businessFields,
     services,
     paymentSettings,
+    subscription,
   }
 }
 
@@ -667,6 +673,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       qrisDataUrl: undefined,
                     }
                   : undefined,
+                subscription: nextUser.subscription,
               },
             })
             .catch(() => {

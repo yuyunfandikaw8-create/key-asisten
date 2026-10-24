@@ -90,6 +90,14 @@ export type AuthUser = {
   businessFields?: BusinessFieldId[]
   services?: BusinessService[]
   paymentSettings?: PaymentSettings
+  /** Langganan Key Assistant setelah trial. */
+  subscription?: {
+    planId: string
+    planName: string
+    status: "active"
+    paymentMethod: "qris" | "va" | "ewallet" | "card"
+    startedAt: string
+  }
 }
 
 export function normalizeRole(role: unknown): AuthRole {

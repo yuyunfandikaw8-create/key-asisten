@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { homePathForUser } from "@/lib/auth"
 import { needsOnboarding } from "@/lib/onboarding"
-import { isTrialExpired } from "@/lib/trial"
+import { isStudioLocked } from "@/lib/trial"
 
 export function AuthGate({
   children,
@@ -46,8 +46,8 @@ export function AuthGate({
       router.replace("/studio")
       return
     }
-    if (user.role === "owner" && isTrialExpired(user.trialStartedAt)) {
-      router.replace("/trial-berakhir")
+    if (user.role === "owner" && isStudioLocked(user)) {
+      router.replace("/langganan")
     }
   }, [allowRole, pathname, ready, router, skipOnboardingRedirect, user])
 
@@ -72,7 +72,7 @@ export function AuthGate({
     return <StudioLoading />
   }
 
-  if (user.role === "owner" && isTrialExpired(user.trialStartedAt)) {
+  if (user.role === "owner" && isStudioLocked(user)) {
     return <StudioLoading />
   }
 
