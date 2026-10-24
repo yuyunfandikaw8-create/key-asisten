@@ -60,7 +60,7 @@ export function JadwalBoard() {
         <div>
           <h1 className="text-4xl">Jadwal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Cari klien, saring status bayar, atau lihat yang bentrok.
+            Kelola jadwal dan booking dengan mudah.
           </p>
         </div>
         <Link
@@ -99,11 +99,11 @@ export function JadwalBoard() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          title="Tidak ada jadwal di saringan ini"
+          title="Belum ada jadwal"
           body={
             query
               ? `Tidak ada klien atau lokasi yang memuat “${query}”.`
-              : "Ubah saringan, atau buat booking dari chat WhatsApp."
+              : "Belum ada booking yang sesuai dengan pilihanmu."
           }
         />
       ) : (

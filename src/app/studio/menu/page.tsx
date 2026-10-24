@@ -60,7 +60,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/jadwal",
         title: "Jadwal",
-        body: "Cari klien, saring status, cek bentrok",
+        body: "Kelola jadwal dan booking dengan mudah",
         Icon: CalendarDays,
         tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
       },
