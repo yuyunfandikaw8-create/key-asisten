@@ -45,6 +45,13 @@ export default function RegisterPage() {
       setPending(false)
       return
     }
+    if (result.notice) {
+      try {
+        sessionStorage.setItem("key-assistant.sync-notice", result.notice)
+      } catch {
+        // ignore
+      }
+    }
     router.replace("/onboarding")
   }
 

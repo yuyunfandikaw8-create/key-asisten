@@ -37,12 +37,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
 
 ### Sinkron lintas perangkat (HP / laptop)
 
-Profil bisnis, layanan, dan data studio (booking, invoice, dll.) tersimpan ke akun email lewat tabel `owner_data` di Supabase — bukan hanya di browser satu HP.
+Data bisnis ikut **email akun** (Auth Supabase `user_metadata`, plus tabel `owner_data` jika sudah dijalankan). Bukan hanya di browser satu HP.
 
-1. **Daftar** dengan email + kata sandi (bukan akun demo `@riasaja.id`).
-2. Jika diminta, **konfirmasi email** dari kotak masuk / spam.
-3. Selesaikan onboarding / pakai studio seperti biasa — data diunggah otomatis saat tersimpan.
-4. Di HP atau perangkat lain: buka app → **Masuk** dengan **email dan kata sandi yang sama**. Profil dan data studio ditarik dari cloud; tidak perlu mengulang onboarding jika sudah selesai.
+1. **Daftar** dengan email + kata sandi (bukan `@riasaja.id`).
+2. Supabase project ini memakai **konfirmasi email** — cek inbox/spam, klik link, baru bisa masuk di perangkat lain.
+3. Di perangkat yang sudah terisi data, tekan **Simpan ke cloud** (banner di studio) sekali setelah email terkonfirmasi.
+4. Di HP lain: **Masuk** dengan email & kata sandi yang sama — profil, onboarding, dan studio ditarik dari cloud.
+
+Opsional di Supabase Dashboard → Authentication → Providers → Email: matikan “Confirm email” agar daftar langsung punya sesi (lebih mudah untuk uji lintas perangkat).
 
 Tanpa Supabase (atau akun demo), data tetap hanya di `localStorage` perangkat itu.
 

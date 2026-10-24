@@ -262,6 +262,52 @@ function DataModeSwitcher() {
   )
 }
 
+function CloudSyncBanner() {
+  const { user, syncNotice, dismissSyncNotice, linkCloudAccount, supabaseReady } = useAuth()
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState("")
+
+  if (!user || !supabaseReady) return null
+  if (user.email.endsWith("@riasaja.id")) return null
+
+  async function saveToCloud() {
+    setPending(true)
+    setError("")
+    const result = await linkCloudAccount()
+    setPending(false)
+    if (!result.ok) setError(result.error)
+  }
+
+  return (
+    <div className="mb-4 space-y-2">
+      {syncNotice ? (
+        <div className="flex items-start justify-between gap-3 rounded-xl bg-accent px-4 py-3 text-sm">
+          <p>{syncNotice}</p>
+          <button className="shrink-0 font-medium" onClick={dismissSyncNotice} type="button">
+            Tutup
+          </button>
+        </div>
+      ) : null}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[oklch(0.97_0.01_240)] px-4 py-3 text-sm ring-1 ring-foreground/10">
+        <p className="min-w-0 text-muted-foreground">
+          Agar data ikut email di HP lain: konfirmasi email (jika diminta), lalu simpan ke cloud
+          dari perangkat yang sudah terisi.
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={pending}
+          onClick={() => void saveToCloud()}
+        >
+          {pending ? "Menyimpan…" : "Simpan ke cloud"}
+        </Button>
+      </div>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+    </div>
+  )
+}
+
 export function StudioShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { user, logout } = useAuth()
@@ -353,6 +399,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               </Link>
             </div>
           ) : null}
+          <CloudSyncBanner />
           {notice ? (
             <div className="mb-4 flex items-start justify-between gap-3 rounded-xl bg-accent px-4 py-3 text-sm">
               <p>{notice}</p>

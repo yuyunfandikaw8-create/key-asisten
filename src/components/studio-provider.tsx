@@ -209,7 +209,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       let stored = readStoredState(key, city)
       const previewDone = localStorage.getItem(previewFlagKey(key)) === "1"
 
-      // Perangkat baru: tarik studio dari cloud jika lokal kosong.
+      // Perangkat baru: tarik studio dari cloud (Auth metadata / owner_data) jika lokal kosong.
       if ((!stored || !studioHasRows(stored)) && user && canCloudSync(user.email) && userId) {
         const cloud = await pullOwnerCloud(userId)
         if (cloud?.studio && studioHasRows(cloud.studio)) {
@@ -217,6 +217,15 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(key, JSON.stringify(stored))
           localStorage.setItem(previewFlagKey(key), "1")
         }
+      } else if (
+        stored &&
+        studioHasRows(stored) &&
+        user &&
+        canCloudSync(user.email) &&
+        userId
+      ) {
+        // Perangkat lama: pastikan salinan lokal ikut ke cloud untuk HP lain.
+        void pushStudioCloud(user, stored)
       }
 
       if (cancelled) return

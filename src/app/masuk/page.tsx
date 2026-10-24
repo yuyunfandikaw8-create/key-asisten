@@ -67,6 +67,11 @@ function LoginForm() {
           Masuk untuk mengelola jadwal, klien, invoice, keuangan, dan kolaborasi
           dengan lebih mudah dalam satu tempat.
         </p>
+        <p className="mt-3 rounded-xl bg-accent/80 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+          Di HP / perangkat lain: pakai <span className="font-medium text-foreground">email dan kata sandi yang sama</span>.
+          Jika diminta, konfirmasi email dulu. Di perangkat lama, tekan{" "}
+          <span className="font-medium text-foreground">Simpan ke cloud</span> sekali agar data ikut terbawa.
+        </p>
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">

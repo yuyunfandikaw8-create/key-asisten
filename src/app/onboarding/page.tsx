@@ -33,7 +33,7 @@ function stepNumber(step: OnboardingStep | undefined): number {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { ready, user, updateProfile } = useAuth()
+  const { ready, user, updateProfile, syncNotice, dismissSyncNotice } = useAuth()
   const { setCity } = useStudio()
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
@@ -225,6 +225,18 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
+      {syncNotice ? (
+        <div className="flex items-start justify-between gap-3 rounded-xl bg-accent px-4 py-3 text-sm">
+          <p>{syncNotice}</p>
+          <button
+            type="button"
+            className="shrink-0 font-medium"
+            onClick={dismissSyncNotice}
+          >
+            Tutup
+          </button>
+        </div>
+      ) : null}
       <div>
         <p className="font-display text-2xl">Key Assistant</p>
         <p className="mt-3 text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
