@@ -26,7 +26,7 @@ type ScheduleFieldsProps = {
 }
 
 const fieldClass =
-  "h-10 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+  "h-10 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm [&::-webkit-calendar-picker-indicator]:mr-0.5 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70"
 
 export function ScheduleFields({
   date,
@@ -94,25 +94,19 @@ export function ScheduleFields({
       <div className="grid gap-1.5">
         <Label htmlFor={dateId}>Tanggal jadwal</Label>
 
-        {/* HP: pakai date native — paling andal di Safari/Chrome mobile */}
-        <div className="relative sm:hidden">
-          <CalendarDays
-            className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <input
-            id={dateId}
-            type="date"
-            value={date}
-            onChange={(event) => {
-              const next = event.target.value
-              setDateError("")
-              setDateText(next ? formatDateInput(next) : "")
-              onDateChange(next)
-            }}
-            className={cn(fieldClass, "pl-10", inputClassName)}
-          />
-        </div>
+        {/* HP: date native saja — jangan tambah ikon kustom (browser sudah punya, bisa menimpa teks). */}
+        <input
+          id={dateId}
+          type="date"
+          value={date}
+          onChange={(event) => {
+            const next = event.target.value
+            setDateError("")
+            setDateText(next ? formatDateInput(next) : "")
+            onDateChange(next)
+          }}
+          className={cn(fieldClass, "sm:hidden", inputClassName)}
+        />
 
         {/* Desktop: ketik + ikon kalender (input date menumpuk di ikon) */}
         <div className="relative hidden gap-2 sm:flex">
@@ -173,24 +167,18 @@ export function ScheduleFields({
       <div className="grid gap-1.5">
         <Label htmlFor={timeId}>Jam</Label>
 
-        <div className="relative sm:hidden">
-          <Clock3
-            className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <input
-            id={timeId}
-            type="time"
-            value={time}
-            onChange={(event) => {
-              const next = event.target.value
-              setTimeError("")
-              setTimeText(next ? formatTime(next) : "")
-              onTimeChange(next)
-            }}
-            className={cn(fieldClass, "pl-10", inputClassName)}
-          />
-        </div>
+        <input
+          id={timeId}
+          type="time"
+          value={time}
+          onChange={(event) => {
+            const next = event.target.value
+            setTimeError("")
+            setTimeText(next ? formatTime(next) : "")
+            onTimeChange(next)
+          }}
+          className={cn(fieldClass, "sm:hidden", inputClassName)}
+        />
 
         <div className="relative hidden gap-2 sm:flex">
           <Input
