@@ -391,7 +391,7 @@ export default function NewBookingPage() {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                WA atau Instagram · tarik gambar ke sini, tempel (Ctrl+V), atau pilih file
+                Tempel atau pilih file
               </p>
             </div>
 
@@ -439,7 +439,7 @@ export default function NewBookingPage() {
                 }
               }
             }}
-            placeholder="Tempel chat teks di sini, atau tempel/unggah screenshot WA maupun Instagram"
+            placeholder="Tempel chat teks disini atau unggah screenshot WhatsApp maupun Instagram"
             className="min-h-40 bg-background"
             disabled={readingImage}
           />
