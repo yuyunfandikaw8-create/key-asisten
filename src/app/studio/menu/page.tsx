@@ -87,15 +87,15 @@ const sections: MenuSection[] = [
       },
       {
         href: "/studio/profil",
-        title: "Profil bisnis",
-        body: "Logo, nama, WhatsApp, Instagram, kota — seperti langkah 4 daftar",
+        title: "Profil",
+        body: "Logo, nama, WhatsApp, Instagram, kota",
         Icon: UserRound,
         tone: "bg-[oklch(0.94_0.03_15)] text-[oklch(0.48_0.1_15)]",
       },
       {
         href: "/studio/layanan",
         title: "Layanan & harga",
-        body: "Bidang, paket, harga, dan durasi — seperti langkah 5 daftar",
+        body: "Bidang, paket, harga, dan durasi",
         Icon: BriefcaseBusiness,
         tone: "bg-[oklch(0.93_0.04_340)] text-[oklch(0.45_0.1_340)]",
       },
