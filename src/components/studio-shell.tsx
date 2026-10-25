@@ -38,13 +38,13 @@ import { cn } from "@/lib/utils"
 
 const links = [
   { href: "/studio", label: "Beranda", icon: LayoutDashboard, exact: true },
+  { href: "/studio/menu", label: "Menu", icon: LayoutGrid },
   { href: "/studio/jadwal", label: "Jadwal", icon: CalendarDays },
   { href: "/studio/invoice", label: "Invoice", icon: FileText },
   { href: "/studio/inbox", label: "Inbox", icon: Inbox },
   { href: "/studio/keuangan", label: "Keuangan", icon: Wallet },
   // Gaun disembunyikan sementara dari navigasi.
   { href: "/studio/partner", label: "Partner", icon: Handshake },
-  { href: "/studio/menu", label: "Menu", icon: LayoutGrid },
 ]
 
 function isActive(pathname: string, href: string, exact?: boolean) {
