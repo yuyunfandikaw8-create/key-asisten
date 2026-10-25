@@ -52,7 +52,7 @@ const sections: MenuSection[] = [
     items: [
       {
         href: "/studio",
-        title: "Beranda KPI",
+        title: "Beranda",
         body: "Laba, hari ini, besok, dan yang perlu dilihat",
         Icon: LayoutDashboard,
         tone: "bg-[oklch(0.93_0.04_15)] text-[oklch(0.45_0.12_15)]",
