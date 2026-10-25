@@ -331,8 +331,7 @@ export default function NewBookingPage() {
       <div>
         <h1 className="text-4xl">Booking baru</h1>
         <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-          Tempel chat WhatsApp/Instagram, atau unggah screenshot — lalu periksa isiannya dan
-          simpan.
+          Tempel chat WhatsApp/Instagram, atau unggah screenshot — lalu periksa dan simpan.
         </p>
       </div>
 
