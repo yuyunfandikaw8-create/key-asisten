@@ -176,7 +176,7 @@ const sections: MenuSection[] = [
       {
         href: `/p/${studio.slug}`,
         title: "Link booking mandiri",
-        body: "Pricelist publik untuk bio Instagram",
+        body: "Link untuk diisi calon klien — hasilnya langsung masuk ke jadwal",
         Icon: Globe,
         tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
       },
