@@ -112,16 +112,28 @@ export function StudioMonthCalendar({
               className={cn(
                 "relative mx-auto flex size-9 items-center justify-center rounded-full transition",
                 isSelected && "bg-primary font-semibold text-primary-foreground",
-                !isSelected && isToday && "ring-1 ring-primary/40 font-semibold text-primary",
                 !isSelected &&
+                  hasEvent &&
+                  "bg-[oklch(0.94_0.045_15)] font-semibold text-primary hover:bg-[oklch(0.91_0.05_15)]",
+                !isSelected &&
+                  !hasEvent &&
+                  isToday &&
+                  "ring-1 ring-primary/40 font-semibold text-primary",
+                !isSelected &&
+                  !hasEvent &&
                   isHoliday &&
                   holiday?.kind === "nasional" &&
                   "font-semibold text-[oklch(0.48_0.16_25)] hover:bg-[oklch(0.96_0.03_25)]",
                 !isSelected &&
+                  !hasEvent &&
                   isHoliday &&
                   holiday?.kind === "cuti" &&
                   "font-semibold text-[oklch(0.5_0.12_55)] hover:bg-[oklch(0.97_0.03_55)]",
-                !isSelected && !isToday && !isHoliday && "text-foreground hover:bg-accent"
+                !isSelected &&
+                  !hasEvent &&
+                  !isToday &&
+                  !isHoliday &&
+                  "text-foreground hover:bg-accent"
               )}
             >
               {day}
