@@ -307,86 +307,116 @@ export function partnersInCity(city: string) {
   return partners.filter((partner) => partner.city === city)
 }
 
-export function initialCollaboration(): {
+/** Data contoh kerja sama + inbox — disesuaikan kota studio agar Inbox terisi. */
+export function initialCollaboration(city = "Bandung"): {
   partnerships: Partnership[]
   combos: Combo[]
   messages: InboxMessage[]
 } {
   const now = Date.now()
+  const local = partnersInCity(city)
+  const primary =
+    local.find((partner) => partner.trade === "dekor") ??
+    local.find((partner) => partner.trade === "makeup") ??
+    local[0]
+  const secondary =
+    local.find(
+      (partner) =>
+        partner.id !== primary?.id &&
+        (partner.trade === "baju" ||
+          partner.trade === "makeup" ||
+          partner.trade === "foto" ||
+          partner.trade === "hair")
+    ) ?? local.find((partner) => partner.id !== primary?.id)
+
+  if (!primary) {
+    return { partnerships: [], combos: [], messages: [] }
+  }
+
+  const partnerships: Partnership[] = [
+    {
+      partnerId: primary.id,
+      status: "diterima",
+      note: `Sering satu tanggal untuk acara di ${city}.`,
+      createdAt: new Date(now - 86_400_000 * 3).toISOString(),
+    },
+  ]
+  if (secondary) {
+    partnerships.push({
+      partnerId: secondary.id,
+      status: "diminta",
+      note: "Menunggu konfirmasi untuk klien minggu depan.",
+      createdAt: new Date(now - 86_400_000).toISOString(),
+    })
+  }
+
+  const areaHint = primary.area || city
+  const messages: InboxMessage[] = [
+    {
+      id: `msg-demo-${primary.id}-1`,
+      partnerId: primary.id,
+      city,
+      sender: "partner",
+      body: `Halo! Slot ${primary.offer.toLowerCase()} di ${areaHint} tanggal dekat masih kosong. Mau kita kunci untuk klien kamu?`,
+      createdAt: new Date(now - 3_600_000 * 5).toISOString(),
+      read: false,
+    },
+    {
+      id: `msg-demo-${primary.id}-2`,
+      partnerId: primary.id,
+      city,
+      sender: "studio",
+      body: `Boleh. Klien di ${city}, jam 08.00. Nanti aku kirim brief dan lokasi lengkapnya.`,
+      createdAt: new Date(now - 3_600_000 * 4).toISOString(),
+      read: true,
+    },
+    {
+      id: `msg-demo-${primary.id}-3`,
+      partnerId: primary.id,
+      city,
+      sender: "partner",
+      body: "Siap. Kirim juga moodboard kalau ada, supaya tim kami bisa siapkan cadangan.",
+      createdAt: new Date(now - 3_600_000 * 3).toISOString(),
+      read: false,
+    },
+  ]
+
+  if (secondary) {
+    messages.push({
+      id: `msg-demo-${secondary.id}-1`,
+      partnerId: secondary.id,
+      city,
+      sender: "partner",
+      body: `${secondary.offer} kami siap. Fitting atau survey bisa dijadwalkan di ${secondary.area}.`,
+      createdAt: new Date(now - 3_600_000 * 2).toISOString(),
+      read: false,
+    })
+    messages.push({
+      id: `msg-demo-${secondary.id}-2`,
+      partnerId: secondary.id,
+      city,
+      sender: "studio",
+      body: "Tolong tahan dulu untuk klien kami. Nanti sore aku konfirmasi final.",
+      createdAt: new Date(now - 3_600_000).toISOString(),
+      read: true,
+    })
+  }
+
   return {
-    partnerships: [
-      {
-        partnerId: "dekor-rumah-bunga",
-        status: "diterima",
-        note: "Sering satu tanggal untuk akad di rumah.",
-        createdAt: new Date(now - 86_400_000 * 3).toISOString(),
-      },
-      {
-        partnerId: "baju-lemari",
-        status: "diminta",
-        note: "Mau tahan kebaya adat untuk klien akad.",
-        createdAt: new Date(now - 86_400_000).toISOString(),
-      },
-    ],
+    partnerships,
     combos: [
       {
-        id: "combo-akad-sunda",
-        name: "Akad Sunda di rumah",
+        id: `combo-demo-${city.toLowerCase().replace(/\s+/g, "-")}`,
+        name: `Paket kombo ${city}`,
         packageId: "adat",
-        partnerIds: ["dekor-rumah-bunga"],
+        partnerIds: [primary.id],
         discount: 500_000,
-        note: "Rias adat dan pelaminan dalam satu harga.",
+        note: `Contoh paket gabungan studio + ${primary.name}.`,
         published: true,
         createdAt: new Date(now - 86_400_000 * 2).toISOString(),
       },
     ],
-    messages: [
-      {
-        id: "msg-bunga-1",
-        partnerId: "dekor-rumah-bunga",
-        city: "Bandung",
-        sender: "partner",
-        body: "Tanggal 20 Nov pelaminan kayu masih kosong. Mau kita kunci untuk akad Sunda?",
-        createdAt: new Date(now - 3_600_000 * 5).toISOString(),
-        read: false,
-      },
-      {
-        id: "msg-bunga-2",
-        partnerId: "dekor-rumah-bunga",
-        city: "Bandung",
-        sender: "studio",
-        body: "Boleh. Klien di Lembang, jam 08.00. Nanti aku kirim denah rumahnya.",
-        createdAt: new Date(now - 3_600_000 * 4).toISOString(),
-        read: true,
-      },
-      {
-        id: "msg-lemari-1",
-        partnerId: "baju-lemari",
-        city: "Bandung",
-        sender: "partner",
-        body: "Kebaya Solo Emas ukuran M masih siap. Fitting bisa besok sore di Dago.",
-        createdAt: new Date(now - 3_600_000 * 2).toISOString(),
-        read: false,
-      },
-      {
-        id: "msg-kalimas-1",
-        partnerId: "dekor-kalimas",
-        city: "Surabaya",
-        sender: "partner",
-        body: "Halo studio Surabaya. Ballroom Gubeng tanggal 12 Des masih kosong untuk kombo pelaminan.",
-        createdAt: new Date(now - 3_600_000).toISOString(),
-        read: false,
-      },
-      {
-        id: "msg-tunjungan-1",
-        partnerId: "makeup-tunjungan",
-        city: "Surabaya",
-        sender: "partner",
-        body: "Kalau butuh asisten rias keluarga di Tunjungan, chat di sini saja. Biasanya balas cepat.",
-        createdAt: new Date(now - 1_800_000).toISOString(),
-        read: false,
-      },
-    ],
+    messages,
   }
 }
 

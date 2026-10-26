@@ -19,7 +19,7 @@ import {
   studioHasRows,
 } from "@/lib/cloud-sync"
 import { normalizeEmail } from "@/lib/auth"
-import { partnerById } from "@/lib/partners"
+import { partnerById, partnersInCity } from "@/lib/partners"
 import type {
   Booking,
   Combo,
@@ -164,7 +164,7 @@ function readStoredState(key: string, fallbackCity: string): StudioState | null 
 }
 
 function sampleState(city: string): StudioState {
-  return { ...createSeed(), city }
+  return createSeed(city)
 }
 
 function hasStudioData(state: StudioState | null | undefined) {
@@ -287,6 +287,24 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       skipPersist.current = false
     }, 0)
   }, [ready, viewMode, state, storageKey])
+
+  // Data contoh: pastikan inbox/partner sesuai kota (seed lama sering hanya Bandung).
+  useEffect(() => {
+    if (!ready || viewMode !== "demo" || !state) return
+    if (partnersInCity(state.city).length === 0) return
+    const hasLocalPartner = state.partnerships.some(
+      (item) => partnerById(item.partnerId)?.city === state.city
+    )
+    const hasLocalMessage = state.messages.some((item) => item.city === state.city)
+    if (hasLocalPartner && hasLocalMessage) return
+    const demo = sampleState(state.city)
+    skipPersist.current = true
+    setState(demo)
+    stateRef.current = demo
+    window.setTimeout(() => {
+      skipPersist.current = false
+    }, 0)
+  }, [ready, viewMode, state])
 
   const value = useMemo<StudioContextValue>(() => {
     /** Mutasi mengikuti mode aktif. Data contoh tidak pernah menimpa Data saya; ganti mode hanya lewat tombol pengguna. */

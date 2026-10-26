@@ -127,7 +127,7 @@ export function createEmptyStudio(city = studio.city): StudioState {
   }
 }
 
-export function createSeed(): StudioState {
+export function createSeed(city = studio.city): StudioState {
   const today = todayISO()
   const emas = packages[0]
   const adat = packages[1]
@@ -339,10 +339,10 @@ export function createSeed(): StudioState {
   ]
 
   return {
-    city: studio.city,
+    city,
     bookings,
     expenses,
-    ...initialCollaboration(),
+    ...initialCollaboration(city),
   }
 }
 
