@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import {
-  BriefcaseBusiness,
   CalendarDays,
   ChevronRight,
   FileText,
@@ -13,7 +12,6 @@ import {
   LayoutDashboard,
   MapPin,
   Plus,
-  Receipt,
   Scissors,
   Search,
   Settings2,
@@ -94,10 +92,17 @@ const sections: MenuSection[] = [
       },
       {
         href: "/studio/layanan",
-        title: "Layanan & harga",
-        body: "Bidang, paket, harga, dan durasi",
-        Icon: BriefcaseBusiness,
-        tone: "bg-[oklch(0.93_0.04_340)] text-[oklch(0.45_0.1_340)]",
+        title: "Katalog layanan & harga",
+        body: "Kelola paket, harga, dan durasi milik bisnis kamu",
+        Icon: Sparkles,
+        tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
+      },
+      {
+        href: "/studio/keuangan",
+        title: "Arus kas & laporan",
+        body: "Pemasukan, pengeluaran, dan Tagihan Klien",
+        Icon: Wallet,
+        tone: "bg-[oklch(0.93_0.04_160)] text-[oklch(0.4_0.09_160)]",
       },
     ],
   },
@@ -125,33 +130,6 @@ const sections: MenuSection[] = [
         body: "Taruh di bio. Klien ajukan tanggal sendiri",
         Icon: Globe,
         tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
-      },
-    ],
-  },
-  {
-    id: "aset",
-    label: "Manajemen aset",
-    items: [
-      {
-        href: "/studio/layanan",
-        title: "Katalog layanan & harga",
-        body: "Kelola paket, harga, dan durasi milik bisnis kamu",
-        Icon: Sparkles,
-        tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
-      },
-      {
-        href: "/studio/keuangan",
-        title: "Arus kas & laporan",
-        body: "Pemasukan, pengeluaran, dan Tagihan Klien",
-        Icon: Wallet,
-        tone: "bg-[oklch(0.93_0.04_160)] text-[oklch(0.4_0.09_160)]",
-      },
-      {
-        href: "/studio/invoice",
-        title: "Flyer invoice",
-        body: "Cetak atau bagikan invoice blush yang rapi",
-        Icon: Receipt,
-        tone: "bg-[oklch(0.94_0.03_15)] text-[oklch(0.48_0.1_15)]",
       },
     ],
   },
@@ -209,6 +187,17 @@ export default function MenuPage() {
       }))
       .filter((section) => section.items.length > 0)
   }, [query])
+
+  useEffect(() => {
+    if (!ready || typeof window === "undefined") return
+    const hash = window.location.hash.replace(/^#/, "")
+    if (!hash) return
+    const target = document.getElementById(hash)
+    if (!target) return
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }, [ready])
 
   if (!ready) return <StudioLoading />
 
