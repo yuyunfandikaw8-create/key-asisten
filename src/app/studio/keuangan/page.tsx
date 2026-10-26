@@ -184,9 +184,6 @@ export default function FinancePage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Kelola pembayaran dan pemasukan bisnis dengan lebih mudah.
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Pemasukan dihitung dari pembayaran yang sudah diterima, bukan dari total tagihan.
-        </p>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-3">
