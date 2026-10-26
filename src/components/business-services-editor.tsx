@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -25,7 +24,6 @@ type Props = {
 
 export function BusinessServicesEditor({ className, onSaved }: Props) {
   const { user, updateProfile } = useAuth()
-  const { showReal, viewMode } = useStudio()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const [saved, setSaved] = useState(false)
@@ -158,7 +156,6 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
     setPending(true)
     setError("")
     setSaved(false)
-    if (viewMode === "demo") showReal()
     const updated = await updateProfile({
       businessFields: fields,
       services,

@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 
 export default function FinancePage() {
   const { user, updateProfile } = useAuth()
-  const { ready, bookings, expenses, addExpense, viewMode, showReal } = useStudio()
+  const { ready, bookings, expenses, addExpense } = useStudio()
   const [label, setLabel] = useState("")
   const [amount, setAmount] = useState("")
   const [error, setError] = useState("")
@@ -112,7 +112,6 @@ export default function FinancePage() {
     setPaymentPending(true)
     setPaymentError("")
     setPaymentSaved(false)
-    if (viewMode === "demo") showReal()
     const next = normalizePaymentSettings({
       ...payment,
       bankName: payment.bankName?.trim(),

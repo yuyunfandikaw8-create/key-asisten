@@ -289,35 +289,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   }, [ready, viewMode, state, storageKey])
 
   const value = useMemo<StudioContextValue>(() => {
-    function leaveDemoForReal(message?: string) {
-      const key = storageKeyRef.current
-      const city = stateRef.current?.city ?? userCity
-      const stored = key ? readStoredState(key, city) : null
-      // Never carry demo/seed rows into Data saya — only keep true user rows.
-      const real = stored ?? createEmptyStudio(city)
-      skipPersist.current = true
-      viewModeRef.current = "real"
-      setViewMode("real")
-      setState(real)
-      stateRef.current = real
-      if (key) {
-        localStorage.setItem(previewFlagKey(key), "1")
-        localStorage.setItem(key, JSON.stringify(real))
-      }
-      if (message) setNotice(message)
-      window.setTimeout(() => {
-        skipPersist.current = false
-      }, 0)
-      return real
-    }
-
-    function withRealBase(updater: (base: StudioState) => StudioState) {
-      let base = stateRef.current ?? createEmptyStudio(userCity)
-      if (viewModeRef.current === "demo") {
-        base = leaveDemoForReal(
-          "Kamu mulai mengedit — beralih ke data saya (real). Data contoh tidak diubah."
-        )
-      }
+    /** Mutasi mengikuti mode aktif. Data contoh tidak pernah menimpa Data saya; ganti mode hanya lewat tombol pengguna. */
+    function withActiveBase(updater: (base: StudioState) => StudioState) {
+      const base = stateRef.current ?? createEmptyStudio(userCity)
       const next = updater(base)
       stateRef.current = next
       setState(next)
@@ -335,7 +309,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       setViewMode("demo")
       setState(demo)
       stateRef.current = demo
-      setNotice("Menampilkan data contoh. Data real kamu aman. Klik “Data saya” untuk kembali.")
+      setNotice("Menampilkan data contoh. Data real kamu tetap aman — mode hanya berubah jika kamu memilihnya.")
       window.setTimeout(() => {
         skipPersist.current = false
       }, 0)
@@ -357,7 +331,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           )
           return
         }
-        withRealBase((base) => ({ ...base, city: next }))
+        withActiveBase((base) => ({ ...base, city: next }))
         void updateOwnerCity(next)
         setNotice(`Wilayah studio diganti ke ${next}. Hanya owner yang bisa mengubah ini.`)
       },
@@ -372,11 +346,11 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
         }
-        withRealBase((base) => ({ ...base, bookings: [booking, ...base.bookings] }))
+        withActiveBase((base) => ({ ...base, bookings: [booking, ...base.bookings] }))
         return booking
       },
       updateBooking: (id, patch) => {
-        withRealBase((base) => ({
+        withActiveBase((base) => ({
           ...base,
           bookings: base.bookings.map((booking) =>
             booking.id === id ? { ...booking, ...patch } : booking
@@ -384,14 +358,14 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         }))
       },
       removeBooking: (id) => {
-        withRealBase((base) => ({
+        withActiveBase((base) => ({
           ...base,
           bookings: base.bookings.filter((booking) => booking.id !== id),
         }))
       },
       addExpense: (input) => {
         const expense: Expense = { ...input, id: crypto.randomUUID() }
-        withRealBase((base) => ({ ...base, expenses: [expense, ...base.expenses] }))
+        withActiveBase((base) => ({ ...base, expenses: [expense, ...base.expenses] }))
       },
       invitePartner: (partnerId, note, accepted) => {
         const next: Partnership = {
@@ -400,13 +374,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           note,
           createdAt: new Date().toISOString(),
         }
-        withRealBase((base) => {
+        withActiveBase((base) => {
           const rest = base.partnerships.filter((item) => item.partnerId !== partnerId)
           return { ...base, partnerships: [next, ...rest] }
         })
       },
       acceptPartner: (partnerId) => {
-        withRealBase((base) => ({
+        withActiveBase((base) => ({
           ...base,
           partnerships: base.partnerships.map((item) =>
             item.partnerId === partnerId ? { ...item, status: "diterima" } : item
@@ -419,11 +393,11 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
         }
-        withRealBase((base) => ({ ...base, combos: [combo, ...base.combos] }))
+        withActiveBase((base) => ({ ...base, combos: [combo, ...base.combos] }))
         return combo
       },
       removeCombo: (id) => {
-        withRealBase((base) => ({
+        withActiveBase((base) => ({
           ...base,
           combos: base.combos.filter((combo) => combo.id !== id),
         }))
@@ -440,11 +414,12 @@ export function StudioProvider({ children }: { children: ReactNode }) {
           createdAt: new Date().toISOString(),
           read: true,
         }
-        withRealBase((base) => ({ ...base, messages: [...base.messages, outbound] }))
+        withActiveBase((base) => ({ ...base, messages: [...base.messages, outbound] }))
 
         if (partner.repliesFast) {
           window.setTimeout(() => {
-            if (viewModeRef.current === "demo") return
+            // Balasan contoh hanya di Data contoh; Data saya tidak diubah otomatis.
+            if (viewModeRef.current !== "demo") return
             const reply: InboxMessage = {
               id: crypto.randomUUID(),
               partnerId,
@@ -455,7 +430,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
               read: false,
             }
             setState((current) => {
-              if (!current) return current
+              if (!current || viewModeRef.current !== "demo") return current
               const next = { ...current, messages: [...current.messages, reply] }
               stateRef.current = next
               return next
@@ -464,7 +439,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         }
       },
       markThreadRead: (partnerId) => {
-        withRealBase((base) => {
+        withActiveBase((base) => {
           const needsUpdate = base.messages.some(
             (message) =>
               message.partnerId === partnerId && message.sender === "partner" && !message.read

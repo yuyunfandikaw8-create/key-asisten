@@ -129,7 +129,7 @@ const faqs: {
   {
     q: "💬 Apa yang bisa saya coba sekarang?",
     lead: "Langsung coba tanpa harus mulai dari nol.",
-    a: "Saat pertama masuk, kamu bisa melihat data contoh supaya paham bentuk studio yang sudah terisi. Klik “Data saya” untuk kembali ke data real milik akunmu. Data contoh tidak menimpa data real.",
+    a: "Kamu bisa membuka Data contoh atau Data saya lewat menu di header. Ganti mode hanya jika kamu sendiri yang memilihnya — mengedit di Data contoh tidak memindahkanmu ke Data saya, dan Data contoh tidak menimpa data real.",
   },
   {
     q: "📋 Bagaimana cara kerja fitur Tempel Chat?",

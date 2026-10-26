@@ -20,7 +20,7 @@ type Props = {
 
 export function BusinessProfileEditor({ className, onSaved }: Props) {
   const { user, updateProfile } = useAuth()
-  const { setCity, showReal, viewMode } = useStudio()
+  const { setCity } = useStudio()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const [saved, setSaved] = useState(false)
@@ -73,7 +73,6 @@ export function BusinessProfileEditor({ className, onSaved }: Props) {
     setPending(true)
     setError("")
     setSaved(false)
-    if (viewMode === "demo") showReal()
     const updated = await updateProfile({
       studioName: studioName.trim(),
       name: ownerName.trim(),
