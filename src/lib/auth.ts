@@ -24,7 +24,8 @@ export type PaymentSettings = {
   ewalletNumber?: string
 }
 
-export const DEFAULT_PAYMENT_METHODS: PaymentMethodId[] = ["transfer", "qris"]
+/** Default kosong — pengguna yang mencentang sendiri, bukan dicentang otomatis. */
+export const DEFAULT_PAYMENT_METHODS: PaymentMethodId[] = []
 
 export const PAYMENT_METHOD_OPTIONS: {
   id: PaymentMethodId
@@ -45,7 +46,7 @@ export function normalizePaymentSettings(
       )
     : [...DEFAULT_PAYMENT_METHODS]
   return {
-    methods: methods.length ? methods : [...DEFAULT_PAYMENT_METHODS],
+    methods,
     bankName: value?.bankName?.trim() || "",
     accountNumber: value?.accountNumber?.trim() || "",
     accountHolder: value?.accountHolder?.trim() || "",

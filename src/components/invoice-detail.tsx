@@ -301,7 +301,7 @@ export function InvoiceDetail() {
         </div>
         {availableMethods.length === 0 ? (
           <p className="rounded-xl bg-muted/40 px-3 py-3 text-sm text-muted-foreground">
-            Belum ada metode aktif. Centang Transfer/QRIS/dll di Keuangan dulu.
+            Belum ada metode aktif. Centang metode di Keuangan dulu.
           </p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
