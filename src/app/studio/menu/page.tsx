@@ -167,9 +167,9 @@ const sections: MenuSection[] = [
         tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
       },
       {
-        href: "/studio/profil",
+        href: "/studio/menu#identitas",
         title: "Identitas & rekening",
-        body: "Nama studio, Instagram, dan profil bisnis",
+        body: "Nama studio, Instagram, profil bisnis, dan metode pembayaran",
         Icon: Settings2,
         tone: "bg-[oklch(0.94_0.02_80)] text-[oklch(0.42_0.05_60)]",
       },
@@ -299,7 +299,7 @@ export default function MenuPage() {
         </p>
       </section>
 
-            <section id="identitas" className="scroll-mt-24 grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+      <section id="identitas" className="scroll-mt-24 grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Settings2 className="size-4 text-primary" />
@@ -312,6 +312,10 @@ export default function MenuPage() {
             <span className="text-muted-foreground">·</span>
             <Link href="/studio/layanan" className="font-medium text-primary hover:underline">
               Edit layanan
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <Link href="/studio/keuangan" className="font-medium text-primary hover:underline">
+              Edit metode pembayaran
             </Link>
           </div>
         </div>
@@ -329,7 +333,7 @@ export default function MenuPage() {
             <dd className="font-medium">{brand.phone}</dd>
             <dd>{brand.address}</dd>
           </div>
-          <div>
+          <div className="sm:col-span-2">
             <dt className="text-muted-foreground">Metode pembayaran</dt>
             <dd className="font-medium">
               {brand.payment.methods
@@ -344,11 +348,37 @@ export default function MenuPage() {
                 )
                 .join(" · ") || "Belum diatur"}
             </dd>
-            <dd>
-              {brand.payment.methods.includes("transfer")
-                ? `${brand.bank} · ${brand.accountName} · ${brand.accountNumber}`
-                : "Atur di Menu → Keuangan"}
-            </dd>
+            {brand.payment.methods.includes("transfer") ? (
+              <dd className="mt-1">
+                Transfer: {brand.bank || "—"} · {brand.accountName || "—"} ·{" "}
+                {brand.accountNumber || "—"}
+              </dd>
+            ) : null}
+            {brand.payment.methods.includes("qris") ? (
+              <dd className="mt-1">
+                QRIS: {brand.payment.qrisDataUrl ? "Gambar sudah diunggah" : "Belum ada gambar QRIS"}
+              </dd>
+            ) : null}
+            {brand.payment.methods.includes("ewallet") ? (
+              <dd className="mt-1">
+                E-Wallet:{" "}
+                {brand.ewalletName && brand.ewalletNumber
+                  ? `${brand.ewalletName} · ${brand.ewalletNumber}`
+                  : "Belum lengkap"}
+              </dd>
+            ) : null}
+            {brand.payment.methods.includes("cash") ? (
+              <dd className="mt-1">Tunai diterima</dd>
+            ) : null}
+            {!brand.payment.methods.length ? (
+              <dd className="mt-1 text-muted-foreground">
+                Belum ada metode. Atur di{" "}
+                <Link href="/studio/keuangan" className="text-primary hover:underline">
+                  Keuangan
+                </Link>
+                .
+              </dd>
+            ) : null}
           </div>
           <div>
             <dt className="text-muted-foreground">Layanan terdaftar</dt>
