@@ -114,7 +114,7 @@ export function StudioMonthCalendar({
                 isSelected && "bg-primary font-semibold text-primary-foreground",
                 !isSelected &&
                   hasEvent &&
-                  "bg-[oklch(0.94_0.045_15)] font-semibold text-primary hover:bg-[oklch(0.91_0.05_15)]",
+                  "bg-[#f6d0d4] font-semibold text-primary hover:bg-[#f0c0c6]",
                 !isSelected &&
                   !hasEvent &&
                   isToday &&
@@ -138,7 +138,7 @@ export function StudioMonthCalendar({
             >
               {day}
               {hasEvent && !isSelected ? (
-                <span className="absolute bottom-1 size-1 rounded-full bg-primary" />
+                <span className="absolute bottom-1 size-1.5 rounded-full bg-primary" />
               ) : null}
               {isHoliday && !isSelected ? (
                 <span
@@ -166,7 +166,7 @@ export function StudioMonthCalendar({
             Cuti bersama
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-primary" />
+            <span className="size-3 rounded-full bg-[#f6d0d4] ring-1 ring-primary/20" />
             Ada booking
           </span>
         </div>
