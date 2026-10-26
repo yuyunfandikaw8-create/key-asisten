@@ -34,10 +34,20 @@ export default function FinancePage() {
     normalizePaymentSettings(undefined)
   )
 
+  const paymentSettingsKey = user
+    ? `${user.id}:${JSON.stringify(normalizePaymentSettings(user.paymentSettings))}`
+    : ""
+
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setPayment(normalizePaymentSettings(undefined))
+      return
+    }
     setPayment(normalizePaymentSettings(user.paymentSettings))
-  }, [user])
+    // Hanya ikut paymentSettingsKey agar ketikan di e-wallet/bank tidak ter-reset
+    // saat objek user diganti referensi tanpa perubahan isi pembayaran.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by paymentSettingsKey
+  }, [paymentSettingsKey])
 
   if (!ready) return <StudioLoading />
 
@@ -67,6 +77,15 @@ export default function FinancePage() {
         : [...current.methods, id]
       return { ...current, methods }
     })
+  }
+
+  /** Isi detail sekaligus menandai metode aktif — kolom tetap bisa diketik kapan saja. */
+  function ensureMethod(id: PaymentMethodId) {
+    setPayment((current) =>
+      current.methods.includes(id)
+        ? current
+        : { ...current, methods: [...current.methods, id] }
+    )
   }
 
   async function onQrisChange(file: File | null) {
@@ -304,25 +323,25 @@ export default function FinancePage() {
           </div>
         </div>
 
-        <div
-          className={cn(
-            "grid gap-3 rounded-xl bg-muted/30 p-4",
-            !acceptsTransfer && "opacity-70"
-          )}
-        >
+        <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
           <p className="text-sm font-medium">Transfer Bank</p>
           <div className="grid gap-1.5">
             <Label htmlFor="pay-bank">Nama Bank</Label>
             <SuggestInput
               id="pay-bank"
               value={payment.bankName ?? ""}
-              disabled={!acceptsTransfer}
               options={INDONESIA_BANKS}
               placeholder="Pilih atau ketik nama bank"
               emptyText="Bank tidak ada di daftar — ketik manual saja."
               onChange={(next) => {
                 setPaymentSaved(false)
-                setPayment((current) => ({ ...current, bankName: next }))
+                setPayment((current) => ({
+                  ...current,
+                  methods: current.methods.includes("transfer")
+                    ? current.methods
+                    : [...current.methods, "transfer"],
+                  bankName: next,
+                }))
               }}
             />
           </div>
@@ -331,11 +350,13 @@ export default function FinancePage() {
             <Input
               id="pay-rek"
               value={payment.accountNumber ?? ""}
-              disabled={!acceptsTransfer}
               onChange={(event) => {
                 setPaymentSaved(false)
                 setPayment((current) => ({
                   ...current,
+                  methods: current.methods.includes("transfer")
+                    ? current.methods
+                    : [...current.methods, "transfer"],
                   accountNumber: event.target.value.replace(/\D/g, ""),
                 }))
               }}
@@ -349,11 +370,13 @@ export default function FinancePage() {
             <Input
               id="pay-holder"
               value={payment.accountHolder ?? ""}
-              disabled={!acceptsTransfer}
               onChange={(event) => {
                 setPaymentSaved(false)
                 setPayment((current) => ({
                   ...current,
+                  methods: current.methods.includes("transfer")
+                    ? current.methods
+                    : [...current.methods, "transfer"],
                   accountHolder: event.target.value,
                 }))
               }}
@@ -363,23 +386,14 @@ export default function FinancePage() {
           </div>
         </div>
 
-        <div
-          className={cn("grid gap-3 rounded-xl bg-muted/30 p-4", !acceptsQris && "opacity-70")}
-        >
+        <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
           <p className="text-sm font-medium">QRIS</p>
           <div className="grid gap-1.5">
             <Label>QRIS Bisnis</Label>
             <p className="text-xs text-muted-foreground">
               Upload atau masukkan QRIS yang digunakan untuk menerima pembayaran dari klien.
             </p>
-            <label
-              className={cn(
-                "flex items-center gap-3 rounded-xl border border-dashed border-foreground/20 bg-background px-4 py-4 transition",
-                acceptsQris
-                  ? "cursor-pointer hover:bg-muted/40"
-                  : "cursor-not-allowed opacity-80"
-              )}
-            >
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-foreground/20 bg-background px-4 py-4 transition hover:bg-muted/40">
               {payment.qrisDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -399,15 +413,16 @@ export default function FinancePage() {
                 type="file"
                 accept="image/*"
                 className="sr-only"
-                disabled={!acceptsQris}
-                onChange={(event) => void onQrisChange(event.target.files?.[0] ?? null)}
+                onChange={(event) => {
+                  ensureMethod("qris")
+                  void onQrisChange(event.target.files?.[0] ?? null)
+                }}
               />
             </label>
             {payment.qrisDataUrl ? (
               <button
                 type="button"
-                disabled={!acceptsQris}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive"
                 onClick={() => {
                   setPaymentSaved(false)
                   setPayment((current) => ({ ...current, qrisDataUrl: undefined }))
@@ -420,25 +435,28 @@ export default function FinancePage() {
           </div>
         </div>
 
-        <div
-          className={cn(
-            "grid gap-3 rounded-xl bg-muted/30 p-4",
-            !acceptsEwallet && "opacity-70"
-          )}
-        >
+        <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
           <p className="text-sm font-medium">E-Wallet</p>
+          <p className="text-xs text-muted-foreground">
+            Isi nama dan nomor e-wallet — metode E-Wallet otomatis aktif saat kamu mengetik.
+          </p>
           <div className="grid gap-1.5">
             <Label htmlFor="pay-ewallet-name">Nama E-Wallet</Label>
             <SuggestInput
               id="pay-ewallet-name"
               value={payment.ewalletName ?? ""}
-              disabled={!acceptsEwallet}
               options={INDONESIA_EWALLETS}
               placeholder="Pilih atau ketik nama e-wallet"
               emptyText="E-wallet tidak ada di daftar — ketik manual saja."
               onChange={(next) => {
                 setPaymentSaved(false)
-                setPayment((current) => ({ ...current, ewalletName: next }))
+                setPayment((current) => ({
+                  ...current,
+                  methods: current.methods.includes("ewallet")
+                    ? current.methods
+                    : [...current.methods, "ewallet"],
+                  ewalletName: next,
+                }))
               }}
             />
           </div>
@@ -447,26 +465,29 @@ export default function FinancePage() {
             <Input
               id="pay-ewallet-number"
               value={payment.ewalletNumber ?? ""}
-              disabled={!acceptsEwallet}
               onChange={(event) => {
                 setPaymentSaved(false)
                 setPayment((current) => ({
                   ...current,
+                  methods: current.methods.includes("ewallet")
+                    ? current.methods
+                    : [...current.methods, "ewallet"],
                   ewalletNumber: event.target.value,
                 }))
               }}
+              inputMode="tel"
+              autoComplete="tel"
               placeholder="Masukkan nomor yang digunakan untuk menerima pembayaran"
               className="h-10 bg-background"
             />
           </div>
         </div>
 
-        <div
-          className={cn("grid gap-2 rounded-xl bg-muted/30 p-4", !acceptsCash && "opacity-70")}
-        >
+        <div className="grid gap-2 rounded-xl bg-muted/30 p-4">
           <p className="text-sm font-medium">Tunai</p>
           <p className="text-sm text-muted-foreground">
             Pembayaran tunai tidak memerlukan detail rekening.
+            {acceptsCash ? "" : " Centang Tunai di atas jika ingin menampilkannya di invoice."}
           </p>
         </div>
 
