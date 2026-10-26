@@ -104,6 +104,13 @@ const sections: MenuSection[] = [
         Icon: Wallet,
         tone: "bg-[oklch(0.93_0.04_160)] text-[oklch(0.4_0.09_160)]",
       },
+      {
+        href: "/studio/link-booking",
+        title: "Link booking mandiri",
+        body: "Link untuk diisi calon klien",
+        Icon: Globe,
+        tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
+      },
     ],
   },
   {
@@ -150,13 +157,6 @@ const sections: MenuSection[] = [
         body: "Nama studio, Instagram, profil bisnis, dan metode pembayaran",
         Icon: Settings2,
         tone: "bg-[oklch(0.94_0.02_80)] text-[oklch(0.42_0.05_60)]",
-      },
-      {
-        href: "/studio/link-booking",
-        title: "Link booking mandiri",
-        body: "Link untuk diisi calon klien",
-        Icon: Globe,
-        tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
       },
     ],
   },
