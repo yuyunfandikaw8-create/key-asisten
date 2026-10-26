@@ -232,9 +232,16 @@ export function InvoiceDetail() {
   function record(nextPaid: number) {
     const paid = Math.min(Math.max(nextPaid, 0), booking!.price)
     updateBooking(booking!.id, { paid })
+    setAmount("")
     setOpen(false)
     setError("")
   }
+
+  const typedAmount = Number(amount.replace(/\D/g, "")) || 0
+  const previewDue =
+    typedAmount > 0
+      ? Math.max(booking.price - Math.min(booking.paid + typedAmount, booking.price), 0)
+      : due
 
   return (
     <div className="grid gap-4">
@@ -487,10 +494,14 @@ export function InvoiceDetail() {
               </div>
               <div className="flex justify-between gap-8 sm:justify-end">
                 <span className="text-[oklch(0.48_0.03_30)]">Down Payment (DP)</span>
+                <span className="font-medium">{rupiah(booking.dp)}</span>
+              </div>
+              <div className="flex justify-between gap-8 sm:justify-end">
+                <span className="text-[oklch(0.48_0.03_30)]">Sudah dibayar</span>
                 <span className="font-medium">{rupiah(booking.paid)}</span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-6 rounded-[1.35rem] bg-[oklch(0.9_0.04_15)] px-4 py-3 text-base font-semibold">
-                <span>Total</span>
+                <span>Sisa tagihan</span>
                 <span>{rupiah(due)}</span>
               </div>
               {due === 0 ? (
@@ -511,44 +522,82 @@ export function InvoiceDetail() {
         </Link>
       </p>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next)
+          if (!next) {
+            setAmount("")
+            setError("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Catat Pembayaran</DialogTitle>
-            <DialogDescription>
-              Sisa invoice {rupiah(due)}. DP standar untuk jadwal ini {rupiah(booking.dp)}.
+            <DialogDescription className="text-sm text-muted-foreground">
+              Sisa tagihan:{" "}
+              <span className="font-semibold text-foreground">{rupiah(previewDue)}</span>
+              {typedAmount > 0 && previewDue !== due ? (
+                <span className="mt-1 block text-xs">
+                  Setelah pembayaran ini (harga − dibayar).
+                </span>
+              ) : booking.paid > 0 && booking.paid < booking.price ? (
+                <span className="mt-1 block text-xs">
+                  Harga {rupiah(booking.price)} − dibayar {rupiah(booking.paid)}
+                  {booking.paid === booking.dp ? " (DP)" : ""}.
+                </span>
+              ) : booking.paid <= 0 ? (
+                <span className="mt-1 block text-xs">
+                  Setelah DP {rupiah(booking.dp)}, sisa menjadi{" "}
+                  {rupiah(Math.max(booking.price - booking.dp, 0))}.
+                </span>
+              ) : null}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
-            <Label htmlFor="jumlah">Jumlah diterima</Label>
+            <Label htmlFor="jumlah">Jumlah pembayaran</Label>
+            <p className="text-xs text-muted-foreground">
+              Masukkan jumlah yang dibayarkan klien.
+            </p>
             <Input
               id="jumlah"
               inputMode="numeric"
               value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              placeholder="1500000"
+              onChange={(event) => {
+                setError("")
+                const digits = event.target.value.replace(/\D/g, "")
+                setAmount(digits ? Number(digits).toLocaleString("id-ID") : "")
+              }}
+              placeholder="Rp1.500.000"
               className="h-10"
             />
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => record(booking.dp)}>
-              Tandai DP
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAmount(booking.dp.toLocaleString("id-ID"))
+                record(booking.dp)
+              }}
+            >
+              Tandai sebagai DP
             </Button>
             <Button variant="outline" onClick={() => record(booking.price)}>
-              Tandai lunas
+              Tandai Lunas
             </Button>
             <Button
               onClick={() => {
                 const value = Number(amount.replace(/\D/g, ""))
                 if (!value) {
-                  setError("Isi jumlah yang diterima.")
+                  setError("Isi jumlah pembayaran.")
                   return
                 }
                 record(booking.paid + value)
               }}
             >
-              Tambah
+              Simpan Pembayaran
             </Button>
           </DialogFooter>
         </DialogContent>
