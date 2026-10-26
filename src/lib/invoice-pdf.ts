@@ -19,6 +19,8 @@ export type InvoicePdfBrand = {
   bank: string
   accountName: string
   accountNumber: string
+  ewalletName?: string
+  ewalletNumber?: string
   instagram?: string
   /** Metode yang dipilih untuk invoice ini. */
   paymentMethods?: Array<"transfer" | "qris" | "ewallet" | "cash">
@@ -234,13 +236,17 @@ export function buildInvoicePdf(input: InvoicePdfInput): Blob {
   if (methods.includes("ewallet")) {
     doc.setFont("helvetica", "normal")
     doc.setTextColor(...muted)
-    doc.text("E-Wallet diterima", margin, y)
+    const ewalletLabel =
+      brand.ewalletName && brand.ewalletNumber
+        ? `E-Wallet ${brand.ewalletName} ${brand.ewalletNumber}`
+        : "E-Wallet diterima"
+    doc.text(ewalletLabel, margin, y)
     y += 5
   }
   if (methods.includes("cash")) {
     doc.setFont("helvetica", "normal")
     doc.setTextColor(...muted)
-    doc.text("Cash / tunai diterima", margin, y)
+    doc.text("Tunai diterima", margin, y)
     y += 5
   }
   doc.text(`Acara: ${bookingEventLabel(booking)}`, margin, y)

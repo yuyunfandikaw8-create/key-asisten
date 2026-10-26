@@ -340,7 +340,7 @@ export default function MenuPage() {
                       ? "QRIS"
                       : id === "ewallet"
                         ? "E-Wallet"
-                        : "Cash"
+                        : "Tunai"
                 )
                 .join(" · ") || "Belum diatur"}
             </dd>

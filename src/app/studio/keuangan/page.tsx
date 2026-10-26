@@ -52,6 +52,8 @@ export default function FinancePage() {
   )
   const acceptsTransfer = payment.methods.includes("transfer")
   const acceptsQris = payment.methods.includes("qris")
+  const acceptsEwallet = payment.methods.includes("ewallet")
+  const acceptsCash = payment.methods.includes("cash")
 
   function toggleMethod(id: PaymentMethodId) {
     setPaymentSaved(false)
@@ -108,6 +110,13 @@ export default function FinancePage() {
       setPaymentSaved(false)
       return
     }
+    if (acceptsEwallet) {
+      if (!payment.ewalletName?.trim() || !payment.ewalletNumber?.trim()) {
+        setPaymentError("Lengkapi nama dan nomor E-Wallet.")
+        setPaymentSaved(false)
+        return
+      }
+    }
 
     setPaymentPending(true)
     setPaymentError("")
@@ -117,6 +126,8 @@ export default function FinancePage() {
       bankName: payment.bankName?.trim(),
       accountNumber: payment.accountNumber?.trim(),
       accountHolder: payment.accountHolder?.trim(),
+      ewalletName: payment.ewalletName?.trim(),
+      ewalletNumber: payment.ewalletNumber?.trim(),
     })
     const updated = await updateProfile({ paymentSettings: next })
     setPaymentPending(false)
@@ -133,100 +144,140 @@ export default function FinancePage() {
       <div>
         <h1 className="text-4xl">Keuangan</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pemasukan dihitung dari uang yang sudah diterima, bukan dari nilai paket yang belum dibayar.
+          Kelola pembayaran dan pemasukan bisnis dengan lebih mudah.
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Pemasukan dihitung dari pembayaran yang sudah diterima, bukan dari total tagihan.
         </p>
       </div>
 
+      <section className="grid gap-3 sm:grid-cols-3">
+        {[
+          ["Pemasukan", summary.income],
+          ["Pengeluaran", summary.spent],
+          ["Laba bersih", summary.profit],
+        ].map(([name, value]) => (
+          <div key={String(name)} className="rounded-2xl bg-card px-4 py-4 ring-1 ring-foreground/10">
+            <p className="text-sm text-muted-foreground">{name}</p>
+            <p className="font-display text-3xl">{rupiah(Number(value))}</p>
+          </div>
+        ))}
+      </section>
+
       <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <div>
-          <h2 className="text-2xl">Metode pembayaran yang diterima</h2>
+          <h2 className="text-2xl">Metode pembayaran</h2>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            Pilih metode pembayaran yang bisa digunakan klien.
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Centang metode yang bisa dipakai klien. Detail rekening dan QRIS muncul di invoice.
+            Detail rekening dan QRIS yang kamu simpan akan ditampilkan pada invoice.
           </p>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          {PAYMENT_METHOD_OPTIONS.map((option) => {
-            const checked = payment.methods.includes(option.id)
-            return (
-              <label
-                key={option.id}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
-                  checked
-                    ? "bg-primary/8 ring-primary"
-                    : "bg-background ring-foreground/10 hover:bg-muted/50"
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleMethod(option.id)}
-                  className="size-4 accent-primary"
-                />
-                <span className="text-sm font-medium">{option.label}</span>
-              </label>
-            )
-          })}
+        <div className="grid gap-2">
+          <p className="text-sm font-medium">Pilihan metode pembayaran</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {PAYMENT_METHOD_OPTIONS.map((option) => {
+              const checked = payment.methods.includes(option.id)
+              return (
+                <label
+                  key={option.id}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
+                    checked
+                      ? "bg-primary/8 ring-primary"
+                      : "bg-background ring-foreground/10 hover:bg-muted/50"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleMethod(option.id)}
+                    className="size-4 accent-primary"
+                  />
+                  <span className="text-sm font-medium">{option.label}</span>
+                </label>
+              )
+            })}
+          </div>
         </div>
 
-        {acceptsTransfer ? (
-          <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
-            <p className="text-sm font-medium">Transfer Bank</p>
-            <div className="grid gap-1.5">
-              <Label htmlFor="pay-bank">Bank</Label>
-              <Input
-                id="pay-bank"
-                value={payment.bankName ?? ""}
-                onChange={(event) => {
-                  setPaymentSaved(false)
-                  setPayment((current) => ({ ...current, bankName: event.target.value }))
-                }}
-                placeholder="Contoh: BCA, Mandiri, BRI"
-                className="h-10 bg-background"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="pay-rek">Nomor rekening</Label>
-              <Input
-                id="pay-rek"
-                value={payment.accountNumber ?? ""}
-                onChange={(event) => {
-                  setPaymentSaved(false)
-                  setPayment((current) => ({
-                    ...current,
-                    accountNumber: event.target.value.replace(/\D/g, ""),
-                  }))
-                }}
-                inputMode="numeric"
-                placeholder="Nomor rekening"
-                className="h-10 bg-background"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="pay-holder">Nama pemilik rekening</Label>
-              <Input
-                id="pay-holder"
-                value={payment.accountHolder ?? ""}
-                onChange={(event) => {
-                  setPaymentSaved(false)
-                  setPayment((current) => ({
-                    ...current,
-                    accountHolder: event.target.value,
-                  }))
-                }}
-                placeholder="Sesuai buku tabungan"
-                className="h-10 bg-background"
-              />
-            </div>
+        <div
+          className={cn(
+            "grid gap-3 rounded-xl bg-muted/30 p-4",
+            !acceptsTransfer && "opacity-70"
+          )}
+        >
+          <p className="text-sm font-medium">Transfer Bank</p>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pay-bank">Nama Bank</Label>
+            <Input
+              id="pay-bank"
+              value={payment.bankName ?? ""}
+              disabled={!acceptsTransfer}
+              onChange={(event) => {
+                setPaymentSaved(false)
+                setPayment((current) => ({ ...current, bankName: event.target.value }))
+              }}
+              placeholder="Contoh: BCA, Mandiri, BRI"
+              className="h-10 bg-background"
+            />
           </div>
-        ) : null}
+          <div className="grid gap-1.5">
+            <Label htmlFor="pay-rek">Nomor Rekening</Label>
+            <Input
+              id="pay-rek"
+              value={payment.accountNumber ?? ""}
+              disabled={!acceptsTransfer}
+              onChange={(event) => {
+                setPaymentSaved(false)
+                setPayment((current) => ({
+                  ...current,
+                  accountNumber: event.target.value.replace(/\D/g, ""),
+                }))
+              }}
+              inputMode="numeric"
+              placeholder="Masukkan nomor rekening"
+              className="h-10 bg-background"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pay-holder">Nama Pemilik Rekening</Label>
+            <Input
+              id="pay-holder"
+              value={payment.accountHolder ?? ""}
+              disabled={!acceptsTransfer}
+              onChange={(event) => {
+                setPaymentSaved(false)
+                setPayment((current) => ({
+                  ...current,
+                  accountHolder: event.target.value,
+                }))
+              }}
+              placeholder="Masukkan nama sesuai rekening"
+              className="h-10 bg-background"
+            />
+          </div>
+        </div>
 
-        {acceptsQris ? (
-          <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
-            <p className="text-sm font-medium">QRIS</p>
-            <Label>Upload gambar QRIS</Label>
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-foreground/20 bg-background px-4 py-4 transition hover:bg-muted/40">
+        <div
+          className={cn("grid gap-3 rounded-xl bg-muted/30 p-4", !acceptsQris && "opacity-70")}
+        >
+          <p className="text-sm font-medium">QRIS</p>
+          <div className="grid gap-1.5">
+            <Label>QRIS Bisnis</Label>
+            <p className="text-xs text-muted-foreground">
+              Upload atau masukkan QRIS yang digunakan untuk menerima pembayaran dari klien.
+            </p>
+            <label
+              className={cn(
+                "flex items-center gap-3 rounded-xl border border-dashed border-foreground/20 bg-background px-4 py-4 transition",
+                acceptsQris
+                  ? "cursor-pointer hover:bg-muted/40"
+                  : "cursor-not-allowed opacity-80"
+              )}
+            >
               {payment.qrisDataUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -246,13 +297,15 @@ export default function FinancePage() {
                 type="file"
                 accept="image/*"
                 className="sr-only"
+                disabled={!acceptsQris}
                 onChange={(event) => void onQrisChange(event.target.files?.[0] ?? null)}
               />
             </label>
             {payment.qrisDataUrl ? (
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive"
+                disabled={!acceptsQris}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive disabled:opacity-50"
                 onClick={() => {
                   setPaymentSaved(false)
                   setPayment((current) => ({ ...current, qrisDataUrl: undefined }))
@@ -263,7 +316,56 @@ export default function FinancePage() {
               </button>
             ) : null}
           </div>
-        ) : null}
+        </div>
+
+        <div
+          className={cn(
+            "grid gap-3 rounded-xl bg-muted/30 p-4",
+            !acceptsEwallet && "opacity-70"
+          )}
+        >
+          <p className="text-sm font-medium">E-Wallet</p>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pay-ewallet-name">Nama E-Wallet</Label>
+            <Input
+              id="pay-ewallet-name"
+              value={payment.ewalletName ?? ""}
+              disabled={!acceptsEwallet}
+              onChange={(event) => {
+                setPaymentSaved(false)
+                setPayment((current) => ({ ...current, ewalletName: event.target.value }))
+              }}
+              placeholder="Contoh: GoPay, DANA, OVO"
+              className="h-10 bg-background"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pay-ewallet-number">Nomor E-Wallet</Label>
+            <Input
+              id="pay-ewallet-number"
+              value={payment.ewalletNumber ?? ""}
+              disabled={!acceptsEwallet}
+              onChange={(event) => {
+                setPaymentSaved(false)
+                setPayment((current) => ({
+                  ...current,
+                  ewalletNumber: event.target.value,
+                }))
+              }}
+              placeholder="Masukkan nomor yang digunakan untuk menerima pembayaran"
+              className="h-10 bg-background"
+            />
+          </div>
+        </div>
+
+        <div
+          className={cn("grid gap-2 rounded-xl bg-muted/30 p-4", !acceptsCash && "opacity-70")}
+        >
+          <p className="text-sm font-medium">Tunai</p>
+          <p className="text-sm text-muted-foreground">
+            Pembayaran tunai tidak memerlukan detail rekening.
+          </p>
+        </div>
 
         {paymentError ? <p className="text-sm text-destructive">{paymentError}</p> : null}
         {paymentSaved ? (
@@ -278,19 +380,6 @@ export default function FinancePage() {
         >
           {paymentPending ? "Menyimpan…" : "Simpan metode pembayaran"}
         </button>
-      </section>
-
-      <section className="grid gap-3 sm:grid-cols-3">
-        {[
-          ["Pemasukan", summary.income],
-          ["Pengeluaran", summary.spent],
-          ["Laba bersih", summary.profit],
-        ].map(([name, value]) => (
-          <div key={String(name)} className="rounded-2xl bg-card px-4 py-4 ring-1 ring-foreground/10">
-            <p className="text-sm text-muted-foreground">{name}</p>
-            <p className="font-display text-3xl">{rupiah(Number(value))}</p>
-          </div>
-        ))}
       </section>
 
       <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">

@@ -126,8 +126,14 @@ export function InvoiceDetail() {
     )
   }
   if (invoiceMethods.includes("qris")) payLines.push("Bisa bayar via QRIS (lihat invoice)")
-  if (invoiceMethods.includes("ewallet")) payLines.push("E-Wallet diterima")
-  if (invoiceMethods.includes("cash")) payLines.push("Cash / tunai diterima")
+  if (invoiceMethods.includes("ewallet")) {
+    payLines.push(
+      brand.ewalletName && brand.ewalletNumber
+        ? `E-Wallet ${brand.ewalletName} ${brand.ewalletNumber}`
+        : "E-Wallet diterima"
+    )
+  }
+  if (invoiceMethods.includes("cash")) payLines.push("Tunai diterima")
 
   const message = [
     `Halo ${booking.clientName}, ini invoice ${brand.name} dalam bentuk PDF.`,
@@ -173,6 +179,8 @@ export function InvoiceDetail() {
         bank: brand.bank,
         accountName: brand.accountName,
         accountNumber: brand.accountNumber,
+        ewalletName: brand.ewalletName,
+        ewalletNumber: brand.ewalletNumber,
         instagram: brand.instagram,
         paymentMethods: invoiceMethods,
         qrisDataUrl: brand.payment.qrisDataUrl,
@@ -459,10 +467,14 @@ export function InvoiceDetail() {
                 </div>
               ) : null}
               {invoiceMethods.includes("ewallet") ? (
-                <p className="mt-2 text-sm">E-Wallet diterima</p>
+                <p className="mt-2 text-sm">
+                  {brand.ewalletName && brand.ewalletNumber
+                    ? `E-Wallet ${brand.ewalletName} · ${brand.ewalletNumber}`
+                    : "E-Wallet diterima"}
+                </p>
               ) : null}
               {invoiceMethods.includes("cash") ? (
-                <p className="mt-2 text-sm">Cash / tunai diterima</p>
+                <p className="mt-2 text-sm">Tunai diterima</p>
               ) : null}
               {booking.notes ? (
                 <p className="mt-3 max-w-sm text-sm text-[oklch(0.48_0.03_30)]">{booking.notes}</p>

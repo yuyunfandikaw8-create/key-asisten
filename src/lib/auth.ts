@@ -20,6 +20,8 @@ export type PaymentSettings = {
   accountHolder?: string
   /** Data URL gambar QRIS. */
   qrisDataUrl?: string
+  ewalletName?: string
+  ewalletNumber?: string
 }
 
 export const DEFAULT_PAYMENT_METHODS: PaymentMethodId[] = ["transfer", "qris"]
@@ -31,7 +33,7 @@ export const PAYMENT_METHOD_OPTIONS: {
   { id: "transfer", label: "Transfer Bank" },
   { id: "qris", label: "QRIS" },
   { id: "ewallet", label: "E-Wallet" },
-  { id: "cash", label: "Cash" },
+  { id: "cash", label: "Tunai" },
 ]
 
 export function normalizePaymentSettings(
@@ -48,6 +50,8 @@ export function normalizePaymentSettings(
     accountNumber: value?.accountNumber?.trim() || "",
     accountHolder: value?.accountHolder?.trim() || "",
     qrisDataUrl: value?.qrisDataUrl,
+    ewalletName: value?.ewalletName?.trim() || "",
+    ewalletNumber: value?.ewalletNumber?.trim() || "",
   }
 }
 
