@@ -11,7 +11,6 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  PAYMENT_METHOD_OPTIONS,
   normalizePaymentSettings,
   type PaymentMethodId,
   type PaymentSettings,
@@ -62,30 +61,46 @@ export default function FinancePage() {
   const outstanding = bookings.filter(
     (booking) => paymentStatus(booking) !== "lunas" && isSameYear(booking.date)
   )
-  const acceptsTransfer = payment.methods.includes("transfer")
-  const acceptsQris = payment.methods.includes("qris")
-  const acceptsEwallet = payment.methods.includes("ewallet")
   const acceptsCash = payment.methods.includes("cash")
+  const hasTransferDetail = Boolean(
+    payment.bankName?.trim() ||
+      payment.accountNumber?.trim() ||
+      payment.accountHolder?.trim()
+  )
+  const hasEwalletDetail = Boolean(
+    payment.ewalletName?.trim() || payment.ewalletNumber?.trim()
+  )
 
-  function toggleMethod(id: PaymentMethodId) {
+  /** Metode aktif mengikuti detail yang diisi — tanpa centang manual. */
+  function methodsFromDetails(settings: PaymentSettings): PaymentMethodId[] {
+    const methods: PaymentMethodId[] = []
+    if (
+      settings.bankName?.trim() ||
+      settings.accountNumber?.trim() ||
+      settings.accountHolder?.trim()
+    ) {
+      methods.push("transfer")
+    }
+    if (settings.qrisDataUrl) methods.push("qris")
+    if (settings.ewalletName?.trim() || settings.ewalletNumber?.trim()) {
+      methods.push("ewallet")
+    }
+    if (settings.methods.includes("cash")) methods.push("cash")
+    return methods
+  }
+
+  function toggleCash() {
     setPaymentSaved(false)
     setPaymentError("")
     setPayment((current) => {
-      const on = current.methods.includes(id)
-      const methods = on
-        ? current.methods.filter((item) => item !== id)
-        : [...current.methods, id]
-      return { ...current, methods }
+      const on = current.methods.includes("cash")
+      return {
+        ...current,
+        methods: on
+          ? current.methods.filter((item) => item !== "cash")
+          : [...current.methods, "cash"],
+      }
     })
-  }
-
-  /** Isi detail sekaligus menandai metode aktif — kolom tetap bisa diketik kapan saja. */
-  function ensureMethod(id: PaymentMethodId) {
-    setPayment((current) =>
-      current.methods.includes(id)
-        ? current
-        : { ...current, methods: [...current.methods, id] }
-    )
   }
 
   async function onQrisChange(file: File | null) {
@@ -103,53 +118,59 @@ export default function FinancePage() {
     const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setPayment((current) => ({ ...current, qrisDataUrl: reader.result as string }))
+        setPayment((current) => ({
+          ...current,
+          qrisDataUrl: reader.result as string,
+          methods: current.methods.includes("qris")
+            ? current.methods
+            : [...current.methods, "qris"],
+        }))
       }
     }
     reader.readAsDataURL(file)
   }
 
   async function savePayment() {
-    if (!payment.methods.length) {
-      setPaymentError("Pilih minimal satu metode pembayaran.")
-      setPaymentSaved(false)
-      return
-    }
-    if (acceptsTransfer) {
-      if (
-        !payment.bankName?.trim() ||
-        !payment.accountNumber?.trim() ||
-        !payment.accountHolder?.trim()
-      ) {
+    const bankName = payment.bankName?.trim() || ""
+    const accountNumber = payment.accountNumber?.trim() || ""
+    const accountHolder = payment.accountHolder?.trim() || ""
+    const ewalletName = payment.ewalletName?.trim() || ""
+    const ewalletNumber = payment.ewalletNumber?.trim() || ""
+
+    if (hasTransferDetail) {
+      if (!bankName || !accountNumber || !accountHolder) {
         setPaymentError("Lengkapi bank, nomor rekening, dan nama pemilik rekening.")
         setPaymentSaved(false)
         return
       }
     }
-    if (acceptsQris && !payment.qrisDataUrl) {
-      setPaymentError("Unggah gambar QRIS terlebih dahulu.")
-      setPaymentSaved(false)
-      return
-    }
-    if (acceptsEwallet) {
-      if (!payment.ewalletName?.trim() || !payment.ewalletNumber?.trim()) {
+    if (hasEwalletDetail) {
+      if (!ewalletName || !ewalletNumber) {
         setPaymentError("Lengkapi nama dan nomor E-Wallet.")
         setPaymentSaved(false)
         return
       }
     }
 
+    const draft = normalizePaymentSettings({
+      ...payment,
+      bankName,
+      accountNumber,
+      accountHolder,
+      ewalletName,
+      ewalletNumber,
+    })
+    const methods = methodsFromDetails(draft)
+    if (!methods.length) {
+      setPaymentError("Isi minimal satu metode: transfer, QRIS, e-wallet, atau aktifkan tunai.")
+      setPaymentSaved(false)
+      return
+    }
+
     setPaymentPending(true)
     setPaymentError("")
     setPaymentSaved(false)
-    const next = normalizePaymentSettings({
-      ...payment,
-      bankName: payment.bankName?.trim(),
-      accountNumber: payment.accountNumber?.trim(),
-      accountHolder: payment.accountHolder?.trim(),
-      ewalletName: payment.ewalletName?.trim(),
-      ewalletNumber: payment.ewalletNumber?.trim(),
-    })
+    const next = normalizePaymentSettings({ ...draft, methods })
     const updated = await updateProfile({ paymentSettings: next })
     setPaymentPending(false)
     if (!updated) {
@@ -287,40 +308,9 @@ export default function FinancePage() {
       <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <div>
           <h2 className="text-2xl">Metode pembayaran</h2>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            Pilih metode pembayaran yang bisa digunakan klien.
-          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Detail rekening dan QRIS yang kamu simpan akan ditampilkan pada invoice.
+            Isi detail yang kamu terima. Metode yang terisi akan muncul di invoice otomatis.
           </p>
-        </div>
-
-        <div className="grid gap-2">
-          <p className="text-sm font-medium">Pilihan metode pembayaran</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {PAYMENT_METHOD_OPTIONS.map((option) => {
-              const checked = payment.methods.includes(option.id)
-              return (
-                <label
-                  key={option.id}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
-                    checked
-                      ? "bg-primary/8 ring-primary"
-                      : "bg-background ring-foreground/10 hover:bg-muted/50"
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleMethod(option.id)}
-                    className="size-4 accent-primary"
-                  />
-                  <span className="text-sm font-medium">{option.label}</span>
-                </label>
-              )
-            })}
-          </div>
         </div>
 
         <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
@@ -335,13 +325,7 @@ export default function FinancePage() {
               emptyText="Bank tidak ada di daftar — ketik manual saja."
               onChange={(next) => {
                 setPaymentSaved(false)
-                setPayment((current) => ({
-                  ...current,
-                  methods: current.methods.includes("transfer")
-                    ? current.methods
-                    : [...current.methods, "transfer"],
-                  bankName: next,
-                }))
+                setPayment((current) => ({ ...current, bankName: next }))
               }}
             />
           </div>
@@ -354,9 +338,6 @@ export default function FinancePage() {
                 setPaymentSaved(false)
                 setPayment((current) => ({
                   ...current,
-                  methods: current.methods.includes("transfer")
-                    ? current.methods
-                    : [...current.methods, "transfer"],
                   accountNumber: event.target.value.replace(/\D/g, ""),
                 }))
               }}
@@ -374,9 +355,6 @@ export default function FinancePage() {
                 setPaymentSaved(false)
                 setPayment((current) => ({
                   ...current,
-                  methods: current.methods.includes("transfer")
-                    ? current.methods
-                    : [...current.methods, "transfer"],
                   accountHolder: event.target.value,
                 }))
               }}
@@ -413,10 +391,7 @@ export default function FinancePage() {
                 type="file"
                 accept="image/*"
                 className="sr-only"
-                onChange={(event) => {
-                  ensureMethod("qris")
-                  void onQrisChange(event.target.files?.[0] ?? null)
-                }}
+                onChange={(event) => void onQrisChange(event.target.files?.[0] ?? null)}
               />
             </label>
             {payment.qrisDataUrl ? (
@@ -425,7 +400,11 @@ export default function FinancePage() {
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive"
                 onClick={() => {
                   setPaymentSaved(false)
-                  setPayment((current) => ({ ...current, qrisDataUrl: undefined }))
+                  setPayment((current) => ({
+                    ...current,
+                    qrisDataUrl: undefined,
+                    methods: current.methods.filter((item) => item !== "qris"),
+                  }))
                 }}
               >
                 <Trash2 className="size-3.5" />
@@ -437,9 +416,6 @@ export default function FinancePage() {
 
         <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
           <p className="text-sm font-medium">E-Wallet</p>
-          <p className="text-xs text-muted-foreground">
-            Isi nama dan nomor e-wallet — metode E-Wallet otomatis aktif saat kamu mengetik.
-          </p>
           <div className="grid gap-1.5">
             <Label htmlFor="pay-ewallet-name">Nama E-Wallet</Label>
             <SuggestInput
@@ -450,13 +426,7 @@ export default function FinancePage() {
               emptyText="E-wallet tidak ada di daftar — ketik manual saja."
               onChange={(next) => {
                 setPaymentSaved(false)
-                setPayment((current) => ({
-                  ...current,
-                  methods: current.methods.includes("ewallet")
-                    ? current.methods
-                    : [...current.methods, "ewallet"],
-                  ewalletName: next,
-                }))
+                setPayment((current) => ({ ...current, ewalletName: next }))
               }}
             />
           </div>
@@ -469,9 +439,6 @@ export default function FinancePage() {
                 setPaymentSaved(false)
                 setPayment((current) => ({
                   ...current,
-                  methods: current.methods.includes("ewallet")
-                    ? current.methods
-                    : [...current.methods, "ewallet"],
                   ewalletNumber: event.target.value,
                 }))
               }}
@@ -483,12 +450,21 @@ export default function FinancePage() {
           </div>
         </div>
 
-        <div className="grid gap-2 rounded-xl bg-muted/30 p-4">
+        <div className="grid gap-3 rounded-xl bg-muted/30 p-4">
           <p className="text-sm font-medium">Tunai</p>
           <p className="text-sm text-muted-foreground">
             Pembayaran tunai tidak memerlukan detail rekening.
-            {acceptsCash ? "" : " Centang Tunai di atas jika ingin menampilkannya di invoice."}
           </p>
+          <button
+            type="button"
+            className={cn(
+              buttonVariants({ variant: acceptsCash ? "default" : "outline" }),
+              "h-10 w-full sm:w-auto"
+            )}
+            onClick={toggleCash}
+          >
+            {acceptsCash ? "Tunai aktif di invoice" : "Tampilkan Tunai di invoice"}
+          </button>
         </div>
 
         {paymentError ? <p className="text-sm text-destructive">{paymentError}</p> : null}
