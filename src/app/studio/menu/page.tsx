@@ -174,7 +174,7 @@ const sections: MenuSection[] = [
         tone: "bg-[oklch(0.94_0.02_80)] text-[oklch(0.42_0.05_60)]",
       },
       {
-        href: `/p/${studio.slug}`,
+        href: "/studio/link-booking",
         title: "Link booking mandiri",
         body: "Link untuk diisi calon klien",
         Icon: Globe,
