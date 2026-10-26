@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   BriefcaseBusiness,
   CalendarDays,
@@ -167,7 +167,7 @@ const sections: MenuSection[] = [
         tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
       },
       {
-        href: "/studio/menu#identitas",
+        href: "/studio/profil",
         title: "Identitas & rekening",
         body: "Nama studio, Instagram, profil bisnis, dan metode pembayaran",
         Icon: Settings2,
