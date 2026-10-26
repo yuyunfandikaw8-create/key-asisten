@@ -164,6 +164,105 @@ export default function FinancePage() {
         ))}
       </section>
 
+      <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+        <h2 className="text-2xl">Empat bulan terakhir</h2>
+        <div className="mt-4 grid grid-cols-4 items-end gap-3">
+          {months.map((key, index) => (
+            <div key={key} className="grid justify-items-center gap-2">
+              <div className="flex h-32 w-full items-end rounded-xl bg-muted">
+                <div
+                  className="w-full rounded-xl bg-primary"
+                  style={{ height: `${Math.max((monthIncome[index] / max) * 100, 6)}%` }}
+                />
+              </div>
+              <p className="text-center text-xs text-muted-foreground">
+                {formatMonth(`${key}-01`).split(" ")[0]}
+              </p>
+              <p className="text-center text-xs">{rupiah(monthIncome[index])}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3">
+          <h2 className="text-2xl">Tagihan Klien {rupiah(summary.outstanding)}</h2>
+          {outstanding.length === 0 ? (
+            <EmptyState
+              title="Tidak ada Tagihan Klien"
+              body="Semua jadwal tahun ini sudah lunas."
+            />
+          ) : (
+            outstanding.map((booking) => (
+              <div
+                key={booking.id}
+                className="rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10"
+              >
+                <p className="font-medium">{booking.clientName}</p>
+                <p className="text-muted-foreground">
+                  {formatShortDate(booking.date)} · sisa {rupiah(balance(booking))}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="grid content-start gap-3">
+          <h2 className="text-2xl">Pengeluaran</h2>
+          <form
+            className="grid gap-2 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+            onSubmit={(event) => {
+              event.preventDefault()
+              const value = Number(amount.replace(/\D/g, ""))
+              if (!label.trim() || !value) {
+                setError("Isi nama pengeluaran dan jumlahnya.")
+                return
+              }
+              addExpense({ label: label.trim(), amount: value, date: todayISO() })
+              setLabel("")
+              setAmount("")
+              setError("")
+            }}
+          >
+            <Label htmlFor="pengeluaran">Catat pengeluaran hari ini</Label>
+            <Input
+              id="pengeluaran"
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              placeholder="Bensin ke lokasi"
+              className="h-10"
+            />
+            <Input
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              inputMode="numeric"
+              placeholder="150000"
+              className="h-10"
+              aria-label="Jumlah pengeluaran"
+            />
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            <Button type="submit">Simpan</Button>
+          </form>
+          {expenses.length === 0 ? (
+            <EmptyState
+              title="Belum ada pengeluaran"
+              body="Catat bensin, cuci gaun, atau belanja kuas supaya laba tidak terlihat lebih besar."
+            />
+          ) : (
+            expenses.map((expense) => (
+              <div
+                key={expense.id}
+                className="flex items-center justify-between rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10"
+              >
+                <div>
+                  <p className="font-medium">{expense.label}</p>
+                  <p className="text-muted-foreground">{formatShortDate(expense.date)}</p>
+                </div>
+                <p>{rupiah(expense.amount)}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
       <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <div>
           <h2 className="text-2xl">Metode pembayaran</h2>
@@ -382,105 +481,7 @@ export default function FinancePage() {
         </button>
       </section>
 
-      <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="text-2xl">Empat bulan terakhir</h2>
-        <div className="mt-4 grid grid-cols-4 items-end gap-3">
-          {months.map((key, index) => (
-            <div key={key} className="grid justify-items-center gap-2">
-              <div className="flex h-32 w-full items-end rounded-xl bg-muted">
-                <div
-                  className="w-full rounded-xl bg-primary"
-                  style={{ height: `${Math.max((monthIncome[index] / max) * 100, 6)}%` }}
-                />
-              </div>
-              <p className="text-center text-xs text-muted-foreground">
-                {formatMonth(`${key}-01`).split(" ")[0]}
-              </p>
-              <p className="text-center text-xs">{rupiah(monthIncome[index])}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="grid gap-3">
-          <h2 className="text-2xl">Tagihan Klien {rupiah(summary.outstanding)}</h2>
-          {outstanding.length === 0 ? (
-            <EmptyState
-              title="Tidak ada Tagihan Klien"
-              body="Semua jadwal tahun ini sudah lunas."
-            />
-          ) : (
-            outstanding.map((booking) => (
-              <div
-                key={booking.id}
-                className="rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10"
-              >
-                <p className="font-medium">{booking.clientName}</p>
-                <p className="text-muted-foreground">
-                  {formatShortDate(booking.date)} · sisa {rupiah(balance(booking))}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-        <div className="grid content-start gap-3">
-          <h2 className="text-2xl">Pengeluaran</h2>
-          <form
-            className="grid gap-2 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
-            onSubmit={(event) => {
-              event.preventDefault()
-              const value = Number(amount.replace(/\D/g, ""))
-              if (!label.trim() || !value) {
-                setError("Isi nama pengeluaran dan jumlahnya.")
-                return
-              }
-              addExpense({ label: label.trim(), amount: value, date: todayISO() })
-              setLabel("")
-              setAmount("")
-              setError("")
-            }}
-          >
-            <Label htmlFor="pengeluaran">Catat pengeluaran hari ini</Label>
-            <Input
-              id="pengeluaran"
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              placeholder="Bensin ke lokasi"
-              className="h-10"
-            />
-            <Input
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              inputMode="numeric"
-              placeholder="150000"
-              className="h-10"
-              aria-label="Jumlah pengeluaran"
-            />
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-            <Button type="submit">Simpan</Button>
-          </form>
-          {expenses.length === 0 ? (
-            <EmptyState
-              title="Belum ada pengeluaran"
-              body="Catat bensin, cuci gaun, atau belanja kuas supaya laba tidak terlihat lebih besar."
-            />
-          ) : (
-            expenses.map((expense) => (
-              <div
-                key={expense.id}
-                className="flex items-center justify-between rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10"
-              >
-                <div>
-                  <p className="font-medium">{expense.label}</p>
-                  <p className="text-muted-foreground">{formatShortDate(expense.date)}</p>
-                </div>
-                <p>{rupiah(expense.amount)}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
     </div>
   )
 }
