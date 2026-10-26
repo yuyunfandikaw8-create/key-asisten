@@ -6,6 +6,7 @@ import { ImagePlus, Trash2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
+import { SuggestInput } from "@/components/suggest-input"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,6 +18,7 @@ import {
 } from "@/lib/auth"
 import { formatMonth, formatShortDate, rupiah, todayISO } from "@/lib/format"
 import { balance, financeSummary, isSameYear, monthKey, paymentStatus, recentMonths } from "@/lib/metrics"
+import { INDONESIA_BANKS, INDONESIA_EWALLETS } from "@/lib/payment-options"
 import { cn } from "@/lib/utils"
 
 export default function FinancePage() {
@@ -311,16 +313,17 @@ export default function FinancePage() {
           <p className="text-sm font-medium">Transfer Bank</p>
           <div className="grid gap-1.5">
             <Label htmlFor="pay-bank">Nama Bank</Label>
-            <Input
+            <SuggestInput
               id="pay-bank"
               value={payment.bankName ?? ""}
               disabled={!acceptsTransfer}
-              onChange={(event) => {
+              options={INDONESIA_BANKS}
+              placeholder="Pilih atau ketik nama bank"
+              emptyText="Bank tidak ada di daftar — ketik manual saja."
+              onChange={(next) => {
                 setPaymentSaved(false)
-                setPayment((current) => ({ ...current, bankName: event.target.value }))
+                setPayment((current) => ({ ...current, bankName: next }))
               }}
-              placeholder="Contoh: BCA, Mandiri, BRI"
-              className="h-10 bg-background"
             />
           </div>
           <div className="grid gap-1.5">
@@ -426,16 +429,17 @@ export default function FinancePage() {
           <p className="text-sm font-medium">E-Wallet</p>
           <div className="grid gap-1.5">
             <Label htmlFor="pay-ewallet-name">Nama E-Wallet</Label>
-            <Input
+            <SuggestInput
               id="pay-ewallet-name"
               value={payment.ewalletName ?? ""}
               disabled={!acceptsEwallet}
-              onChange={(event) => {
+              options={INDONESIA_EWALLETS}
+              placeholder="Pilih atau ketik nama e-wallet"
+              emptyText="E-wallet tidak ada di daftar — ketik manual saja."
+              onChange={(next) => {
                 setPaymentSaved(false)
-                setPayment((current) => ({ ...current, ewalletName: event.target.value }))
+                setPayment((current) => ({ ...current, ewalletName: next }))
               }}
-              placeholder="Contoh: GoPay, DANA, OVO"
-              className="h-10 bg-background"
             />
           </div>
           <div className="grid gap-1.5">

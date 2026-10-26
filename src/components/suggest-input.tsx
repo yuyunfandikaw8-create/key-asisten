@@ -21,6 +21,7 @@ type SuggestInputProps = {
   className?: string
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]
   filterDigits?: boolean
+  disabled?: boolean
   emptyText?: string
   "aria-label"?: string
 }
@@ -35,6 +36,7 @@ export function SuggestInput({
   className,
   inputMode,
   filterDigits,
+  disabled,
   emptyText = "Tidak ada di daftar — teks bebas tetap bisa dipakai.",
   "aria-label": ariaLabel,
 }: SuggestInputProps) {
@@ -64,9 +66,12 @@ export function SuggestInput({
         aria-label={ariaLabel}
         inputMode={inputMode}
         placeholder={placeholder}
+        disabled={disabled}
         className={cn("h-10 bg-background", className)}
         autoComplete="off"
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          if (!disabled) setOpen(true)
+        }}
         onBlur={() => {
           // Delay supaya klik opsi sempat terproses.
           window.setTimeout(() => {
@@ -81,7 +86,7 @@ export function SuggestInput({
           setOpen(true)
         }}
       />
-      {open && options.length > 0 ? (
+      {open && !disabled && options.length > 0 ? (
         <div className="absolute z-30 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border bg-card shadow-md">
           {filtered.length ? (
             filtered.map((option) => (
