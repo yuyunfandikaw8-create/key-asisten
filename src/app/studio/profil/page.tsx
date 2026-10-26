@@ -9,7 +9,7 @@ import { useAuth } from "@/components/auth-provider"
 import { useStudio } from "@/components/studio-provider"
 
 export default function StudioProfilPage() {
-  const { ready: authReady, user } = useAuth()
+  const { ready: authReady } = useAuth()
   const { ready } = useStudio()
 
   if (!ready || !authReady) return <StudioLoading />
@@ -26,9 +26,7 @@ export default function StudioProfilPage() {
         </Link>
         <h1 className="text-4xl">Profil bisnis</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sama seperti langkah 4 saat daftar. Detail ini muncul di pricelist dan
-          komunikasi dengan klien
-          {user?.studioName ? ` · ${user.studioName}` : ""}.
+          Detail ini muncul di pricelist dan komunikasi dengan klien
         </p>
       </div>
 
