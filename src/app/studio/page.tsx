@@ -256,10 +256,12 @@ export default function StudioHomePage() {
             Selamat datang. Semoga hari ini berjalan lancar
           </p>
           <h1 className="text-4xl">{brand.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{greeting()}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {greeting()} · {formatDate(todayISO())}
+            {city}
+            {city ? " · " : ""}
+            {formatDate(todayISO())}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">{city}</p>
           {counts.partial > 0 ? (
             <p className="mt-2 text-sm text-primary">
               {counts.partial} invoice belum lunas · {reminders.length} perlu ditagih H-7
