@@ -6,8 +6,14 @@ import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
 import { buttonVariants } from "@/components/ui/button"
-import { homePathForUser, type AuthRole } from "@/lib/auth"
+import { homePathForUser, type AuthRole, type AuthUser } from "@/lib/auth"
+import { needsOnboarding } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
+
+/** Akun baru / belum selesai setup → boleh (ulang) pilih Owner atau Klien. */
+function shouldChooseRole(user: AuthUser) {
+  return user.roleChosen === false || needsOnboarding(user)
+}
 
 export default function ChooseRolePage() {
   const router = useRouter()
@@ -22,7 +28,7 @@ export default function ChooseRolePage() {
       router.replace("/masuk?next=/pilih-peran")
       return
     }
-    if (user.roleChosen !== false) {
+    if (!shouldChooseRole(user)) {
       router.replace(homePathForUser(user))
     }
   }, [ready, router, user])
@@ -43,7 +49,7 @@ export default function ChooseRolePage() {
     router.replace(homePathForUser(result.user))
   }
 
-  if (!ready || !user || user.roleChosen !== false) {
+  if (!ready || !user || !shouldChooseRole(user)) {
     return (
       <div className="mx-auto grid min-h-screen max-w-lg content-center px-4 py-10 text-sm text-muted-foreground">
         Memuat…
@@ -59,7 +65,8 @@ export default function ChooseRolePage() {
         </Link>
         <h1 className="mt-4 text-4xl">Selamat datang di Key Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Kamu menggunakan Key Assistant sebagai apa?
+          Halo{user.name ? `, ${user.name}` : ""}. Kamu menggunakan Key Assistant sebagai
+          apa?
         </p>
       </div>
 

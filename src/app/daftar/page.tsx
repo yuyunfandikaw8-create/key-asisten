@@ -29,11 +29,11 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!ready || !user) return
-    if (user.roleChosen === false) {
+    // Akun baru / belum selesai → pilih Owner atau Klien dulu, jangan loncat isi bisnis.
+    if (user.roleChosen === false || needsOnboarding(user)) {
       router.replace("/pilih-peran")
       return
     }
-    if (needsOnboarding(user)) return
     router.replace(homePathForUser(user))
   }, [ready, router, user])
 
@@ -71,38 +71,10 @@ export default function RegisterPage() {
     router.replace("/onboarding")
   }
 
-  if (ready && user && user.roleChosen === false) {
+  if (ready && user) {
     return (
       <div className="mx-auto grid min-h-screen max-w-md content-center px-4 py-10 text-sm text-muted-foreground">
-        Memuat…
-      </div>
-    )
-  }
-
-  if (ready && user && needsOnboarding(user)) {
-    return (
-      <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
-        <div>
-          <Link href="/" className="font-display text-2xl">
-            Key Assistant
-          </Link>
-          <h1 className="mt-4 text-4xl">Akun sudah dibuat</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Kamu sudah masuk sebagai {user.name || user.email}. Lanjutkan mengisi data
-            bisnis, atau kembali ke beranda.
-          </p>
-        </div>
-        <div className="grid gap-2 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-          <Link href="/onboarding" className={cn(buttonVariants(), "h-11 w-full")}>
-            Lanjutkan isi bisnis
-          </Link>
-          <Link
-            href="/"
-            className={cn(buttonVariants({ variant: "outline" }), "h-11 w-full")}
-          >
-            Kembali ke beranda
-          </Link>
-        </div>
+        Mengarahkan ke pilihan peran…
       </div>
     )
   }
@@ -116,8 +88,8 @@ export default function RegisterPage() {
           </Link>
           <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Satu akun Google bisa dipakai sebagai Owner maupun Klien. Pilih peran setelah
-            masuk, atau lanjut daftar dengan email.
+            Daftar gratis. Setelah masuk, pilih memakai Key Assistant sebagai Owner atau
+            Klien.
           </p>
         </div>
 
@@ -129,6 +101,9 @@ export default function RegisterPage() {
               router.replace(homePathForUser(nextUser))
             }}
           />
+          <p className="text-center text-xs text-muted-foreground">
+            Setelah Google, kamu akan memilih: mengelola bisnis atau mencari jasa.
+          </p>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -140,7 +115,7 @@ export default function RegisterPage() {
         <div>
           <p className="text-sm font-medium">Kamu menggunakan Key Assistant sebagai apa?</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pilihan ini hanya untuk daftar dengan email.
+            Pilih dulu, lalu isi nama, email, dan kata sandi.
           </p>
         </div>
 
