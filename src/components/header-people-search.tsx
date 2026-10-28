@@ -61,6 +61,7 @@ export function HeaderPeopleSearch({ className }: { className?: string }) {
     // Data contoh: boleh tampilkan akun demo. Data saya: hanya owner yang benar-benar daftar.
     if (demoDirectory) {
       for (const account of DEMO_ACCOUNTS) {
+        if (account.role === "client") continue
         map.set(normalizeEmail(account.email), account)
       }
     }

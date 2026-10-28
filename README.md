@@ -17,10 +17,19 @@ Studio dilindungi login. Daftar di `/daftar` (Step 1: akun), lalu lanjut `/onboa
 
 Akun contoh (tersimpan di browser):
 
+Owner (studio):
+
 - Bandung: `laras@riasaja.id` / `laras123`
 - Surabaya: `nadya@riasaja.id` / `suro123`
 
-Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog.
+Klien (Acara / vendor):
+
+- Bandung: `dina@riasaja.id` / `dina123` — isi contoh Pernikahan Yogi & Dina
+- Surabaya: `yogi@riasaja.id` / `yogi123` — isi contoh Lamaran
+
+Akun real (daftar email / Google pribadi) mulai kosong — tanpa acara, shortlist, atau booking contoh.
+
+Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog (setelah login pilih Owner atau Klien).
 
 Supabase project: `iukerqusjdlkkoyxvgjs` — pakai **anon public JWT** di `.env.local`:
 
