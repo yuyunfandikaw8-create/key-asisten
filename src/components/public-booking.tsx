@@ -271,8 +271,8 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
                     <p className="text-sm text-muted-foreground">Memuat layanan…</p>
                   ) : services.length === 0 ? (
                     <div className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-                      Belum ada layanan yang disiapkan owner. Hubungi studio lewat WhatsApp, atau
-                      minta owner menambah layanan di menu Layanan.
+                      Belum ada layanan yang disiapkan owner. Hubungi {studioName} lewat WhatsApp,
+                      atau minta owner menambah layanan di menu Layanan.
                     </div>
                   ) : (
                     <div className="grid gap-2">
