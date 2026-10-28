@@ -1,33 +1,37 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
-import { Pricelist } from "@/components/pricelist"
+import { PublicBookingFlow } from "@/components/public-booking"
 import { studio } from "@/lib/catalog"
 
 type Props = {
   params: Promise<{ slug: string }>
 }
 
+/** Jangan cache flyer pricelist lama — selalu kirim alur Ajukan Booking. */
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export const metadata: Metadata = {
-  title: `Booking ${studio.name}`,
+  title: `Ajukan Booking · ${studio.name}`,
   description: `Ajukan booking singkat ke ${studio.name}. Owner mengonfirmasi lewat WhatsApp.`,
 }
 
-async function PricelistFromParams({ params }: Props) {
+async function BookingFromParams({ params }: Props) {
   const { slug } = await params
-  return <Pricelist slug={slug} />
+  return <PublicBookingFlow slug={slug} />
 }
 
-export default function PricelistPage({ params }: Props) {
+export default function PublicBookingPage({ params }: Props) {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto max-w-3xl px-4 py-16 text-sm text-muted-foreground">
-          Memuat link booking…
+        <main className="mx-auto max-w-lg px-4 py-16 text-sm text-muted-foreground">
+          Memuat form ajukan booking…
         </main>
       }
     >
-      <PricelistFromParams params={params} />
+      <BookingFromParams params={params} />
     </Suspense>
   )
 }

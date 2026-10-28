@@ -107,15 +107,15 @@ export default function ClientHomePage() {
       </section>
 
       <section className="mt-6 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <h2 className="text-2xl">Pricelist contoh</h2>
+        <h2 className="text-2xl">Link booking contoh</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Lihat contoh halaman harga {studio.name} yang bisa dibagikan owner ke klien.
+          Contoh form ajukan booking singkat yang bisa dibagikan owner ke klien.
         </p>
         <Link
           href={`/p/${studio.slug}`}
           className={cn(buttonVariants({ variant: "outline" }), "mt-4 h-10")}
         >
-          Buka pricelist
+          Buka ajukan booking
         </Link>
       </section>
     </div>
