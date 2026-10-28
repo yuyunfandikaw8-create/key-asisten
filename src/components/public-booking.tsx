@@ -25,17 +25,6 @@ import { cn } from "@/lib/utils"
 
 type Step = 1 | 2 | 3 | 4 | 5
 
-const TIME_OPTIONS = [
-  "07:00",
-  "08:00",
-  "09:00",
-  "10:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-]
-
 function eventTypeForField(fieldId: BusinessFieldId | undefined): EventType {
   if (fieldId === "photo" || fieldId === "video" || fieldId === "content") return "prewedding"
   if (fieldId === "dekor") return "pesta"
@@ -369,26 +358,6 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
                     timeId="booking-time"
                     inputClassName="h-11 bg-background"
                   />
-                  <div className="grid gap-1.5">
-                    <Label>Pilihan cepat</Label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {TIME_OPTIONS.map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setTime(option)}
-                          className={cn(
-                            "h-10 rounded-xl text-sm ring-1 transition",
-                            time === option
-                              ? "bg-primary text-primary-foreground ring-primary"
-                              : "bg-background ring-foreground/10 hover:bg-muted/50"
-                          )}
-                        >
-                          {formatTime(option)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ) : null}
 
