@@ -31,7 +31,7 @@ export function AuthGate({
       return
     }
     if (user.roleChosen === false) {
-      router.replace("/pilih-peran")
+      router.replace("/daftar")
       return
     }
     if (allowRole !== "any" && user.role !== allowRole) {

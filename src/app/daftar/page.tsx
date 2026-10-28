@@ -15,9 +15,53 @@ import { cn } from "@/lib/utils"
 
 type Step = "role" | "form"
 
+function RoleChoiceCards({
+  role,
+  onSelect,
+}: {
+  role: AuthRole | null
+  onSelect: (next: AuthRole) => void
+}) {
+  return (
+    <div className="grid gap-3">
+      <button
+        type="button"
+        onClick={() => onSelect("owner")}
+        className={cn(
+          "rounded-2xl px-4 py-4 text-left ring-1 transition",
+          role === "owner"
+            ? "bg-primary/8 ring-primary"
+            : "bg-card ring-foreground/10 hover:bg-muted/40"
+        )}
+      >
+        <p className="text-lg font-medium">💼 Saya mengelola bisnis</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Kelola booking, jadwal, invoice, keuangan, layanan, dan partner.
+        </p>
+      </button>
+      <button
+        type="button"
+        onClick={() => onSelect("client")}
+        className={cn(
+          "rounded-2xl px-4 py-4 text-left ring-1 transition",
+          role === "client"
+            ? "bg-primary/8 ring-primary"
+            : "bg-card ring-foreground/10 hover:bg-muted/40"
+        )}
+      >
+        <p className="text-lg font-medium">💍 Saya sedang mencari jasa</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Cari dan pilih MUA, Hair Stylist, Decoration, Photographer, Videographer, dan
+          vendor lainnya.
+        </p>
+      </button>
+    </div>
+  )
+}
+
 export default function RegisterPage() {
   const router = useRouter()
-  const { ready, user, register } = useAuth()
+  const { ready, user, register, chooseRole, logout } = useAuth()
   const [step, setStep] = useState<Step>("role")
   const [role, setRole] = useState<AuthRole | null>(null)
   const [name, setName] = useState("")
@@ -27,15 +71,16 @@ export default function RegisterPage() {
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
 
+  const needsRole =
+    Boolean(user) && (user!.roleChosen === false || needsOnboarding(user))
+
   useEffect(() => {
     if (!ready || !user) return
-    // Akun baru / belum selesai → pilih Owner atau Klien dulu, jangan loncat isi bisnis.
-    if (user.roleChosen === false || needsOnboarding(user)) {
-      router.replace("/pilih-peran")
-      return
-    }
+    // Akun sudah lengkap → masuk ke rumah masing-masing. Jangan redirect saat masih
+    // perlu pilih peran (tampilkan pilihan di halaman ini supaya tidak “mental”).
+    if (needsRole) return
     router.replace(homePathForUser(user))
-  }, [ready, router, user])
+  }, [needsRole, ready, router, user])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -71,10 +116,83 @@ export default function RegisterPage() {
     router.replace("/onboarding")
   }
 
-  if (ready && user) {
+  async function continueExistingAccount() {
+    if (!role) {
+      setError("Pilih salah satu opsi di atas.")
+      return
+    }
+    setPending(true)
+    setError("")
+    const result = await chooseRole(role)
+    if (!result.ok) {
+      setError(result.error)
+      setPending(false)
+      return
+    }
+    router.replace(homePathForUser(result.user))
+  }
+
+  if (!ready) {
     return (
       <div className="mx-auto grid min-h-screen max-w-md content-center px-4 py-10 text-sm text-muted-foreground">
-        Mengarahkan ke pilihan peran…
+        Memuat…
+      </div>
+    )
+  }
+
+  // Sudah masuk tapi belum pilih / belum selesai setup → pilih peran di sini.
+  if (user && needsRole) {
+    return (
+      <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
+        <div>
+          <Link href="/" className="font-display text-2xl">
+            Key Assistant
+          </Link>
+          <h1 className="mt-4 text-4xl">Selamat datang di Key Assistant</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Halo{user.name ? `, ${user.name}` : ""}. Kamu menggunakan Key Assistant
+            sebagai apa?
+          </p>
+        </div>
+
+        <RoleChoiceCards
+          role={role}
+          onSelect={(next) => {
+            setRole(next)
+            setError("")
+          }}
+        />
+
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+        <button
+          type="button"
+          className={cn(
+            buttonVariants(),
+            "h-11",
+            !role && !pending ? "opacity-60" : null
+          )}
+          disabled={pending}
+          onClick={() => void continueExistingAccount()}
+        >
+          {pending ? "Menyimpan…" : "Lanjutkan"}
+        </button>
+
+        <button
+          type="button"
+          className="text-sm text-muted-foreground hover:text-foreground"
+          onClick={() => void logout().then(() => router.replace("/daftar"))}
+        >
+          Bukan akun ini? Keluar dan daftar ulang
+        </button>
+      </div>
+    )
+  }
+
+  if (user) {
+    return (
+      <div className="mx-auto grid min-h-screen max-w-md content-center px-4 py-10 text-sm text-muted-foreground">
+        Memuat…
       </div>
     )
   }
@@ -88,8 +206,7 @@ export default function RegisterPage() {
           </Link>
           <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Daftar gratis. Setelah masuk, pilih memakai Key Assistant sebagai Owner atau
-            Klien.
+            Daftar gratis. Pilih dulu: Owner atau Klien, lalu isi data akun.
           </p>
         </div>
 
@@ -98,11 +215,16 @@ export default function RegisterPage() {
             mode="daftar"
             nextPath="/pilih-peran"
             onSuccess={(nextUser) => {
+              // Tetap di /daftar — halaman ini menampilkan pilihan peran untuk akun baru.
+              if (nextUser.roleChosen === false || needsOnboarding(nextUser)) {
+                router.replace("/daftar")
+                return
+              }
               router.replace(homePathForUser(nextUser))
             }}
           />
           <p className="text-center text-xs text-muted-foreground">
-            Setelah Google, kamu akan memilih: mengelola bisnis atau mencari jasa.
+            Setelah Google, pilih di halaman yang sama: bisnis atau mencari jasa.
           </p>
         </div>
 
@@ -119,39 +241,13 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <div className="grid gap-3">
-          <button
-            type="button"
-            onClick={() => setRole("owner")}
-            className={cn(
-              "rounded-2xl px-4 py-4 text-left ring-1 transition",
-              role === "owner"
-                ? "bg-primary/8 ring-primary"
-                : "bg-card ring-foreground/10 hover:bg-muted/40"
-            )}
-          >
-            <p className="text-lg font-medium">💼 Saya mengelola bisnis</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Kelola booking, jadwal, invoice, keuangan, layanan, dan partner.
-            </p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole("client")}
-            className={cn(
-              "rounded-2xl px-4 py-4 text-left ring-1 transition",
-              role === "client"
-                ? "bg-primary/8 ring-primary"
-                : "bg-card ring-foreground/10 hover:bg-muted/40"
-            )}
-          >
-            <p className="text-lg font-medium">💍 Saya sedang mencari jasa</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cari dan pilih MUA, Hair Stylist, Decoration, Photographer, Videographer,
-              dan vendor lainnya.
-            </p>
-          </button>
-        </div>
+        <RoleChoiceCards
+          role={role}
+          onSelect={(next) => {
+            setRole(next)
+            setError("")
+          }}
+        />
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 

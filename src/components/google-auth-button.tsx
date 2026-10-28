@@ -55,7 +55,7 @@ function choiceFromEmail(email: string): GoogleChoice {
 
 export function GoogleAuthButton({
   mode,
-  nextPath = "/pilih-peran",
+  nextPath = "/daftar",
   onSuccess,
   className,
 }: {

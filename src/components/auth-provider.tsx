@@ -731,7 +731,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
         return { ok: true, user: publicUser }
       },
-      startGoogleOAuth: async (nextPath = "/pilih-peran") => {
+      startGoogleOAuth: async (nextPath = "/daftar") => {
         if (!supabase) {
           return { ok: false, error: "Supabase belum dikonfigurasi." }
         }

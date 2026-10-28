@@ -74,7 +74,11 @@ function LoginForm() {
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
           mode="masuk"
-          nextPath={requestedNext || "/pilih-peran"}
+          nextPath={
+            requestedNext && !requestedNext.startsWith("/pilih-peran")
+              ? requestedNext
+              : "/daftar"
+          }
           onSuccess={(nextUser) => {
             router.replace(
               resolveNextPath(requestedNext || homePathForUser(nextUser), nextUser)
