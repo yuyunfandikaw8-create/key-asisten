@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
@@ -12,16 +13,26 @@ import {
 import { useAuth } from "@/components/auth-provider"
 import {
   createClientEvent,
+  emptyClientWorkspace,
+  previewFlagKeyFor,
   readClientWorkspace,
+  sampleClientWorkspace,
+  workspaceIsEmpty,
   writeClientWorkspace,
   type ClientBookingStatus,
   type ClientEvent,
   type ClientNeedId,
+  type ClientViewMode,
   type ClientWorkspace,
 } from "@/lib/client-workspace"
 
 type ClientContextValue = {
   ready: boolean
+  notice: string | null
+  dismissNotice: () => void
+  viewMode: ClientViewMode
+  showDemo: () => void
+  showReal: () => void
   workspace: ClientWorkspace
   activeEvent: ClientEvent | null
   toggleShortlist: (partnerId: string) => void
@@ -51,27 +62,70 @@ const ClientContext = createContext<ClientContextValue | null>(null)
 export function ClientProvider({ children }: { children: ReactNode }) {
   const { ready: authReady, user } = useAuth()
   const [ready, setReady] = useState(false)
-  const [workspace, setWorkspace] = useState<ClientWorkspace>({
-    shortlist: [],
-    events: [],
-    activeEventId: null,
-  })
+  const [viewMode, setViewMode] = useState<ClientViewMode>("real")
+  const [notice, setNotice] = useState<string | null>(null)
+  const [workspace, setWorkspace] = useState<ClientWorkspace>(emptyClientWorkspace())
+  const skipPersist = useRef(false)
+  const viewModeRef = useRef<ClientViewMode>("real")
+  const workspaceRef = useRef<ClientWorkspace>(emptyClientWorkspace())
+
+  useEffect(() => {
+    viewModeRef.current = viewMode
+  }, [viewMode])
+
+  useEffect(() => {
+    workspaceRef.current = workspace
+  }, [workspace])
 
   useEffect(() => {
     if (!authReady) return
     if (!user || user.role !== "client") {
-      setWorkspace({ shortlist: [], events: [], activeEventId: null })
+      skipPersist.current = true
+      setWorkspace(emptyClientWorkspace())
+      workspaceRef.current = emptyClientWorkspace()
+      setViewMode("real")
+      viewModeRef.current = "real"
+      setNotice(null)
       setReady(true)
+      window.setTimeout(() => {
+        skipPersist.current = false
+      }, 0)
       return
     }
-    setWorkspace(readClientWorkspace(user.email))
+
+    const stored = readClientWorkspace(user.email)
+    const previewDone = localStorage.getItem(previewFlagKeyFor(user.email)) === "1"
+    const city = user.city || "Bandung"
+
+    skipPersist.current = true
+    if (workspaceIsEmpty(stored) && !previewDone) {
+      const demo = sampleClientWorkspace(city)
+      setViewMode("demo")
+      viewModeRef.current = "demo"
+      setWorkspace(demo)
+      workspaceRef.current = demo
+      setNotice(
+        "Ini tampilan data contoh agar kamu melihat acara yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
+      )
+    } else {
+      setViewMode("real")
+      viewModeRef.current = "real"
+      setWorkspace(stored)
+      workspaceRef.current = stored
+      setNotice(null)
+    }
     setReady(true)
+    window.setTimeout(() => {
+      skipPersist.current = false
+    }, 0)
   }, [authReady, user])
 
   useEffect(() => {
     if (!ready || !user || user.role !== "client") return
+    if (skipPersist.current) return
+    if (viewMode !== "real") return
     writeClientWorkspace(user.email, workspace)
-  }, [ready, user, workspace])
+  }, [ready, user, viewMode, workspace])
 
   const value = useMemo<ClientContextValue>(() => {
     const activeEvent =
@@ -79,12 +133,62 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       workspace.events[0] ||
       null
 
+    function withActiveBase(updater: (base: ClientWorkspace) => ClientWorkspace) {
+      const next = updater(workspaceRef.current)
+      workspaceRef.current = next
+      setWorkspace(next)
+      return next
+    }
+
+    function showDemo() {
+      if (!user) return
+      if (viewModeRef.current === "real") {
+        writeClientWorkspace(user.email, workspaceRef.current)
+      }
+      const demo = sampleClientWorkspace(user.city || "Bandung")
+      skipPersist.current = true
+      viewModeRef.current = "demo"
+      setViewMode("demo")
+      setWorkspace(demo)
+      workspaceRef.current = demo
+      setNotice(
+        "Menampilkan data contoh. Data real kamu tetap aman — mode hanya berubah jika kamu memilihnya."
+      )
+      window.setTimeout(() => {
+        skipPersist.current = false
+      }, 0)
+    }
+
+    function showReal() {
+      if (!user) return
+      const stored = readClientWorkspace(user.email)
+      skipPersist.current = true
+      viewModeRef.current = "real"
+      setViewMode("real")
+      setWorkspace(stored)
+      workspaceRef.current = stored
+      localStorage.setItem(previewFlagKeyFor(user.email), "1")
+      setNotice(
+        workspaceIsEmpty(stored)
+          ? "Ini Data saya — masih kosong. Buat acara atau cari vendor untuk mulai."
+          : null
+      )
+      window.setTimeout(() => {
+        skipPersist.current = false
+      }, 0)
+    }
+
     return {
       ready,
+      notice,
+      dismissNotice: () => setNotice(null),
+      viewMode,
+      showDemo,
+      showReal,
       workspace,
       activeEvent,
       toggleShortlist: (partnerId) => {
-        setWorkspace((current) => {
+        withActiveBase((current) => {
           const exists = current.shortlist.includes(partnerId)
           return {
             ...current,
@@ -97,7 +201,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       isShortlisted: (partnerId) => workspace.shortlist.includes(partnerId),
       addEvent: (input) => {
         const event = createClientEvent(input)
-        setWorkspace((current) => ({
+        withActiveBase((current) => ({
           ...current,
           events: [event, ...current.events],
           activeEventId: event.id,
@@ -105,10 +209,10 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         return event
       },
       setActiveEvent: (eventId) => {
-        setWorkspace((current) => ({ ...current, activeEventId: eventId }))
+        withActiveBase((current) => ({ ...current, activeEventId: eventId }))
       },
       assignVendor: (eventId, needId, partnerId, status) => {
-        setWorkspace((current) => ({
+        withActiveBase((current) => ({
           ...current,
           events: current.events.map((event) => {
             if (event.id !== eventId) return event
@@ -130,7 +234,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         }))
       },
       setSlotStatus: (eventId, needId, status) => {
-        setWorkspace((current) => ({
+        withActiveBase((current) => ({
           ...current,
           events: current.events.map((event) => {
             if (event.id !== eventId) return event
@@ -144,7 +248,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         }))
       },
     }
-  }, [ready, workspace])
+  }, [ready, notice, viewMode, workspace, user])
 
   return <ClientContext.Provider value={value}>{children}</ClientContext.Provider>
 }

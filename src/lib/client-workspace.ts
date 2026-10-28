@@ -1,8 +1,10 @@
-import { isDemoClientEmail, normalizeEmail } from "@/lib/auth"
+import { normalizeEmail } from "@/lib/auth"
 import { partners, TRADE_LABEL, type Partner } from "@/lib/partners"
 import type { Trade } from "@/lib/types"
 
 export const CLIENT_WORKSPACE_KEY = "key-assistant.client-workspace.v1"
+
+export type ClientViewMode = "real" | "demo"
 
 export type ClientBookingStatus =
   | "belum_booking"
@@ -67,14 +69,21 @@ export type ClientWorkspace = {
   activeEventId: string | null
 }
 
-function emptyWorkspace(): ClientWorkspace {
+export function emptyClientWorkspace(): ClientWorkspace {
   return { shortlist: [], events: [], activeEventId: null }
 }
 
-/** Data contoh hanya untuk akun demo klien — akun real tetap kosong. */
-export function demoClientWorkspace(email: string): ClientWorkspace {
-  const normalized = normalizeEmail(email)
-  if (normalized === "yogi@riasaja.id") {
+export function workspaceIsEmpty(workspace: ClientWorkspace) {
+  return workspace.events.length === 0 && workspace.shortlist.length === 0
+}
+
+/**
+ * Data contoh untuk mode “Coba data contoh”.
+ * Tidak pernah ditulis ke storage Data Saya.
+ */
+export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
+  const inSurabaya = city.trim().toLowerCase() === "surabaya"
+  if (inSurabaya) {
     const eventId = "demo-event-lamaran-yogi"
     return {
       shortlist: ["makeup-tunjungan", "dekor-kalimas", "foto-frame-suro", "hair-pakuwon"],
@@ -139,39 +148,23 @@ export function workspaceKeyFor(email: string) {
   return `${CLIENT_WORKSPACE_KEY}:${normalizeEmail(email)}`
 }
 
+export function previewFlagKeyFor(email: string) {
+  return `${CLIENT_WORKSPACE_KEY}:preview:${normalizeEmail(email)}`
+}
+
 export function readClientWorkspace(email: string | undefined | null): ClientWorkspace {
-  if (!email || typeof window === "undefined") return emptyWorkspace()
+  if (!email || typeof window === "undefined") return emptyClientWorkspace()
   try {
-    const key = workspaceKeyFor(email)
-    const raw = localStorage.getItem(key)
-    if (!raw) {
-      // Hanya akun contoh yang diisi sample; akun real mulai kosong.
-      if (isDemoClientEmail(email)) {
-        const demo = demoClientWorkspace(email)
-        localStorage.setItem(key, JSON.stringify(demo))
-        return demo
-      }
-      return emptyWorkspace()
-    }
+    const raw = localStorage.getItem(workspaceKeyFor(email))
+    if (!raw) return emptyClientWorkspace()
     const parsed = JSON.parse(raw) as Partial<ClientWorkspace>
-    const workspace: ClientWorkspace = {
+    return {
       shortlist: Array.isArray(parsed.shortlist) ? parsed.shortlist : [],
       events: Array.isArray(parsed.events) ? parsed.events : [],
       activeEventId: typeof parsed.activeEventId === "string" ? parsed.activeEventId : null,
     }
-    // Demo lama yang masih kosong → isi ulang sample sekali.
-    if (
-      isDemoClientEmail(email) &&
-      workspace.events.length === 0 &&
-      workspace.shortlist.length === 0
-    ) {
-      const demo = demoClientWorkspace(email)
-      localStorage.setItem(key, JSON.stringify(demo))
-      return demo
-    }
-    return workspace
   } catch {
-    return emptyWorkspace()
+    return emptyClientWorkspace()
   }
 }
 

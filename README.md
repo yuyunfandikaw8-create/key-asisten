@@ -22,12 +22,11 @@ Owner (studio):
 - Bandung: `laras@riasaja.id` / `laras123`
 - Surabaya: `nadya@riasaja.id` / `suro123`
 
-Klien (Acara / vendor):
+Klien:
 
-- Bandung: `dina@riasaja.id` / `dina123` — isi contoh Pernikahan Yogi & Dina
-- Surabaya: `yogi@riasaja.id` / `yogi123` — isi contoh Lamaran
+- `dina@riasaja.id` / `dina123`
 
-Akun real (daftar email / Google pribadi) mulai kosong — tanpa acara, shortlist, atau booking contoh.
+Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh** — sama seperti Owner. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
 
 Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog (setelah login pilih Owner atau Klien).
 

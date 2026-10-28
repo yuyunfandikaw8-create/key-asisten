@@ -184,29 +184,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     roleChosen: true,
     onboardingStep: "done",
   },
-  {
-    id: "user-yogi",
-    name: "Yogi Pratama",
-    email: "yogi@riasaja.id",
-    phone: "081287654321",
-    city: "Surabaya",
-    studioName: "",
-    password: "yogi123",
-    provider: "password",
-    role: "client",
-    roleChosen: true,
-    onboardingStep: "done",
-  },
 ]
-
-/** Email akun contoh klien — workspace diisi data contoh. */
-export function isDemoClientEmail(email: string | undefined | null) {
-  if (!email) return false
-  const value = normalizeEmail(email)
-  return DEMO_ACCOUNTS.some(
-    (account) => account.role === "client" && account.email === value
-  )
-}
 
 /** Pilihan Gmail untuk demo picker (mirip layar pilih akun Google). */
 export const GOOGLE_CHOICES: GoogleChoice[] = [
