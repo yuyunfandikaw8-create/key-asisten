@@ -8,10 +8,6 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-/** Jangan cache flyer pricelist lama — selalu kirim alur Ajukan Booking. */
-export const dynamic = "force-dynamic"
-export const revalidate = 0
-
 export const metadata: Metadata = {
   title: `Ajukan Booking · ${studio.name}`,
   description: `Ajukan booking singkat ke ${studio.name}. Owner mengonfirmasi lewat WhatsApp.`,
