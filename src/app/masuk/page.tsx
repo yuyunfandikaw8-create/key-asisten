@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { GoogleAuthButton } from "@/components/google-auth-button"
@@ -61,9 +62,18 @@ function LoginForm() {
   return (
     <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
       <div>
-        <Link href="/" className="font-display text-2xl">
-          Key Assistant
+        <Link
+          href="/"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Kembali ke beranda
         </Link>
+        <div>
+          <Link href="/" className="font-display text-2xl">
+            Key Assistant
+          </Link>
+        </div>
         <h1 className="mt-4 text-4xl">Selamat datang di Key Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Masuk untuk mengelola jadwal, klien, invoice, keuangan, dan kolaborasi

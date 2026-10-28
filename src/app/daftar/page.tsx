@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { GoogleAuthButton } from "@/components/google-auth-button"
