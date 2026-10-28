@@ -14,6 +14,15 @@ import {
 } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
+type DateFieldProps = {
+  date: string
+  onDateChange: (isoDate: string) => void
+  id?: string
+  label?: string
+  className?: string
+  inputClassName?: string
+}
+
 type ScheduleFieldsProps = {
   date: string
   time: string
@@ -39,32 +48,23 @@ function openNativePicker(el: HTMLInputElement | null) {
   el.click()
 }
 
-export function ScheduleFields({
+/** Tanggal bisa diketik (dd/mm/yyyy) atau dipilih dari kalender. */
+export function DateField({
   date,
-  time,
   onDateChange,
-  onTimeChange,
-  dateId = "tanggal",
-  timeId = "jam",
+  id = "tanggal",
+  label = "Tanggal",
   className,
   inputClassName,
-}: ScheduleFieldsProps) {
+}: DateFieldProps) {
   const datePickerRef = useRef<HTMLInputElement>(null)
-  const timePickerRef = useRef<HTMLInputElement>(null)
   const [dateText, setDateText] = useState(() => formatDateInput(date))
-  const [timeText, setTimeText] = useState(() => formatTime(time))
   const [dateError, setDateError] = useState("")
-  const [timeError, setTimeError] = useState("")
 
   useEffect(() => {
     setDateText(formatDateInput(date))
     setDateError("")
   }, [date])
-
-  useEffect(() => {
-    setTimeText(formatTime(time))
-    setTimeError("")
-  }, [time])
 
   function commitDate(raw: string) {
     if (!raw.trim()) {
@@ -83,6 +83,86 @@ export function ScheduleFields({
     setDateText(formatDateInput(parsed))
     if (parsed !== date) onDateChange(parsed)
   }
+
+  return (
+    <div className={cn("grid gap-1.5", className)}>
+      <Label htmlFor={`${id}-text`}>{label}</Label>
+
+      <div className="flex gap-2">
+        <Input
+          id={`${id}-text`}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="22/10/2026"
+          value={dateText}
+          onChange={(event) => {
+            const next = maskDateDigits(event.target.value)
+            setDateText(next)
+            if (dateError) setDateError("")
+            const parsed = parseDateInput(next)
+            if (parsed && parsed !== date) onDateChange(parsed)
+          }}
+          onBlur={(event) => commitDate(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault()
+              commitDate((event.target as HTMLInputElement).value)
+            }
+          }}
+          className={cn("h-11 min-w-0 flex-1 bg-background", inputClassName)}
+          aria-invalid={Boolean(dateError)}
+        />
+        <div className="relative h-11 w-11 shrink-0">
+          <span
+            className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-input bg-background"
+            aria-hidden
+          >
+            <CalendarDays className="size-4" />
+          </span>
+          <input
+            ref={datePickerRef}
+            id={id}
+            type="date"
+            value={date || ""}
+            aria-label="Pilih tanggal dari kalender"
+            onClick={(event) => openNativePicker(event.currentTarget)}
+            onChange={(event) => {
+              const next = event.target.value
+              if (!next) return
+              setDateError("")
+              setDateText(formatDateInput(next))
+              onDateChange(next)
+            }}
+            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+          />
+        </div>
+      </div>
+
+      {dateError ? <p className="text-xs text-destructive">{dateError}</p> : null}
+    </div>
+  )
+}
+
+export function ScheduleFields({
+  date,
+  time,
+  onDateChange,
+  onTimeChange,
+  dateId = "tanggal",
+  timeId = "jam",
+  className,
+  inputClassName,
+}: ScheduleFieldsProps) {
+  const timePickerRef = useRef<HTMLInputElement>(null)
+  const [timeText, setTimeText] = useState(() => formatTime(time))
+  const [timeError, setTimeError] = useState("")
+
+  useEffect(() => {
+    setTimeText(formatTime(time))
+    setTimeError("")
+  }, [time])
 
   function commitTime(raw: string) {
     if (!raw.trim()) {
@@ -104,63 +184,13 @@ export function ScheduleFields({
 
   return (
     <div className={cn("grid gap-3 sm:grid-cols-2", className)}>
-      <div className="grid gap-1.5">
-        <Label htmlFor={`${dateId}-text`}>Tanggal jadwal</Label>
-
-        <div className="flex gap-2">
-          <Input
-            id={`${dateId}-text`}
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="22/10/2026"
-            value={dateText}
-            onChange={(event) => {
-              const next = maskDateDigits(event.target.value)
-              setDateText(next)
-              if (dateError) setDateError("")
-              const parsed = parseDateInput(next)
-              if (parsed && parsed !== date) onDateChange(parsed)
-            }}
-            onBlur={(event) => commitDate(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault()
-                commitDate((event.target as HTMLInputElement).value)
-              }
-            }}
-            className={cn("h-11 min-w-0 flex-1 bg-background", inputClassName)}
-            aria-invalid={Boolean(dateError)}
-          />
-          <div className="relative h-11 w-11 shrink-0">
-            <span
-              className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-input bg-background"
-              aria-hidden
-            >
-              <CalendarDays className="size-4" />
-            </span>
-            <input
-              ref={datePickerRef}
-              id={dateId}
-              type="date"
-              value={date || ""}
-              aria-label="Pilih tanggal dari kalender"
-              onClick={(event) => openNativePicker(event.currentTarget)}
-              onChange={(event) => {
-                const next = event.target.value
-                if (!next) return
-                setDateError("")
-                setDateText(formatDateInput(next))
-                onDateChange(next)
-              }}
-              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-            />
-          </div>
-        </div>
-
-        {dateError ? <p className="text-xs text-destructive">{dateError}</p> : null}
-      </div>
+      <DateField
+        date={date}
+        onDateChange={onDateChange}
+        id={dateId}
+        label="Tanggal jadwal"
+        inputClassName={inputClassName}
+      />
 
       <div className="grid gap-1.5">
         <Label htmlFor={`${timeId}-text`}>Jam</Label>

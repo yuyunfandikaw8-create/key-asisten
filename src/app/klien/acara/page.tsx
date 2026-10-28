@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { useAuth } from "@/components/auth-provider"
 import { useClientWorkspace } from "@/components/client-provider"
+import { DateField } from "@/components/schedule-fields"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -77,16 +78,12 @@ export default function ClientEventsPage() {
           />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="grid gap-1.5">
-            <Label htmlFor="event-date">Tanggal</Label>
-            <Input
-              id="event-date"
-              type="date"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
-              className="h-11 bg-background"
-            />
-          </div>
+          <DateField
+            id="event-date"
+            label="Tanggal"
+            date={date}
+            onDateChange={setDate}
+          />
           <div className="grid gap-1.5">
             <Label htmlFor="event-location">Lokasi</Label>
             <Input
