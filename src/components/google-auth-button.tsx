@@ -196,7 +196,13 @@ export function GoogleAuthButton({
 
           {error ? <p className="border-t px-4 py-3 text-sm text-destructive">{error}</p> : null}
 
-          <div className="border-t px-4 py-2">
+          <div className="flex flex-wrap items-center gap-3 border-t px-4 py-2">
+            <a
+              href="/"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              ← Kembali ke beranda
+            </a>
             <button
               type="button"
               className="text-xs text-muted-foreground hover:text-foreground"

@@ -237,37 +237,27 @@ export const QUICK_TEST_LOGINS: {
   },
 ]
 
-/** Pilihan Gmail untuk demo picker (mirip layar pilih akun Google). */
+/** Pilihan akun demo di picker Google — hanya Owner & Klien uji. */
 export const GOOGLE_CHOICES: GoogleChoice[] = [
   {
-    id: "gmail-laras",
-    name: "Laras Ayu",
-    email: "laras.ayu@gmail.com",
-    city: "Bandung",
-    studioName: "",
-    phone: "081223334455",
-    initial: "L",
+    id: "gmail-owner",
+    name: "Owner Uji",
+    email: "owner@riasaja.id",
+    city: "Surabaya",
+    studioName: "Laras Makeup",
+    phone: "081211112222",
+    initial: "O",
     tone: "bg-[oklch(0.55_0.14_25)] text-white",
   },
   {
-    id: "gmail-nadya",
-    name: "Nadya Suro",
-    email: "nadya.rias.sby@gmail.com",
+    id: "gmail-klien",
+    name: "Klien Uji",
+    email: "klien@riasaja.id",
     city: "Surabaya",
     studioName: "",
-    phone: "081255566677",
-    initial: "N",
+    phone: "081233334444",
+    initial: "K",
     tone: "bg-[oklch(0.5_0.1_250)] text-white",
-  },
-  {
-    id: "gmail-mira",
-    name: "Mira Handayani",
-    email: "mira.handayani@gmail.com",
-    city: "Jakarta",
-    studioName: "",
-    phone: "081288877766",
-    initial: "M",
-    tone: "bg-[oklch(0.52_0.1_160)] text-white",
   },
 ]
 

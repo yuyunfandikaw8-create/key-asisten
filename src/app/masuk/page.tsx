@@ -64,7 +64,10 @@ function LoginForm() {
       <div>
         <Link
           href="/"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "mb-4 h-9 w-fit gap-1.5"
+          )}
         >
           <ArrowLeft className="size-4" />
           Kembali ke beranda
