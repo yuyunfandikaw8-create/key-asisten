@@ -146,9 +146,18 @@ export default function RegisterPage() {
     return (
       <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
         <div>
-          <Link href="/" className="font-display text-2xl">
-            Key Assistant
+          <Link
+            href="/"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Kembali ke beranda
           </Link>
+          <div>
+            <Link href="/" className="font-display text-2xl">
+              Key Assistant
+            </Link>
+          </div>
           <h1 className="mt-4 text-4xl">Selamat datang di Key Assistant</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Halo{user.name ? `, ${user.name}` : ""}. Kamu menggunakan Key Assistant
@@ -202,9 +211,18 @@ export default function RegisterPage() {
     return (
       <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
         <div>
-          <Link href="/" className="font-display text-2xl">
-            Key Assistant
+          <Link
+            href="/"
+            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Kembali ke beranda
           </Link>
+          <div>
+            <Link href="/" className="font-display text-2xl">
+              Key Assistant
+            </Link>
+          </div>
           <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Daftar gratis. Pilih dulu: Owner atau Klien, lalu isi data akun.
@@ -281,13 +299,22 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
       <div>
-        <button
-          type="button"
-          className="mb-3 text-sm text-muted-foreground hover:text-foreground"
-          onClick={() => setStep("role")}
-        >
-          ← Ganti pilihan
-        </button>
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Kembali ke beranda
+          </Link>
+          <button
+            type="button"
+            className="text-sm text-muted-foreground hover:text-foreground"
+            onClick={() => setStep("role")}
+          >
+            Ganti pilihan
+          </button>
+        </div>
         <Link href="/" className="font-display text-2xl">
           Key Assistant
         </Link>
