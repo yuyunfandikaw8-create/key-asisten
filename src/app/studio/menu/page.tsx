@@ -25,6 +25,7 @@ import { EmptyState, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
 import { Input } from "@/components/ui/input"
 import { studio } from "@/lib/catalog"
+import { formatFieldsSummary } from "@/lib/onboarding"
 import { studioBrand } from "@/lib/studio-brand"
 import { cn } from "@/lib/utils"
 
@@ -372,18 +373,12 @@ export default function MenuPage() {
             <dt className="text-muted-foreground">Layanan terdaftar</dt>
             <dd className="font-medium">
               {user?.services?.length
-                ? `${user.services.length} paket`
+                ? `${user.services.length} paket / layanan`
                 : "Belum ada — tambah di Layanan & harga"}
             </dd>
-            {user?.services?.length ? (
-              <dd className="mt-1 text-sm text-muted-foreground">
-                {user.services
-                  .slice(0, 3)
-                  .map((service) => service.name)
-                  .join(" · ")}
-                {user.services.length > 3 ? "…" : ""}
-              </dd>
-            ) : null}
+            <dd>
+              {formatFieldsSummary(user?.businessFields, user?.customBusinessFields)}
+            </dd>
           </div>
         </dl>
       </section>
