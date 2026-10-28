@@ -27,7 +27,7 @@ export default function StudioLayananPage() {
         </Link>
         <h1 className="text-4xl">Layanan bisnis</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Tambah bidang, isi paket manual (nama, rincian, harga, waktu), lalu simpan
+          Isi paket (nama, rincian, harga, waktu), lalu simpan
           {count ? ` · ${count} paket tersimpan` : ""}. Dipakai di booking dan link
           klien.
         </p>

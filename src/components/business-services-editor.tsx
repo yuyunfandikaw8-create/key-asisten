@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
@@ -8,19 +8,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  BUSINESS_FIELDS,
-  createCustomBusinessField,
-  fieldById,
-  filterServicePresets,
-  isCustomFieldId,
-  presetsForField,
-  type BusinessFieldId,
-  type BusinessFieldMeta,
-  type BusinessService,
-  type CustomBusinessField,
-  type ServicePreset,
-} from "@/lib/onboarding"
+import type { BusinessService } from "@/lib/onboarding"
 import { publishFromOwner } from "@/lib/public-booking-profile"
 import { cn } from "@/lib/utils"
 
@@ -35,119 +23,16 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
   const [error, setError] = useState("")
   const [saved, setSaved] = useState(false)
 
-  const [fields, setFields] = useState<BusinessFieldId[]>([])
-  const [customFields, setCustomFields] = useState<CustomBusinessField[]>([])
   const [services, setServices] = useState<BusinessService[]>([])
-  const [draftBidang, setDraftBidang] = useState("")
   const [draftName, setDraftName] = useState("")
   const [draftDetails, setDraftDetails] = useState("")
   const [draftPrice, setDraftPrice] = useState("")
   const [draftDuration, setDraftDuration] = useState("")
-  const [draftField, setDraftField] = useState<BusinessFieldId | "">("")
 
   useEffect(() => {
     if (!user) return
-    const nextFields = user.businessFields || []
-    const nextCustom = user.customBusinessFields || []
-    setFields(nextFields)
-    setCustomFields(nextCustom)
     setServices(user.services || [])
-    setDraftField(nextFields[0] ?? "")
   }, [user])
-
-  const selectedFields = useMemo(() => {
-    const resolved: BusinessFieldMeta[] = []
-    for (const id of fields) {
-      const field = fieldById(id, customFields)
-      if (field) resolved.push(field)
-    }
-    return resolved
-  }, [customFields, fields])
-  const filteredPresets = useMemo(() => {
-    if (!draftField) return []
-    return filterServicePresets(draftField, draftName)
-  }, [draftField, draftName])
-  const exactPresetMatch = useMemo(() => {
-    if (!draftField || !draftName.trim()) return false
-    return presetsForField(draftField).some(
-      (preset) => preset.name.toLowerCase() === draftName.trim().toLowerCase()
-    )
-  }, [draftField, draftName])
-
-  function toggleField(id: BusinessFieldId) {
-    setSaved(false)
-    setFields((current) => {
-      const next = current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-      if (!next.includes(draftField as BusinessFieldId)) {
-        setDraftField(next[0] ?? "")
-      }
-      if (current.includes(id) && !next.includes(id)) {
-        setServices((list) => list.filter((service) => service.fieldId !== id))
-        if (isCustomFieldId(id)) {
-          setCustomFields((list) => list.filter((field) => field.id !== id))
-        }
-      }
-      return next
-    })
-  }
-
-  function addCustomBidang() {
-    const label = draftBidang.trim()
-    if (!label) {
-      setError("Isi nama bidang dulu.")
-      return
-    }
-    const duplicate = [...BUSINESS_FIELDS, ...customFields].some(
-      (field) => field.label.toLowerCase() === label.toLowerCase()
-    )
-    if (duplicate || fields.some((id) => fieldById(id, customFields)?.label.toLowerCase() === label.toLowerCase())) {
-      setError("Bidang dengan nama itu sudah ada.")
-      return
-    }
-    const created = createCustomBusinessField(label)
-    setError("")
-    setSaved(false)
-    setCustomFields((current) => [...current, created])
-    setFields((current) => [...current, created.id])
-    setDraftField(created.id)
-    setDraftBidang("")
-  }
-
-  function hasService(fieldId: BusinessFieldId, name: string) {
-    const needle = name.trim().toLowerCase()
-    return services.some(
-      (service) =>
-        service.fieldId === fieldId && service.name.trim().toLowerCase() === needle
-    )
-  }
-
-  function togglePreset(fieldId: BusinessFieldId, preset: ServicePreset) {
-    setError("")
-    setSaved(false)
-    setServices((current) => {
-      const existing = current.find(
-        (service) =>
-          service.fieldId === fieldId &&
-          service.name.trim().toLowerCase() === preset.name.toLowerCase()
-      )
-      if (existing) {
-        return current.filter((service) => service.id !== existing.id)
-      }
-      return [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          fieldId,
-          name: preset.name,
-          price: 0,
-          durationHours: 0,
-          details: "",
-        },
-      ]
-    })
-  }
 
   function updateService(
     id: string,
@@ -166,13 +51,21 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
     setDraftDuration("")
   }
 
+  function hasPackageName(name: string, exceptId?: string) {
+    const needle = name.trim().toLowerCase()
+    return services.some(
+      (service) =>
+        service.id !== exceptId && service.name.trim().toLowerCase() === needle
+    )
+  }
+
   function addService() {
-    if (!draftField || !draftName.trim()) {
-      setError("Pilih bidang dan isi nama paket.")
+    if (!draftName.trim()) {
+      setError("Isi nama paket.")
       return
     }
-    if (hasService(draftField, draftName)) {
-      setError("Paket ini sudah ditambahkan.")
+    if (hasPackageName(draftName)) {
+      setError("Paket dengan nama itu sudah ada.")
       return
     }
     const price = Number(draftPrice.replace(/\D/g, "")) || 0
@@ -186,7 +79,8 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
       ...current,
       {
         id: crypto.randomUUID(),
-        fieldId: draftField,
+        // fieldId tetap ada untuk kompatibilitas data lama; paket tidak lagi dikunci ke 1 bidang.
+        fieldId: "other",
         name: draftName.trim(),
         price,
         durationHours: Number(draftDuration.replace(",", ".")) || 0,
@@ -198,11 +92,6 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
 
   async function save() {
     if (!user) return
-    if (!fields.length) {
-      setError("Pilih minimal satu bidang bisnis.")
-      setSaved(false)
-      return
-    }
     if (!services.length) {
       setError("Tambah minimal satu paket layanan.")
       setSaved(false)
@@ -218,12 +107,11 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
     setSaved(false)
     const cleaned = services.map((service) => ({
       ...service,
+      fieldId: service.fieldId || "other",
       name: service.name.trim(),
       details: service.details?.trim() || "",
     }))
     const updated = await updateProfile({
-      businessFields: fields,
-      customBusinessFields: customFields.filter((field) => fields.includes(field.id)),
       services: cleaned,
     })
     setPending(false)
@@ -240,176 +128,13 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
 
   return (
     <section className={cn("grid gap-5", className)}>
-      <div className="grid gap-2">
-        <div>
-          <p className="font-medium">Bidang layanan</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Centang dari daftar, atau tulis bidang manual di bawah. Bidang tersimpan di
-            akun.
-          </p>
-        </div>
-        <div className="grid gap-2">
-          {BUSINESS_FIELDS.map((field) => {
-            const checked = fields.includes(field.id)
-            return (
-              <label
-                key={field.id}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
-                  checked
-                    ? "bg-primary/8 ring-primary"
-                    : "bg-background ring-foreground/10 hover:bg-muted/50"
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleField(field.id)}
-                  className="size-4 accent-primary"
-                />
-                <span className="text-lg" aria-hidden>
-                  {field.emoji}
-                </span>
-                <span className="text-sm font-medium">{field.label}</span>
-              </label>
-            )
-          })}
-          {customFields.map((field) => {
-            const checked = fields.includes(field.id)
-            return (
-              <label
-                key={field.id}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
-                  checked
-                    ? "bg-primary/8 ring-primary"
-                    : "bg-background ring-foreground/10 hover:bg-muted/50"
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleField(field.id)}
-                  className="size-4 accent-primary"
-                />
-                <span className="text-lg" aria-hidden>
-                  {field.emoji}
-                </span>
-                <span className="min-w-0 flex-1 text-sm font-medium">{field.label}</span>
-                <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                  Manual
-                </span>
-              </label>
-            )
-          })}
-        </div>
-
-        <div className="grid gap-2 rounded-xl bg-muted/40 p-3 ring-1 ring-foreground/10">
-          <Label htmlFor="bidang-manual">Isi bidang manual</Label>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              id="bidang-manual"
-              value={draftBidang}
-              onChange={(event) => setDraftBidang(event.target.value)}
-              placeholder="Contoh: Nail Art / Sound System"
-              className="h-11 flex-1 bg-background"
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault()
-                  addCustomBidang()
-                }
-              }}
-            />
-            <button
-              type="button"
-              className={cn(buttonVariants({ variant: "outline" }), "h-11 shrink-0")}
-              onClick={addCustomBidang}
-            >
-              <Plus className="size-4" />
-              Daftarkan bidang
-            </button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Bidang manual ikut tersimpan dan bisa dipakai saat menambah paket.
-          </p>
-        </div>
-      </div>
-
-      {selectedFields.map((field) => {
-        const presets = presetsForField(field.id)
-        if (!presets.length) {
-          return (
-            <div
-              key={field.id}
-              className="rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground"
-            >
-              <p className="font-medium text-foreground">
-                {field.emoji} {field.label}
-              </p>
-              <p className="mt-1">
-                Bidang ini belum punya daftar paket siap pakai. Isi paket manual di bawah.
-              </p>
-            </div>
-          )
-        }
-        return (
-          <div key={field.id} className="grid gap-3">
-            <p className="font-medium">
-              {field.emoji} {field.label}
-            </p>
-            <div className="max-h-56 space-y-1 overflow-y-auto rounded-xl bg-background p-2 ring-1 ring-foreground/10">
-              {presets.map((preset) => {
-                const checked = hasService(field.id, preset.name)
-                return (
-                  <label
-                    key={preset.name}
-                    className={cn(
-                      "flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition",
-                      checked ? "bg-primary/8 font-medium" : "hover:bg-muted/60"
-                    )}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => togglePreset(field.id, preset)}
-                      className="size-4 accent-primary"
-                    />
-                    <span>{preset.name}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })}
-
       <div className="grid gap-3 rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
         <div>
-          <p className="font-medium">Isi paket manual</p>
+          <p className="font-medium">Tambah paket</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tulis nama paket, rincian, harga, dan waktu. Paket ini muncul di link booking
-            klien.
+            Isi nama paket, rincian, harga, dan waktu. Satu paket bisa mencakup beberapa
+            layanan — tidak perlu pilih bidang.
           </p>
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="paket-bidang">Bidang</Label>
-          <select
-            id="paket-bidang"
-            value={draftField}
-            onChange={(event) => {
-              setDraftField(event.target.value as BusinessFieldId)
-              setDraftName("")
-            }}
-            className="h-11 rounded-lg border bg-background px-3 text-sm"
-          >
-            <option value="">Pilih bidang</option>
-            {selectedFields.map((field) => (
-              <option key={field.id} value={field.id}>
-                {field.emoji} {field.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div className="grid gap-1.5">
@@ -418,29 +143,9 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
             id="paket-nama"
             value={draftName}
             onChange={(event) => setDraftName(event.target.value)}
-            placeholder="Contoh: Paket Emas / Wedding Makeup"
+            placeholder="Contoh: Paket Emas / Wedding Complete"
             className="h-11 bg-background"
-            disabled={!draftField}
           />
-          {draftField && draftName.trim() ? (
-            <div className="max-h-36 overflow-y-auto rounded-lg border bg-background">
-              {filteredPresets.slice(0, 8).map((preset) => (
-                <button
-                  key={preset.name}
-                  type="button"
-                  className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
-                  onClick={() => setDraftName(preset.name)}
-                >
-                  {preset.name}
-                </button>
-              ))}
-              {!exactPresetMatch ? (
-                <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-                  Pakai nama kustom: “{draftName.trim()}”
-                </p>
-              ) : null}
-            </div>
-          ) : null}
         </div>
 
         <div className="grid gap-1.5">
@@ -449,9 +154,8 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
             id="paket-rincian"
             value={draftDetails}
             onChange={(event) => setDraftDetails(event.target.value)}
-            placeholder="Contoh: Rias pengantin akad dan resepsi, termasuk keluarga inti."
+            placeholder="Contoh: Makeup + hijab + attire pengantin, termasuk keluarga inti."
             className="min-h-20 bg-background"
-            disabled={!draftField}
           />
         </div>
 
@@ -467,7 +171,6 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
               inputMode="numeric"
               placeholder="6500000"
               className="h-11 bg-background"
-              disabled={!draftField}
             />
           </div>
           <div className="grid gap-1.5">
@@ -479,7 +182,6 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
               inputMode="decimal"
               placeholder="8"
               className="h-11 bg-background"
-              disabled={!draftField}
             />
           </div>
         </div>
@@ -488,7 +190,6 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
           type="button"
           className={cn(buttonVariants({ variant: "outline" }), "h-11")}
           onClick={addService}
-          disabled={!selectedFields.length}
         >
           <Plus className="size-4" />
           Tambah paket ke daftar
@@ -499,111 +200,107 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
         <div>
           <p className="font-medium">Daftar paket</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Edit nama, rincian, harga, dan waktu sebelum menyimpan.
+            Edit nama, rincian, harga, dan waktu sebelum menyimpan. Paket ini muncul di
+            link booking klien.
           </p>
         </div>
         {services.length ? (
           <div className="grid gap-3">
-                {services.map((service) => {
-              const field = fieldById(service.fieldId, customFields)
-              return (
-                <div
-                  key={service.id}
-                  className="grid gap-3 rounded-xl bg-background p-4 ring-1 ring-foreground/10"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {field ? `${field.emoji} ${field.short}` : service.fieldId}
-                    </p>
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => {
-                        setSaved(false)
-                        setServices((current) =>
-                          current.filter((item) => item.id !== service.id)
-                        )
-                      }}
-                      aria-label={`Hapus ${service.name}`}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
-                  </div>
+            {services.map((service) => (
+              <div
+                key={service.id}
+                className="grid gap-3 rounded-xl bg-background p-4 ring-1 ring-foreground/10"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-xs font-medium text-muted-foreground">Paket</p>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      setSaved(false)
+                      setServices((current) =>
+                        current.filter((item) => item.id !== service.id)
+                      )
+                    }}
+                    aria-label={`Hapus ${service.name}`}
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
 
+                <div className="grid gap-1.5">
+                  <Label htmlFor={`name-${service.id}`}>Nama paket</Label>
+                  <Input
+                    id={`name-${service.id}`}
+                    value={service.name}
+                    onChange={(event) =>
+                      updateService(service.id, { name: event.target.value })
+                    }
+                    className="h-11 bg-background"
+                  />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label htmlFor={`details-${service.id}`}>Rincian</Label>
+                  <Textarea
+                    id={`details-${service.id}`}
+                    value={service.details || ""}
+                    onChange={(event) =>
+                      updateService(service.id, { details: event.target.value })
+                    }
+                    placeholder="Detail isi paket…"
+                    className="min-h-20 bg-background"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div className="grid gap-1.5">
-                    <Label htmlFor={`name-${service.id}`}>Nama paket</Label>
+                    <Label htmlFor={`price-${service.id}`}>Harga (Rp)</Label>
                     <Input
-                      id={`name-${service.id}`}
-                      value={service.name}
+                      id={`price-${service.id}`}
+                      value={service.price ? String(service.price) : ""}
                       onChange={(event) =>
-                        updateService(service.id, { name: event.target.value })
+                        updateService(service.id, {
+                          price: Number(event.target.value.replace(/\D/g, "")) || 0,
+                        })
                       }
+                      inputMode="numeric"
+                      placeholder="0"
                       className="h-11 bg-background"
                     />
                   </div>
-
                   <div className="grid gap-1.5">
-                    <Label htmlFor={`details-${service.id}`}>Rincian</Label>
-                    <Textarea
-                      id={`details-${service.id}`}
-                      value={service.details || ""}
-                      onChange={(event) =>
-                        updateService(service.id, { details: event.target.value })
+                    <Label htmlFor={`duration-${service.id}`}>Waktu (jam)</Label>
+                    <Input
+                      id={`duration-${service.id}`}
+                      value={
+                        service.durationHours ? String(service.durationHours) : ""
                       }
-                      placeholder="Detail isi paket…"
-                      className="min-h-20 bg-background"
+                      onChange={(event) =>
+                        updateService(service.id, {
+                          durationHours:
+                            Number(event.target.value.replace(",", ".")) || 0,
+                        })
+                      }
+                      inputMode="decimal"
+                      placeholder="0"
+                      className="h-11 bg-background"
                     />
                   </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={`price-${service.id}`}>Harga (Rp)</Label>
-                      <Input
-                        id={`price-${service.id}`}
-                        value={service.price ? String(service.price) : ""}
-                        onChange={(event) =>
-                          updateService(service.id, {
-                            price: Number(event.target.value.replace(/\D/g, "")) || 0,
-                          })
-                        }
-                        inputMode="numeric"
-                        placeholder="0"
-                        className="h-11 bg-background"
-                      />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor={`duration-${service.id}`}>Waktu (jam)</Label>
-                      <Input
-                        id={`duration-${service.id}`}
-                        value={
-                          service.durationHours ? String(service.durationHours) : ""
-                        }
-                        onChange={(event) =>
-                          updateService(service.id, {
-                            durationHours:
-                              Number(event.target.value.replace(",", ".")) || 0,
-                          })
-                        }
-                        inputMode="decimal"
-                        placeholder="0"
-                        className="h-11 bg-background"
-                      />
-                    </div>
-                  </div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         ) : (
           <p className="rounded-xl bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
-            Belum ada paket. Centang dari daftar di atas, atau isi form paket manual.
+            Belum ada paket. Isi form di atas untuk menambah paket pertama.
           </p>
         )}
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {saved ? (
-        <p className="text-sm text-primary">Layanan bisnis tersimpan.</p>
+        <p className="text-sm text-primary">Paket layanan tersimpan.</p>
       ) : null}
 
       <button
@@ -612,7 +309,7 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
         disabled={pending}
         onClick={() => void save()}
       >
-        {pending ? "Menyimpan…" : "Simpan layanan"}
+        {pending ? "Menyimpan…" : "Simpan paket"}
       </button>
     </section>
   )

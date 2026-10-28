@@ -219,12 +219,12 @@ export default function OnboardingPage() {
   }
 
   function addService() {
-    if (!draftField || !draftName.trim()) {
-      setError("Pilih bidang dan isi nama layanan.")
+    if (!draftName.trim()) {
+      setError("Isi nama paket.")
       return
     }
-    if (hasService(draftField, draftName)) {
-      setError("Layanan ini sudah ditambahkan.")
+    if (hasService("other", draftName) || services.some((s) => s.name.trim().toLowerCase() === draftName.trim().toLowerCase())) {
+      setError("Paket ini sudah ditambahkan.")
       return
     }
     setError("")
@@ -232,7 +232,7 @@ export default function OnboardingPage() {
       ...current,
       {
         id: crypto.randomUUID(),
-        fieldId: draftField,
+        fieldId: draftField || "other",
         name: draftName.trim(),
         price: 0,
         durationHours: 0,
@@ -664,48 +664,18 @@ export default function OnboardingPage() {
             </button>
             {showCustomForm ? (
               <>
-                <select
-                  value={draftField}
-                  onChange={(event) => {
-                    setDraftField(event.target.value as BusinessFieldId)
-                    setDraftName("")
-                  }}
-                  className="h-10 rounded-lg border bg-background px-3 text-sm"
-                >
-                  <option value="">Pilih bidang</option>
-                  {selectedFields.map((field) => (
-                    <option key={field.id} value={field.id}>
-                      {field.emoji} {field.label}
-                    </option>
-                  ))}
-                </select>
                 <div className="grid gap-1.5">
+                  <Label htmlFor="onboarding-paket-nama">Nama paket</Label>
                   <Input
+                    id="onboarding-paket-nama"
                     value={draftName}
                     onChange={(event) => setDraftName(event.target.value)}
-                    placeholder="Cari atau ketik nama layanan"
+                    placeholder="Contoh: Paket Emas / Wedding Complete"
                     className="h-10 bg-background"
-                    disabled={!draftField}
                   />
-                  {draftField && draftName.trim() ? (
-                    <div className="max-h-36 overflow-y-auto rounded-lg border bg-background">
-                      {filteredPresets.slice(0, 8).map((preset) => (
-                        <button
-                          key={preset.name}
-                          type="button"
-                          className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
-                          onClick={() => setDraftName(preset.name)}
-                        >
-                          {preset.name}
-                        </button>
-                      ))}
-                      {!exactPresetMatch ? (
-                        <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-                          Pakai nama kustom: “{draftName.trim()}”
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
+                  <p className="text-xs text-muted-foreground">
+                    Tidak perlu pilih bidang — satu paket bisa mencakup beberapa layanan.
+                  </p>
                 </div>
                 <button
                   type="button"
