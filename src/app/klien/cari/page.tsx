@@ -1,7 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo, useState } from "react"
-import { Heart, Search } from "lucide-react"
+import { Heart, Search, Star } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { useClientWorkspace } from "@/components/client-provider"
@@ -16,6 +17,11 @@ import {
   type ClientNeedId,
 } from "@/lib/client-workspace"
 import { rupiah } from "@/lib/format"
+import {
+  partnerAvailable,
+  partnerPortfolioCount,
+  partnerRating,
+} from "@/lib/partners"
 import { cn } from "@/lib/utils"
 
 export default function ClientSearchPage() {
@@ -39,7 +45,6 @@ export default function ClientSearchPage() {
             partner,
             needId,
           }))
-    // Deduplicate partners when "all" maps foto twice
     const seen = new Set<string>()
     const unique = pool.filter(({ partner, needId: nid }) => {
       const key = `${partner.id}:${nid}`
@@ -66,7 +71,7 @@ export default function ClientSearchPage() {
       <div>
         <h1 className="text-4xl">Cari Vendor</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pilih kategori, simpan ke Pilihan Saya, atau masukkan langsung ke acara aktif.
+          Lihat portofolio dulu, simpan ke Pilihan Saya, lalu bandingkan sebelum booking.
         </p>
       </div>
 
@@ -119,6 +124,9 @@ export default function ClientSearchPage() {
           {listings.map(({ partner, needId: nid }) => {
             const liked = isShortlisted(partner.id)
             const category = categoryById(nid)
+            const rating = partnerRating(partner)
+            const photos = partnerPortfolioCount(partner)
+            const available = partnerAvailable(partner)
             return (
               <article
                 key={`${partner.id}-${nid}`}
@@ -129,9 +137,24 @@ export default function ClientSearchPage() {
                     <p className="text-xs text-muted-foreground">
                       {category?.emoji} {category?.label}
                     </p>
-                    <p className="font-medium">{partner.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {partner.area}, {partner.city} · mulai {rupiah(partner.share)}
+                    <Link
+                      href={`/klien/vendor/${partner.id}`}
+                      className="font-medium hover:text-primary"
+                    >
+                      {partner.name}
+                    </Link>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 text-foreground">
+                        <Star className="size-3.5 fill-current text-primary" />
+                        {rating.toFixed(1)}
+                      </span>
+                      <span>
+                        {partner.area}, {partner.city}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-sm">
+                      mulai {rupiah(partner.share)} · {photos} foto ·{" "}
+                      {available ? "Tersedia" : "Padat"}
                     </p>
                   </div>
                   <button
@@ -148,17 +171,25 @@ export default function ClientSearchPage() {
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground">{partner.blurb}</p>
-                {activeEvent ? (
-                  <button
-                    type="button"
-                    className={cn(buttonVariants({ variant: "outline" }), "h-10 w-fit")}
-                    onClick={() =>
-                      assignVendor(activeEvent.id, nid, partner.id, "menunggu_konfirmasi")
-                    }
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/klien/vendor/${partner.id}`}
+                    className={cn(buttonVariants({ variant: "outline" }), "h-10")}
                   >
-                    Masukkan ke {activeEvent.title}
-                  </button>
-                ) : null}
+                    Lihat profil & portofolio
+                  </Link>
+                  {activeEvent ? (
+                    <button
+                      type="button"
+                      className={cn(buttonVariants({ variant: "outline" }), "h-10")}
+                      onClick={() =>
+                        assignVendor(activeEvent.id, nid, partner.id, "menunggu_konfirmasi")
+                      }
+                    >
+                      Masukkan ke {activeEvent.title}
+                    </button>
+                  ) : null}
+                </div>
               </article>
             )
           })}

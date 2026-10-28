@@ -21,6 +21,48 @@ export type Partner = {
   share: number
   busyOffsets: number[]
   repliesFast: boolean
+  /** Rating tampilan marketplace (opsional; dihitung bila kosong). */
+  rating?: number
+  /** Jumlah foto portofolio contoh untuk dibandingkan. */
+  portfolioCount?: number
+  /** Siap menerima booking. */
+  available?: boolean
+}
+
+function hashSeed(value: string) {
+  let total = 0
+  for (let i = 0; i < value.length; i += 1) total += value.charCodeAt(i)
+  return total
+}
+
+/** Rating 4.6–5.0 untuk kartu & bandingkan vendor. */
+export function partnerRating(partner: Partner) {
+  if (typeof partner.rating === "number") return partner.rating
+  const seed = hashSeed(partner.id)
+  return Math.round((4.6 + (seed % 5) * 0.1) * 10) / 10
+}
+
+export function partnerPortfolioCount(partner: Partner) {
+  if (typeof partner.portfolioCount === "number") return partner.portfolioCount
+  const seed = hashSeed(partner.id)
+  return 12 + (seed % 16)
+}
+
+export function partnerAvailable(partner: Partner) {
+  if (typeof partner.available === "boolean") return partner.available
+  return partner.busyOffsets.length < 3
+}
+
+/** Field bisnis klien dari trade partner. */
+export function partnerFieldId(trade: Trade) {
+  if (trade === "foto") return "photo"
+  return trade === "makeup" ||
+    trade === "hair" ||
+    trade === "dekor" ||
+    trade === "baju" ||
+    trade === "content"
+    ? trade
+    : "other"
 }
 
 export const partners: Partner[] = [
@@ -127,6 +169,38 @@ export const partners: Partner[] = [
     share: 1_800_000,
     busyOffsets: [],
     repliesFast: false,
+  },
+  {
+    id: "makeup-laras",
+    name: "Laras Makeup",
+    trade: "makeup",
+    city: "Surabaya",
+    area: "Tunjungan",
+    phone: "081933300010",
+    blurb: "Makeup untuk wedding, engagement, wisuda, dan acara spesial.",
+    offer: "Makeup pengantin soft glam",
+    share: 2_500_000,
+    busyOffsets: [],
+    repliesFast: true,
+    rating: 4.9,
+    portfolioCount: 24,
+    available: true,
+  },
+  {
+    id: "makeup-nadya",
+    name: "Nadya Makeup",
+    trade: "makeup",
+    city: "Surabaya",
+    area: "Gubeng",
+    phone: "081933300011",
+    blurb: "Rias pengantin dan keluarga untuk acara di Surabaya.",
+    offer: "Makeup akad & resepsi",
+    share: 2_200_000,
+    busyOffsets: [],
+    repliesFast: true,
+    rating: 4.8,
+    portfolioCount: 18,
+    available: true,
   },
   {
     id: "hair-sanggul-dago",

@@ -5,7 +5,14 @@ import {
   pullPublicBookingProfileCloud,
   pushPublicBookingProfileCloud,
 } from "@/lib/cloud-sync"
-import type { BusinessService } from "@/lib/onboarding"
+import type { BusinessFieldId, BusinessService } from "@/lib/onboarding"
+import {
+  demoBio,
+  demoPortfolioItems,
+  normalizePortfolioList,
+  visiblePortfolio,
+  type PortfolioItem,
+} from "@/lib/portfolio"
 import { studioBrand } from "@/lib/studio-brand"
 import { supabase } from "@/lib/supabase"
 
@@ -42,6 +49,14 @@ export type PublicBookingProfile = {
   city: string
   services: PublicBookingService[]
   updatedAt: string
+  bio?: string
+  rating?: number
+  address?: string
+  instagram?: string
+  logoDataUrl?: string
+  businessFields?: BusinessFieldId[]
+  /** Hanya item yang ditampilkan ke publik (visible). */
+  portfolio?: PortfolioItem[]
 }
 
 type ProfileMap = Record<string, PublicBookingProfile>
@@ -97,19 +112,24 @@ function writeMap(map: ProfileMap) {
   try {
     localStorage.setItem(PUBLIC_BOOKING_PROFILE_KEY, JSON.stringify(map))
   } catch {
-    // ignore quota / private mode
+    // ignore quota / private mode — coba tanpa logo besar
+    try {
+      const slim: ProfileMap = {}
+      for (const [key, profile] of Object.entries(map)) {
+        slim[key] = { ...profile, logoDataUrl: undefined }
+      }
+      localStorage.setItem(PUBLIC_BOOKING_PROFILE_KEY, JSON.stringify(slim))
+    } catch {
+      // ignore
+    }
   }
 }
 
-export function readPublicBookingProfile(slug: string): PublicBookingProfile | null {
-  const key = slug.trim().toLowerCase()
-  if (!key) return null
-  const profile = readMap()[key]
-  if (!profile || !Array.isArray(profile.services)) return null
+function normalizeProfile(profile: PublicBookingProfile, slug: string): PublicBookingProfile {
   return {
     ...profile,
-    slug: key,
-    services: profile.services
+    slug,
+    services: (profile.services || [])
       .map((service) =>
         normalizeService({
           id: service.id,
@@ -121,7 +141,26 @@ export function readPublicBookingProfile(slug: string): PublicBookingProfile | n
         })
       )
       .filter((service): service is PublicBookingService => Boolean(service)),
+    portfolio: visiblePortfolio(normalizePortfolioList(profile.portfolio)),
+    businessFields: Array.isArray(profile.businessFields)
+      ? profile.businessFields
+      : undefined,
+    bio: profile.bio?.trim() || undefined,
+    address: profile.address?.trim() || undefined,
+    instagram: profile.instagram?.trim() || undefined,
+    rating:
+      typeof profile.rating === "number" && Number.isFinite(profile.rating)
+        ? profile.rating
+        : undefined,
   }
+}
+
+export function readPublicBookingProfile(slug: string): PublicBookingProfile | null {
+  const key = slug.trim().toLowerCase()
+  if (!key) return null
+  const profile = readMap()[key]
+  if (!profile || !Array.isArray(profile.services)) return null
+  return normalizeProfile(profile, key)
 }
 
 /** Lokal dulu, lalu cloud — untuk /p/[slug] lintas perangkat. */
@@ -131,14 +170,24 @@ export async function loadPublicBookingProfile(
   const local = readPublicBookingProfile(slug)
   const cloud = await pullPublicBookingProfileCloud(slug)
   if (!cloud) return local
-  const fromCloud: PublicBookingProfile = {
-    slug: cloud.slug,
-    name: cloud.name,
-    phone: cloud.phone,
-    city: cloud.city,
-    services: coerceCloudServices(cloud.services),
-    updatedAt: cloud.updatedAt,
-  }
+  const fromCloud: PublicBookingProfile = normalizeProfile(
+    {
+      slug: cloud.slug,
+      name: cloud.name,
+      phone: cloud.phone,
+      city: cloud.city,
+      services: coerceCloudServices(cloud.services),
+      updatedAt: cloud.updatedAt,
+      bio: cloud.bio,
+      rating: cloud.rating,
+      address: cloud.address,
+      instagram: cloud.instagram,
+      logoDataUrl: cloud.logoDataUrl,
+      businessFields: cloud.businessFields,
+      portfolio: normalizePortfolioList(cloud.portfolio),
+    },
+    cloud.slug
+  )
   const map = readMap()
   map[fromCloud.slug] = fromCloud
   writeMap(map)
@@ -156,6 +205,13 @@ export function publishPublicBookingProfile(input: {
   city?: string
   services: BusinessService[] | undefined | null
   ownerId?: string
+  bio?: string
+  rating?: number
+  address?: string
+  instagram?: string
+  logoDataUrl?: string
+  businessFields?: BusinessFieldId[]
+  portfolio?: PortfolioItem[] | null
 }): PublicBookingProfile {
   const slug = input.slug.trim().toLowerCase()
   const services = (input.services ?? [])
@@ -169,6 +225,16 @@ export function publishPublicBookingProfile(input: {
     city: input.city?.trim() || "",
     services,
     updatedAt: new Date().toISOString(),
+    bio: input.bio?.trim() || undefined,
+    rating:
+      typeof input.rating === "number" && Number.isFinite(input.rating)
+        ? input.rating
+        : undefined,
+    address: input.address?.trim() || undefined,
+    instagram: input.instagram?.trim() || undefined,
+    logoDataUrl: input.logoDataUrl,
+    businessFields: input.businessFields,
+    portfolio: visiblePortfolio(normalizePortfolioList(input.portfolio)),
   }
 
   const map = readMap()
@@ -187,7 +253,7 @@ export function publishPublicBookingProfile(input: {
   return profile
 }
 
-/** Publish dari akun login (halaman Link booking / editor layanan). */
+/** Publish dari akun login (halaman Link booking / editor layanan / profil). */
 export function publishFromOwner(
   user: AuthUser | null | undefined,
   options?: { demo?: boolean }
@@ -200,5 +266,17 @@ export function publishFromOwner(
     city: brand.city,
     services: options?.demo ? DEMO_BOOKING_SERVICES : user?.services,
     ownerId: user && canCloudSync(user.email) ? user.id : undefined,
+    bio: options?.demo ? demoBio() : brand.bio,
+    rating: brand.rating ?? (options?.demo ? 4.9 : undefined),
+    address: brand.address,
+    instagram: brand.instagram,
+    logoDataUrl: brand.logoDataUrl,
+    businessFields: [...brand.businessFields],
+    portfolio: options?.demo ? demoPortfolioItems() : brand.portfolio,
   })
+}
+
+export function startingPrice(services: PublicBookingService[] | undefined | null) {
+  if (!services?.length) return null
+  return Math.min(...services.map((service) => service.price))
 }

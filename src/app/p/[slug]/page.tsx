@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
-import { PublicBookingFlow } from "@/components/public-booking"
+import { PublicVendorProfile } from "@/components/public-vendor-profile"
 import { studio } from "@/lib/catalog"
 
 type Props = {
@@ -9,25 +9,25 @@ type Props = {
 }
 
 export const metadata: Metadata = {
-  title: `Ajukan Booking · ${studio.name}`,
-  description: `Ajukan booking singkat ke ${studio.name}. Owner mengonfirmasi lewat WhatsApp.`,
+  title: `Profil Publik · ${studio.name}`,
+  description: `Lihat portofolio, layanan, dan ajukan booking ke ${studio.name}.`,
 }
 
-async function BookingFromParams({ params }: Props) {
+async function ProfileFromParams({ params }: Props) {
   const { slug } = await params
-  return <PublicBookingFlow slug={slug} />
+  return <PublicVendorProfile slug={slug} />
 }
 
-export default function PublicBookingPage({ params }: Props) {
+export default function PublicProfilePage({ params }: Props) {
   return (
     <Suspense
       fallback={
         <main className="mx-auto max-w-lg px-4 py-16 text-sm text-muted-foreground">
-          Memuat form ajukan booking…
+          Memuat profil publik…
         </main>
       }
     >
-      <BookingFromParams params={params} />
+      <ProfileFromParams params={params} />
     </Suspense>
   )
 }

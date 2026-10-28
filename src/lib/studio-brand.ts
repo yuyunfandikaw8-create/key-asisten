@@ -4,6 +4,8 @@ import {
   type AuthUser,
   type PaymentSettings,
 } from "@/lib/auth"
+import { demoBio, demoPortfolioItems, normalizePortfolioList } from "@/lib/portfolio"
+import { resolvePublicSlug } from "@/lib/public-slug"
 
 /** Nama bisnis / owner dari akun login, fallback ke data demo katalog. */
 export function studioBrand(
@@ -25,7 +27,11 @@ export function studioBrand(
       ewalletNumber: "",
       slug: studio.slug,
       address: studio.address,
-      bio: studio.bio,
+      bio: demoBio(),
+      rating: 4.9,
+      portfolio: demoPortfolioItems(),
+      businessFields: ["makeup", "hair", "baju"],
+      logoDataUrl: undefined as string | undefined,
       payment: normalizePaymentSettings({
         methods: ["transfer", "qris"],
         bankName: studio.bank,
@@ -44,6 +50,11 @@ export function studioBrand(
   const bank = payment.bankName || studio.bank
   const accountName = payment.accountHolder || owner
   const accountNumber = payment.accountNumber || studio.accountNumber
+  const portfolio = normalizePortfolioList(user?.portfolio)
+  const rating =
+    typeof user?.rating === "number" && Number.isFinite(user.rating)
+      ? user.rating
+      : undefined
 
   return {
     name: business,
@@ -56,9 +67,18 @@ export function studioBrand(
     accountNumber,
     ewalletName: payment.ewalletName || "",
     ewalletNumber: payment.ewalletNumber || "",
-    slug: studio.slug,
+    slug: resolvePublicSlug({
+      publicSlug: user?.publicSlug,
+      studioName: user?.studioName,
+      name: user?.name,
+      fallback: studio.slug,
+    }),
     address: user?.address?.trim() || studio.address,
-    bio: studio.bio,
+    bio: user?.bio?.trim() || studio.bio,
+    rating,
+    portfolio,
+    businessFields: user?.businessFields || [],
+    logoDataUrl: user?.logoDataUrl,
     payment,
   }
 }

@@ -72,8 +72,18 @@ Tabel yang dibuat:
 | `studios` | Identitas studio ringkas |
 | `owner_data` | Profil bisnis + state studio (booking, invoice, partner, …) |
 | `client_data` | Workspace klien (acara, shortlist, status) |
-| `public_booking_profiles` | Pricelist `/p/[slug]` (bisa dibaca publik) |
+| `public_booking_profiles` | Profil publik `/p/[slug]` (portofolio, layanan, bio) |
 | `booking_requests` | Pengajuan dari link booking |
+
+### Profil publik & portofolio
+
+Owner mengatur **Portofolio** di `Studio → Profil` (foto/video, judul, kategori, deskripsi, tahun, tampil/sembunyi). Klien melihatnya di:
+
+- Profil publik: `/p/[slug]` (contoh `/p/laras`) — tentang, portofolio, layanan, hubungi, ajukan booking
+- `Klien → Cari Vendor` → profil vendor + ❤️ **Pilihan Saya**
+- `Klien → Pilihan Saya` — bandingkan portofolio, rating, harga mulai, lokasi, status
+
+Setelah menambah kolom portofolio, jalankan ulang bagian ALTER di `supabase/schema.sql` (aman diulang).
 
 Setelah skema aktif, login email/Google non-demo menyimpan data ke cloud (bukan hanya `localStorage`).
 

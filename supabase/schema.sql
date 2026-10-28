@@ -278,6 +278,24 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ---------------------------------------------------------------------------
--- 9) Realtime (opsional) — aktifkan di Dashboard bila perlu
+-- 9) Profil publik: portofolio, bio, rating (aman dijalankan ulang)
+-- ---------------------------------------------------------------------------
+alter table public.public_booking_profiles
+  add column if not exists bio text not null default '';
+alter table public.public_booking_profiles
+  add column if not exists rating numeric;
+alter table public.public_booking_profiles
+  add column if not exists address text not null default '';
+alter table public.public_booking_profiles
+  add column if not exists instagram text not null default '';
+alter table public.public_booking_profiles
+  add column if not exists logo_data_url text;
+alter table public.public_booking_profiles
+  add column if not exists business_fields jsonb not null default '[]'::jsonb;
+alter table public.public_booking_profiles
+  add column if not exists portfolio jsonb not null default '[]'::jsonb;
+
+-- ---------------------------------------------------------------------------
+-- 10) Realtime (opsional) — aktifkan di Dashboard bila perlu
 -- ---------------------------------------------------------------------------
 -- alter publication supabase_realtime add table public.booking_requests;

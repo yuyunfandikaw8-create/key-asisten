@@ -172,6 +172,10 @@ function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUse
     instagram: local.instagram || remote.instagram,
     address: local.address || remote.address,
     logoDataUrl: local.logoDataUrl || remote.logoDataUrl,
+    bio: local.bio || remote.bio,
+    rating: local.rating ?? remote.rating,
+    publicSlug: local.publicSlug || remote.publicSlug,
+    portfolio: local.portfolio?.length ? local.portfolio : remote.portfolio,
     businessFields:
       (local.businessFields as BusinessFieldId[] | undefined) || remote.businessFields,
     customBusinessFields:
@@ -224,6 +228,10 @@ function userFromMetadata(
     instagram: fromCloud.instagram,
     address: fromCloud.address,
     logoDataUrl: fromCloud.logoDataUrl,
+    bio: fromCloud.bio,
+    rating: fromCloud.rating,
+    publicSlug: fromCloud.publicSlug,
+    portfolio: fromCloud.portfolio,
     businessFields: fromCloud.businessFields as BusinessFieldId[] | undefined,
     customBusinessFields: fromCloud.customBusinessFields,
     services: fromCloud.services as BusinessService[] | undefined,
@@ -900,6 +908,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 business_email: nextUser.businessEmail,
                 instagram: nextUser.instagram,
                 address: nextUser.address,
+                bio: nextUser.bio,
+                rating: nextUser.rating,
+                public_slug: nextUser.publicSlug,
+                portfolio: nextUser.portfolio,
                 business_fields: nextUser.businessFields,
                 custom_business_fields: nextUser.customBusinessFields,
                 services: nextUser.services,
@@ -917,6 +929,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               // Sinkron cloud opsional.
             })
           void pushOwnerProfile(nextUser)
+          // Publikasikan profil + portofolio ke /p/[slug] setelah simpan.
+          if (nextUser.role === "owner") {
+            void import("@/lib/public-booking-profile").then(({ publishFromOwner }) => {
+              publishFromOwner(nextUser)
+            })
+          }
+        } else if (nextUser.role === "owner") {
+          void import("@/lib/public-booking-profile").then(({ publishFromOwner }) => {
+            publishFromOwner(nextUser)
+          })
         }
         return nextUser
       },

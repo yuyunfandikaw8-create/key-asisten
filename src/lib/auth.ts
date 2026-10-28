@@ -6,6 +6,7 @@ import {
   type CustomBusinessField,
   type OnboardingStep,
 } from "@/lib/onboarding"
+import { demoPortfolioItems, type PortfolioItem } from "@/lib/portfolio"
 
 export type AuthProviderKind = "password" | "google"
 
@@ -98,6 +99,14 @@ export type AuthUser = {
   instagram?: string
   address?: string
   logoDataUrl?: string
+  /** Deskripsi singkat bisnis untuk profil publik. */
+  bio?: string
+  /** Rating tampilan publik (opsional; default dari contoh/demo). */
+  rating?: number
+  /** Portofolio hasil pekerjaan — Owner atur tampil/sembunyi per item. */
+  portfolio?: PortfolioItem[]
+  /** Slug profil publik `/p/[slug]`. Kosong = diturunkan dari nama bisnis. */
+  publicSlug?: string
   businessFields?: BusinessFieldId[]
   /** Bidang diketik manual (di luar daftar bawaan). */
   customBusinessFields?: CustomBusinessField[]
@@ -157,6 +166,10 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     roleChosen: true,
     onboardingStep: "done",
     businessFields: ["makeup", "hair", "baju"],
+    bio: "Makeup untuk wedding, engagement, wisuda, dan acara spesial.",
+    rating: 4.9,
+    publicSlug: "laras",
+    portfolio: demoPortfolioItems(),
   },
   {
     id: "user-suro",
@@ -164,13 +177,24 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     email: "nadya@riasaja.id",
     phone: "081255566677",
     city: "Surabaya",
-    studioName: "Nadya Rias Surabaya",
+    studioName: "Nadya Makeup",
     password: "suro123",
     provider: "password",
     role: "owner",
     roleChosen: true,
     onboardingStep: "done",
     businessFields: ["makeup", "hair"],
+    bio: "Rias pengantin dan keluarga untuk acara di Surabaya dan sekitarnya.",
+    rating: 4.8,
+    publicSlug: "nadya",
+    portfolio: demoPortfolioItems().map((item, index) => ({
+      ...item,
+      id: `nadya-${item.id}`,
+      media: item.media.slice(0, index === 0 ? 2 : 1).map((media) => ({
+        ...media,
+        id: `nadya-${media.id}`,
+      })),
+    })),
   },
   {
     id: "user-dina",

@@ -86,7 +86,13 @@ export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
   if (inSurabaya) {
     const eventId = "demo-event-lamaran-yogi"
     return {
-      shortlist: ["makeup-tunjungan", "dekor-kalimas", "foto-frame-suro", "hair-pakuwon"],
+      shortlist: [
+        "makeup-laras",
+        "makeup-nadya",
+        "dekor-kalimas",
+        "foto-frame-suro",
+        "hair-pakuwon",
+      ],
       events: [
         {
           id: eventId,

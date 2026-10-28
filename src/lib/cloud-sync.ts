@@ -5,6 +5,10 @@ import {
   type ClientWorkspace,
 } from "@/lib/client-workspace"
 import { normalizeOnboardingStep } from "@/lib/onboarding"
+import {
+  normalizePortfolioList,
+  type PortfolioItem,
+} from "@/lib/portfolio"
 import { supabase, supabaseConfigured } from "@/lib/supabase"
 import type { StudioState } from "@/lib/types"
 
@@ -15,6 +19,13 @@ export type CloudPublicBookingProfile = {
   city: string
   services: unknown[]
   updatedAt: string
+  bio?: string
+  rating?: number
+  address?: string
+  instagram?: string
+  logoDataUrl?: string
+  businessFields?: AuthUser["businessFields"]
+  portfolio?: PortfolioItem[]
 }
 
 /** Metadata keys — ikut akun Auth Supabase, tidak perlu tabel ekstra. */
@@ -36,6 +47,23 @@ function stripHeavy(profile: Partial<AuthUser>): Partial<AuthUser> {
   }
   if (next.paymentSettings?.qrisDataUrl && next.paymentSettings.qrisDataUrl.length > 80_000) {
     next.paymentSettings = { ...next.paymentSettings, qrisDataUrl: undefined }
+  }
+  // Portofolio media bisa sangat besar untuk user_metadata Auth.
+  // Simpan ringkas di metadata; salinan penuh tetap di owner_data / localStorage / public profile.
+  if (next.portfolio?.length) {
+    const encoded = JSON.stringify(next.portfolio)
+    if (encoded.length > 90_000) {
+      next.portfolio = next.portfolio.map((item) => ({
+        ...item,
+        media: item.media.slice(0, 1).map((media, index) => ({
+          id: media.id || `slim-${index}`,
+          kind: media.kind,
+          dataUrl: media.dataUrl.startsWith("data:image/svg")
+            ? media.dataUrl
+            : "",
+        })),
+      }))
+    }
   }
   delete (next as { password?: string }).password
   return next
@@ -65,6 +93,10 @@ export function profileToAuthMetadata(
     instagram: user.instagram,
     address: user.address,
     logoDataUrl: user.logoDataUrl,
+    bio: user.bio,
+    rating: user.rating,
+    portfolio: user.portfolio,
+    publicSlug: user.publicSlug,
     businessFields: user.businessFields,
     customBusinessFields: user.customBusinessFields,
     services: user.services,
@@ -86,6 +118,10 @@ export function profileToAuthMetadata(
     business_email: slim.businessEmail,
     instagram: slim.instagram,
     address: slim.address,
+    bio: slim.bio,
+    rating: slim.rating,
+    public_slug: slim.publicSlug,
+    portfolio: slim.portfolio,
     business_fields: slim.businessFields,
     custom_business_fields: slim.customBusinessFields,
     services: slim.services,
@@ -136,6 +172,22 @@ export function profileFromAuthMetadata(
     address: typeof metadata.address === "string" ? metadata.address : undefined,
     logoDataUrl:
       typeof metadata.logo_data_url === "string" ? metadata.logo_data_url : undefined,
+    bio: typeof metadata.bio === "string" ? metadata.bio : undefined,
+    rating:
+      typeof metadata.rating === "number"
+        ? metadata.rating
+        : typeof metadata.rating === "string" && metadata.rating
+          ? Number(metadata.rating)
+          : undefined,
+    publicSlug:
+      typeof metadata.public_slug === "string"
+        ? metadata.public_slug
+        : typeof metadata.publicSlug === "string"
+          ? metadata.publicSlug
+          : undefined,
+    portfolio: Array.isArray(metadata.portfolio)
+      ? normalizePortfolioList(metadata.portfolio)
+      : undefined,
     businessFields: Array.isArray(metadata.business_fields)
       ? (metadata.business_fields as AuthUser["businessFields"])
       : undefined,
@@ -316,10 +368,31 @@ export async function pullPublicBookingProfileCloud(
   try {
     const { data, error } = await supabase
       .from("public_booking_profiles")
-      .select("slug, name, phone, city, services, updated_at")
+      .select(
+        "slug, name, phone, city, services, updated_at, bio, rating, address, instagram, logo_data_url, business_fields, portfolio"
+      )
       .eq("slug", key)
       .maybeSingle()
-    if (error || !data) return null
+    if (error || !data) {
+      // Kolom baru belum ada — fallback select lama.
+      const legacy = await supabase
+        .from("public_booking_profiles")
+        .select("slug, name, phone, city, services, updated_at")
+        .eq("slug", key)
+        .maybeSingle()
+      if (legacy.error || !legacy.data) return null
+      return {
+        slug: key,
+        name: typeof legacy.data.name === "string" ? legacy.data.name : "",
+        phone: typeof legacy.data.phone === "string" ? legacy.data.phone : "",
+        city: typeof legacy.data.city === "string" ? legacy.data.city : "",
+        services: Array.isArray(legacy.data.services) ? legacy.data.services : [],
+        updatedAt:
+          typeof legacy.data.updated_at === "string"
+            ? legacy.data.updated_at
+            : new Date().toISOString(),
+      }
+    }
     return {
       slug: key,
       name: typeof data.name === "string" ? data.name : "",
@@ -330,6 +403,23 @@ export async function pullPublicBookingProfileCloud(
         typeof data.updated_at === "string"
           ? data.updated_at
           : new Date().toISOString(),
+      bio: typeof data.bio === "string" ? data.bio : undefined,
+      rating:
+        typeof data.rating === "number"
+          ? data.rating
+          : data.rating != null
+            ? Number(data.rating)
+            : undefined,
+      address: typeof data.address === "string" ? data.address : undefined,
+      instagram: typeof data.instagram === "string" ? data.instagram : undefined,
+      logoDataUrl:
+        typeof data.logo_data_url === "string" ? data.logo_data_url : undefined,
+      businessFields: Array.isArray(data.business_fields)
+        ? (data.business_fields as AuthUser["businessFields"])
+        : undefined,
+      portfolio: Array.isArray(data.portfolio)
+        ? normalizePortfolioList(data.portfolio)
+        : undefined,
     }
   } catch {
     return null
@@ -342,20 +432,50 @@ export async function pushPublicBookingProfileCloud(
 ) {
   if (!supabase) return false
   try {
-    const { error } = await supabase.from("public_booking_profiles").upsert(
-      {
-        slug: profile.slug,
-        owner_id: ownerId,
-        name: profile.name,
-        phone: profile.phone,
-        city: profile.city,
-        services: profile.services,
-        updated_at: profile.updatedAt || new Date().toISOString(),
-      },
-      { onConflict: "slug" }
-    )
-    if (error && !isMissingTableError(error.message)) return false
-    return !error
+    const payload = {
+      slug: profile.slug,
+      owner_id: ownerId,
+      name: profile.name,
+      phone: profile.phone,
+      city: profile.city,
+      services: profile.services,
+      updated_at: profile.updatedAt || new Date().toISOString(),
+      bio: profile.bio || "",
+      rating: profile.rating ?? null,
+      address: profile.address || "",
+      instagram: profile.instagram || "",
+      logo_data_url: profile.logoDataUrl || null,
+      business_fields: profile.businessFields || [],
+      portfolio: profile.portfolio || [],
+    }
+    const { error } = await supabase
+      .from("public_booking_profiles")
+      .upsert(payload, { onConflict: "slug" })
+    if (!error) return true
+    // Kolom baru belum ada di DB — simpan field inti saja.
+    if (
+      error.message?.toLowerCase().includes("column") ||
+      error.message?.toLowerCase().includes("schema cache")
+    ) {
+      const { error: legacyError } = await supabase
+        .from("public_booking_profiles")
+        .upsert(
+          {
+            slug: profile.slug,
+            owner_id: ownerId,
+            name: profile.name,
+            phone: profile.phone,
+            city: profile.city,
+            services: profile.services,
+            updated_at: profile.updatedAt || new Date().toISOString(),
+          },
+          { onConflict: "slug" }
+        )
+      if (legacyError && !isMissingTableError(legacyError.message)) return false
+      return !legacyError
+    }
+    if (isMissingTableError(error.message)) return false
+    return false
   } catch {
     return false
   }
@@ -566,6 +686,10 @@ export async function pushOwnerProfile(user: AuthUser, studio?: StudioState | nu
       instagram: user.instagram,
       address: user.address,
       logoDataUrl: user.logoDataUrl,
+      bio: user.bio,
+      rating: user.rating,
+      portfolio: user.portfolio,
+      publicSlug: user.publicSlug,
       businessFields: user.businessFields,
       customBusinessFields: user.customBusinessFields,
       services: user.services,
@@ -624,6 +748,10 @@ export async function pushStudioCloud(user: AuthUser, studio: StudioState) {
         instagram: user.instagram,
         address: user.address,
         logoDataUrl: user.logoDataUrl,
+        bio: user.bio,
+        rating: user.rating,
+        portfolio: user.portfolio,
+        publicSlug: user.publicSlug,
         avatar: user.avatar,
       },
       profileFromAuthMetadata(existingMeta)
@@ -685,6 +813,10 @@ export function applyCloudProfile(base: AuthUser, cloud: Partial<AuthUser> | nul
     instagram: base.instagram || cloud.instagram,
     address: base.address || cloud.address,
     logoDataUrl: base.logoDataUrl || cloud.logoDataUrl,
+    bio: base.bio || cloud.bio,
+    rating: base.rating ?? cloud.rating,
+    publicSlug: base.publicSlug || cloud.publicSlug,
+    portfolio: base.portfolio?.length ? base.portfolio : cloud.portfolio,
     businessFields: base.businessFields?.length
       ? base.businessFields
       : cloud.businessFields,
