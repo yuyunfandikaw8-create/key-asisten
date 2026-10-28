@@ -208,6 +208,9 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
         setProfile(published)
       } else if (user?.role === "owner") {
         setProfile(publishFromOwner(user))
+      } else if (slug.trim().toLowerCase() === studio.slug) {
+        // Contoh profil publik Key Partner — selalu tersedia untuk demo.
+        setProfile(publishFromOwner(null, { demo: true }))
       } else {
         setProfile(null)
       }
