@@ -1,123 +1,145 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
-import { LogOut, MapPin, Search } from "lucide-react"
+import { CalendarHeart, Heart, Search } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { useClientWorkspace } from "@/components/client-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { studio } from "@/lib/catalog"
-import { partners, TRADE_LABEL } from "@/lib/partners"
+import {
+  categoryById,
+  CLIENT_BOOKING_STATUS_LABEL,
+  partnerById,
+} from "@/lib/client-workspace"
 import { cn } from "@/lib/utils"
 
 export default function ClientHomePage() {
-  const router = useRouter()
-  const { ready, user, logout } = useAuth()
-  const [query, setQuery] = useState("")
+  const { ready: authReady, user } = useAuth()
+  const { ready, activeEvent, workspace } = useClientWorkspace()
 
-  const city = user?.city || "Bandung"
-  const listings = useMemo(() => {
-    const needle = query.trim().toLowerCase()
-    const inCity = partners.filter((partner) => partner.city === city)
-    const pool = inCity.length ? inCity : partners
-    if (!needle) return pool.slice(0, 8)
-    return pool
-      .filter((partner) => {
-        const haystack =
-          `${partner.name} ${TRADE_LABEL[partner.trade]} ${partner.area} ${partner.blurb}`.toLowerCase()
-        return haystack.includes(needle)
-      })
-      .slice(0, 12)
-  }, [city, query])
+  if (!authReady || !ready || !user) return <StudioLoading />
 
-  if (!ready || !user) return <StudioLoading />
+  const filledSlots =
+    activeEvent?.slots.filter((slot) => Boolean(slot.partnerId)) ?? []
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl px-4 py-8">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-display text-2xl">Key Assistant</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl">Halo, {user.name}</h1>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="size-3.5" />
-            Mencari vendor di {city}
-          </p>
-        </div>
-        <button
-          type="button"
-          className={cn(buttonVariants({ variant: "outline" }), "h-10")}
-          onClick={() => void logout().then(() => router.replace("/masuk"))}
-        >
-          <LogOut className="size-4" />
-          Keluar
-        </button>
-      </header>
+    <div className="grid gap-5">
+      <div>
+        <p className="text-sm font-medium tracking-wide text-primary uppercase">
+          Beranda klien
+        </p>
+        <h1 className="mt-2 text-4xl">Halo, {user.name}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Atur kebutuhan acara dan pilih beberapa vendor sekaligus — MUA, dekor,
+          fotografer, dan lainnya dalam satu tempat.
+        </p>
+      </div>
 
-      <section className="mt-8 grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <div>
-          <h2 className="text-2xl">Cari vendor</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Lihat vendor di sekitarmu, buka pricelist, lalu hubungi lewat WhatsApp.
-          </p>
-        </div>
-        <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Cari nama, jenis jasa, atau area…"
-            className="h-11 bg-background pl-10"
-          />
-        </div>
-        {!listings.length ? (
-          <p className="rounded-xl bg-muted/50 px-4 py-6 text-sm text-muted-foreground">
-            Belum ada vendor yang cocok dengan pencarianmu. Coba kata kunci lain.
-          </p>
+      <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        {activeEvent ? (
+          <>
+            <div>
+              <p className="text-sm text-muted-foreground">Acara aktif</p>
+              <h2 className="mt-1 font-display text-3xl">{activeEvent.title}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {activeEvent.date
+                  ? new Date(`${activeEvent.date}T12:00:00`).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "Tanggal belum diisi"}{" "}
+                · {activeEvent.location || activeEvent.city}
+              </p>
+            </div>
+            {filledSlots.length ? (
+              <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
+                <table className="w-full min-w-[28rem] border-collapse text-sm">
+                  <thead className="bg-muted/50 text-left">
+                    <tr>
+                      <th className="px-3 py-2.5 font-medium">Kebutuhan</th>
+                      <th className="px-3 py-2.5 font-medium">Vendor</th>
+                      <th className="px-3 py-2.5 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filledSlots.map((slot) => {
+                      const category = categoryById(slot.needId)
+                      const partner = slot.partnerId
+                        ? partnerById(slot.partnerId)
+                        : null
+                      return (
+                        <tr
+                          key={slot.needId}
+                          className="border-t border-foreground/10 bg-background"
+                        >
+                          <td className="px-3 py-2.5">
+                            {category?.emoji} {category?.label}
+                          </td>
+                          <td className="px-3 py-2.5 font-medium">
+                            {partner?.name ?? "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-muted-foreground">
+                            {CLIENT_BOOKING_STATUS_LABEL[slot.status]}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                Belum ada vendor di acara ini. Cari vendor lalu masukkan ke Pilihan Saya
+                atau langsung ke Acara.
+              </p>
+            )}
+            <Link
+              href="/klien/acara"
+              className={cn(buttonVariants({ variant: "outline" }), "h-10 w-fit")}
+            >
+              <CalendarHeart className="size-4" />
+              Kelola acara
+            </Link>
+          </>
         ) : (
-          <div className="grid gap-3">
-            {listings.map((partner) => (
-              <article
-                key={partner.id}
-                className="rounded-2xl bg-background px-4 py-4 ring-1 ring-foreground/10"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{partner.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {TRADE_LABEL[partner.trade]} · {partner.area}, {partner.city}
-                    </p>
-                  </div>
-                  <a
-                    href={`https://wa.me/62${partner.phone.replace(/^0/, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(buttonVariants({ size: "sm" }), "h-9")}
-                  >
-                    WhatsApp
-                  </a>
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">{partner.blurb}</p>
-              </article>
-            ))}
-          </div>
+          <>
+            <h2 className="font-display text-2xl">Mulai dari acara</h2>
+            <p className="text-sm text-muted-foreground">
+              Buat acara dulu — misalnya Pernikahan — lalu isi vendor per kebutuhan.
+            </p>
+            <Link href="/klien/acara" className={cn(buttonVariants(), "h-10 w-fit")}>
+              Buat acara pertama
+            </Link>
+          </>
         )}
       </section>
 
-      <section className="mt-6 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <h2 className="text-2xl">Link booking contoh</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Contoh form ajukan booking singkat yang bisa dibagikan owner ke klien.
-        </p>
+      <div className="grid gap-3 sm:grid-cols-2">
         <Link
-          href={`/p/${studio.slug}`}
-          className={cn(buttonVariants({ variant: "outline" }), "mt-4 h-10")}
+          href="/klien/cari"
+          className="grid gap-2 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition hover:bg-muted/30"
         >
-          Buka ajukan booking
+          <Search className="size-5 text-primary" />
+          <p className="font-medium">Cari Vendor</p>
+          <p className="text-sm text-muted-foreground">
+            MUA, Hair & Hijab, Decoration, Attire, Photo, Video, Content Creator.
+          </p>
         </Link>
-      </section>
+        <Link
+          href="/klien/pilihan"
+          className="grid gap-2 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition hover:bg-muted/30"
+        >
+          <Heart className="size-5 text-primary" />
+          <p className="font-medium">Pilihan Saya</p>
+          <p className="text-sm text-muted-foreground">
+            {workspace.shortlist.length
+              ? `${workspace.shortlist.length} vendor tersimpan untuk dibandingkan.`
+              : "Simpan beberapa kandidat vendor sebelum booking."}
+          </p>
+        </Link>
+      </div>
     </div>
   )
 }

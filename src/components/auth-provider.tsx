@@ -62,6 +62,7 @@ type AuthContextValue = {
     name: string
     email: string
     password: string
+    role?: AuthRole
   }) => Promise<AuthResult>
   continueWithGoogle: (choice: GoogleChoice, role?: AuthRole) => Promise<AuthResult>
   startGoogleOAuth: (nextPath?: string) => Promise<AuthResult>
@@ -567,6 +568,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { ok: false, error: "Email ini sudah terdaftar. Silakan masuk." }
         }
 
+        const role = normalizeRole(input.role)
+        const isClient = role === "client"
         const trialStartedAt = nowIso()
         let accountId = crypto.randomUUID()
         let needsEmailConfirm = false
@@ -581,8 +584,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               options: {
                 data: {
                   name: input.name.trim(),
-                  role: "owner",
-                  onboarding_step: 2,
+                  role,
+                  onboarding_step: isClient ? "done" : 2,
                   trial_started_at: trialStartedAt,
                 },
                 emailRedirectTo:
@@ -644,8 +647,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           studioName: "",
           password: input.password.trim(),
           provider: "password",
-          role: "owner",
-          onboardingStep: 2,
+          role,
+          onboardingStep: isClient ? "done" : 2,
           businessEmail: email,
           trialStartedAt,
         }
@@ -702,7 +705,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           provider: "google",
           role: nextRole,
           avatar: choice.initial,
-          onboardingStep: nextRole === "owner" ? 2 : undefined,
+          onboardingStep: nextRole === "owner" ? 2 : "done",
           businessEmail: email,
           trialStartedAt: nowIso(),
         }
@@ -710,6 +713,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const publicUser = toPublicUser(account)
         setUser(publicUser)
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
+        if (nextRole === "client") markOnboardingDone(publicUser.email)
         return { ok: true, user: publicUser }
       },
       startGoogleOAuth: async (nextPath = "/studio") => {

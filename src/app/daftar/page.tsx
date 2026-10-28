@@ -9,13 +9,17 @@ import { GoogleAuthButton } from "@/components/google-auth-button"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { homePathForUser } from "@/lib/auth"
-import { needsOnboarding } from "@/lib/onboarding"
+import { homePathForUser, type AuthRole } from "@/lib/auth"
+import { markOnboardingDone, needsOnboarding } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
+
+type Step = "role" | "form"
 
 export default function RegisterPage() {
   const router = useRouter()
   const { ready, user, register } = useAuth()
+  const [step, setStep] = useState<Step>("role")
+  const [role, setRole] = useState<AuthRole | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -25,13 +29,16 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!ready || !user) return
-    // Mid-onboarding: biarkan lihat halaman ini (dari tombol Kembali step 2).
     if (needsOnboarding(user)) return
     router.replace(homePathForUser(user))
   }, [ready, router, user])
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
+    if (!role) {
+      setError("Pilih cara kamu memakai Key Assistant dulu.")
+      return
+    }
     setPending(true)
     setError("")
     if (!accepted) {
@@ -39,7 +46,7 @@ export default function RegisterPage() {
       setPending(false)
       return
     }
-    const result = await register({ name, email, password })
+    const result = await register({ name, email, password, role })
     if (!result.ok) {
       setError(result.error)
       setPending(false)
@@ -51,6 +58,11 @@ export default function RegisterPage() {
       } catch {
         // ignore
       }
+    }
+    if (role === "client") {
+      markOnboardingDone(result.user.email)
+      router.replace("/klien")
+      return
     }
     router.replace("/onboarding")
   }
@@ -83,22 +95,107 @@ export default function RegisterPage() {
     )
   }
 
+  if (step === "role") {
+    return (
+      <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
+        <div>
+          <Link href="/" className="font-display text-2xl">
+            Key Assistant
+          </Link>
+          <h1 className="mt-4 text-4xl">Pilih cara kamu menggunakan Key Assistant</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Owner mengelola bisnis. Klien mengatur acara dan memilih beberapa vendor sekaligus.
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          <button
+            type="button"
+            onClick={() => setRole("owner")}
+            className={cn(
+              "rounded-2xl px-4 py-4 text-left ring-1 transition",
+              role === "owner"
+                ? "bg-primary/8 ring-primary"
+                : "bg-card ring-foreground/10 hover:bg-muted/40"
+            )}
+          >
+            <p className="text-lg font-medium">💼 Saya mengelola bisnis</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Kelola booking, klien, jadwal, invoice, keuangan, dan partner.
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("client")}
+            className={cn(
+              "rounded-2xl px-4 py-4 text-left ring-1 transition",
+              role === "client"
+                ? "bg-primary/8 ring-primary"
+                : "bg-card ring-foreground/10 hover:bg-muted/40"
+            )}
+          >
+            <p className="text-lg font-medium">💍 Saya sedang mencari jasa</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Cari MUA, Hair Stylist, Decoration, Attire, Photographer, Videographer, dan
+              vendor lainnya.
+            </p>
+          </button>
+        </div>
+
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+        <button
+          type="button"
+          className={cn(buttonVariants(), "h-11")}
+          disabled={!role}
+          onClick={() => {
+            if (!role) {
+              setError("Pilih salah satu opsi di atas.")
+              return
+            }
+            setError("")
+            setStep("form")
+          }}
+        >
+          Lanjutkan
+        </button>
+
+        <p className="text-sm text-muted-foreground">
+          Sudah punya akun?{" "}
+          <Link href="/masuk" className="font-medium text-primary hover:underline">
+            Masuk
+          </Link>
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
       <div>
+        <button
+          type="button"
+          className="mb-3 text-sm text-muted-foreground hover:text-foreground"
+          onClick={() => setStep("role")}
+        >
+          ← Ganti pilihan
+        </button>
         <Link href="/" className="font-display text-2xl">
           Key Assistant
         </Link>
         <h1 className="mt-4 text-4xl">Buat akun kamu</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Kelola bisnis beauty, wedding & event dalam satu tempat.
+          {role === "client"
+            ? "Akun klien untuk mengatur acara dan memilih banyak vendor."
+            : "Akun owner untuk mengelola bisnis beauty, wedding & event."}
         </p>
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
           mode="daftar"
-          nextPath="/onboarding"
+          nextPath={role === "client" ? "/klien" : "/onboarding"}
+          role={role ?? "owner"}
           onSuccess={(nextUser) => {
             router.replace(homePathForUser(nextUser))
           }}
@@ -173,17 +270,10 @@ export default function RegisterPage() {
             {pending ? "Menyimpan…" : "Buat Akun"}
           </button>
           <p className="text-center text-sm text-muted-foreground">
-            Coba gratis 14 hari
+            {role === "owner" ? "Coba gratis 14 hari" : "Gratis untuk mengatur acara"}
           </p>
         </form>
       </div>
-
-      <p className="text-sm text-muted-foreground">
-        Sudah punya akun?{" "}
-        <Link href="/masuk" className="font-medium text-primary hover:underline">
-          Masuk
-        </Link>
-      </p>
     </div>
   )
 }
