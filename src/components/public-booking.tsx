@@ -14,6 +14,7 @@ import { dpFor, formatDate, formatTime, rupiah, waLink } from "@/lib/format"
 import type { BusinessFieldId } from "@/lib/onboarding"
 import { fieldById } from "@/lib/onboarding"
 import {
+  DEMO_BOOKING_SERVICES,
   publishFromOwner,
   readPublicBookingProfile,
   type PublicBookingService,
@@ -41,15 +42,31 @@ function eventTypeForField(fieldId: BusinessFieldId | undefined): EventType {
 }
 
 function serviceBlurb(service: PublicBookingService) {
+  if (service.blurb?.trim()) return service.blurb.trim()
   const field = fieldById(service.fieldId)?.short
   const hours =
     service.durationHours > 0 ? `${service.durationHours} jam` : null
   return [field, hours].filter(Boolean).join(" · ")
 }
 
+function toPublicServices(
+  items: { id: string; name: string; price: number; durationHours: number; fieldId: BusinessFieldId; blurb?: string }[]
+): PublicBookingService[] {
+  return items
+    .filter((service) => service.name.trim() && service.price > 0)
+    .map((service) => ({
+      id: service.id,
+      name: service.name.trim(),
+      price: service.price,
+      durationHours: service.durationHours || 0,
+      fieldId: service.fieldId,
+      ...(service.blurb ? { blurb: service.blurb } : {}),
+    }))
+}
+
 /** Halaman klien untuk link booking mandiri — alur pendek, tanpa flyer pricelist lama. */
 export function PublicBookingFlow({ slug }: { slug: string }) {
-  const { ready, addBooking } = useStudio()
+  const { ready, addBooking, viewMode } = useStudio()
   const { ready: authReady, user } = useAuth()
   const [step, setStep] = useState<Step>(1)
   const [serviceId, setServiceId] = useState("")
@@ -63,6 +80,7 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
   const [studioPhone, setStudioPhone] = useState(studio.phone)
   const [services, setServices] = useState<PublicBookingService[]>([])
   const [profileReady, setProfileReady] = useState(false)
+  const isDemo = viewMode === "demo"
 
   const stepsLabel = useMemo(
     () => ["Layanan", "Jadwal", "Kontak", "Ringkasan", "Ajukan"] as const,
@@ -70,49 +88,67 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
   )
 
   useEffect(() => {
-    if (!authReady) return
+    if (!authReady || !ready) return
 
-    // Owner di perangkat yang sama: pastikan snapshot layanan terbaru ikut tersimpan.
+    function applyServices(
+      nextName: string,
+      nextPhone: string,
+      nextServices: PublicBookingService[]
+    ) {
+      setStudioName(nextName)
+      setStudioPhone(nextPhone)
+      setServices(nextServices)
+      setServiceId((current) =>
+        nextServices.some((item) => item.id === current)
+          ? current
+          : (nextServices[0]?.id ?? "")
+      )
+      setProfileReady(true)
+    }
+
+    // Data contoh: selalu isi paket contoh + harga supaya form bisa dicoba.
+    if (isDemo) {
+      const published = publishFromOwner(user, { demo: true })
+      applyServices(
+        published.name,
+        published.phone,
+        published.services.length
+          ? published.services
+          : toPublicServices(DEMO_BOOKING_SERVICES)
+      )
+      return
+    }
+
+    // Mode nyata: snapshot layanan owner ke profil publik.
     if (user?.services?.length) {
       publishFromOwner(user)
     }
 
     const published = readPublicBookingProfile(slug)
-    if (published) {
-      setStudioName(published.name || studio.name)
-      setStudioPhone(published.phone || studio.phone)
-      setServices(published.services)
-      setServiceId((current) =>
-        published.services.some((item) => item.id === current)
-          ? current
-          : (published.services[0]?.id ?? "")
+    if (published?.services.length) {
+      applyServices(
+        published.name || studio.name,
+        published.phone || studio.phone,
+        published.services
       )
-      setProfileReady(true)
       return
     }
 
     if (user?.services?.length && slug === studio.slug) {
-      const ownerServices = (user.services ?? [])
-        .filter((service) => service.name.trim() && service.price > 0)
-        .map((service) => ({
-          id: service.id,
-          name: service.name.trim(),
-          price: service.price,
-          durationHours: service.durationHours || 0,
-          fieldId: service.fieldId,
-        }))
-      setStudioName(user.studioName?.trim() || user.name?.trim() || studio.name)
-      setStudioPhone(user.phone?.trim() || studio.phone)
-      setServices(ownerServices)
-      setServiceId(ownerServices[0]?.id ?? "")
-      setProfileReady(true)
+      applyServices(
+        user.studioName?.trim() || user.name?.trim() || studio.name,
+        user.phone?.trim() || studio.phone,
+        toPublicServices(user.services)
+      )
       return
     }
 
-    setServices([])
-    setServiceId("")
-    setProfileReady(true)
-  }, [authReady, slug, user])
+    applyServices(
+      user?.studioName?.trim() || user?.name?.trim() || studio.name,
+      user?.phone?.trim() || studio.phone,
+      []
+    )
+  }, [authReady, isDemo, ready, slug, user])
 
   const selected = services.find((item) => item.id === serviceId) ?? services[0]
 

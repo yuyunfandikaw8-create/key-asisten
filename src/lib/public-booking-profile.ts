@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/lib/auth"
+import { packages } from "@/lib/catalog"
 import type { BusinessService } from "@/lib/onboarding"
 import { studioBrand } from "@/lib/studio-brand"
 
@@ -10,7 +11,22 @@ export type PublicBookingService = {
   price: number
   durationHours: number
   fieldId: BusinessService["fieldId"]
+  blurb?: string
 }
+
+/** Contoh layanan + harga untuk mode Data contoh (isi form booking klien). */
+export const DEMO_BOOKING_SERVICES: BusinessService[] = packages.map((item) => ({
+  id: `demo-${item.id}`,
+  fieldId: "makeup",
+  name: item.name,
+  price: item.price,
+  durationHours:
+    item.id === "wisuda" ? 3 : item.id === "perak" ? 4 : item.id === "adat" ? 10 : 8,
+}))
+
+const DEMO_BLURBS: Record<string, string> = Object.fromEntries(
+  packages.map((item) => [`demo-${item.id}`, item.blurb])
+)
 
 export type PublicBookingProfile = {
   slug: string
@@ -27,12 +43,14 @@ function normalizeService(service: BusinessService): PublicBookingService | null
   const name = service.name?.trim()
   const price = Number(service.price)
   if (!name || !Number.isFinite(price) || price <= 0) return null
+  const blurb = DEMO_BLURBS[service.id]
   return {
     id: service.id,
     name,
     price,
     durationHours: Number(service.durationHours) || 0,
     fieldId: service.fieldId,
+    ...(blurb ? { blurb } : {}),
   }
 }
 
@@ -119,6 +137,6 @@ export function publishFromOwner(
     name: brand.name,
     phone: brand.phone,
     city: brand.city,
-    services: options?.demo ? [] : user?.services,
+    services: options?.demo ? DEMO_BOOKING_SERVICES : user?.services,
   })
 }
