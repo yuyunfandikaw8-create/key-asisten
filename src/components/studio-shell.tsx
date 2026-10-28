@@ -10,6 +10,7 @@ import {
   FileText,
   FlaskConical,
   Handshake,
+  Images,
   Inbox,
   LayoutDashboard,
   LayoutGrid,
@@ -39,6 +40,7 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/studio", label: "Beranda", icon: LayoutDashboard, exact: true },
   { href: "/studio/menu", label: "Menu", icon: LayoutGrid },
+  { href: "/studio/portofolio", label: "Portofolio", icon: Images },
   { href: "/studio/jadwal", label: "Jadwal", icon: CalendarDays },
   { href: "/studio/invoice", label: "Invoice", icon: FileText },
   { href: "/studio/inbox", label: "Inbox", icon: Inbox },
