@@ -36,7 +36,7 @@ export default function LinkBookingPage() {
     () =>
       [
         `Halo, ini link booking ${brand.name}.`,
-        "Pilih layanan, jadwal, lalu ajukan booking — kami yang konfirmasi lewat WhatsApp:",
+        "Ajukan booking lewat link ini — kami konfirmasi via WhatsApp:",
         shareUrl,
       ].join("\n"),
     [brand.name, shareUrl]
@@ -85,8 +85,7 @@ export default function LinkBookingPage() {
         </Link>
         <h1 className="text-4xl">Link booking mandiri</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Bagikan link ini ke calon klien. Pengajuan masuk ke Jadwal untuk kamu terima, tolak,
-          atau konfirmasi.
+          Salin dan bagikan link ke calon klien. Pengajuan muncul di Jadwal.
         </p>
       </div>
 
@@ -122,6 +121,12 @@ export default function LinkBookingPage() {
             <ExternalLink className="size-4" />
             Buka halaman klien
           </a>
+          <Link
+            href="/studio/jadwal?status=pengajuan"
+            className={cn(buttonVariants({ variant: "outline" }), "h-10")}
+          >
+            Lihat pengajuan
+          </Link>
         </div>
 
         {shareNotice ? (
@@ -131,13 +136,6 @@ export default function LinkBookingPage() {
             Cocok untuk bio Instagram, broadcast WhatsApp, atau dikirim langsung ke calon klien.
           </p>
         )}
-
-        <Link
-          href="/studio/jadwal?status=pengajuan"
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          Buka pengajuan di Jadwal →
-        </Link>
       </section>
     </div>
   )
