@@ -25,6 +25,7 @@ import {
   type ClientViewMode,
   type ClientWorkspace,
 } from "@/lib/client-workspace"
+import { canCloudSync, pullClientCloud, pushClientCloud } from "@/lib/cloud-sync"
 
 type ClientContextValue = {
   ready: boolean
@@ -79,45 +80,63 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!authReady) return
-    if (!user || user.role !== "client") {
+    let cancelled = false
+
+    async function boot() {
+      if (!user || user.role !== "client") {
+        skipPersist.current = true
+        setWorkspace(emptyClientWorkspace())
+        workspaceRef.current = emptyClientWorkspace()
+        setViewMode("real")
+        viewModeRef.current = "real"
+        setNotice(null)
+        setReady(true)
+        window.setTimeout(() => {
+          skipPersist.current = false
+        }, 0)
+        return
+      }
+
+      let stored = readClientWorkspace(user.email)
+      if (workspaceIsEmpty(stored) && canCloudSync(user.email)) {
+        const cloud = await pullClientCloud(user.id)
+        if (cloud && !workspaceIsEmpty(cloud)) {
+          stored = cloud
+          writeClientWorkspace(user.email, cloud)
+        }
+      }
+
+      if (cancelled) return
+      const previewDone = localStorage.getItem(previewFlagKeyFor(user.email)) === "1"
+      const city = user.city || "Bandung"
+
       skipPersist.current = true
-      setWorkspace(emptyClientWorkspace())
-      workspaceRef.current = emptyClientWorkspace()
-      setViewMode("real")
-      viewModeRef.current = "real"
-      setNotice(null)
+      if (workspaceIsEmpty(stored) && !previewDone) {
+        const demo = sampleClientWorkspace(city)
+        setViewMode("demo")
+        viewModeRef.current = "demo"
+        setWorkspace(demo)
+        workspaceRef.current = demo
+        setNotice(
+          "Ini tampilan data contoh agar kamu melihat acara yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
+        )
+      } else {
+        setViewMode("real")
+        viewModeRef.current = "real"
+        setWorkspace(stored)
+        workspaceRef.current = stored
+        setNotice(null)
+      }
       setReady(true)
       window.setTimeout(() => {
         skipPersist.current = false
       }, 0)
-      return
     }
 
-    const stored = readClientWorkspace(user.email)
-    const previewDone = localStorage.getItem(previewFlagKeyFor(user.email)) === "1"
-    const city = user.city || "Bandung"
-
-    skipPersist.current = true
-    if (workspaceIsEmpty(stored) && !previewDone) {
-      const demo = sampleClientWorkspace(city)
-      setViewMode("demo")
-      viewModeRef.current = "demo"
-      setWorkspace(demo)
-      workspaceRef.current = demo
-      setNotice(
-        "Ini tampilan data contoh agar kamu melihat acara yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
-      )
-    } else {
-      setViewMode("real")
-      viewModeRef.current = "real"
-      setWorkspace(stored)
-      workspaceRef.current = stored
-      setNotice(null)
+    void boot()
+    return () => {
+      cancelled = true
     }
-    setReady(true)
-    window.setTimeout(() => {
-      skipPersist.current = false
-    }, 0)
   }, [authReady, user])
 
   useEffect(() => {
@@ -125,6 +144,9 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     if (skipPersist.current) return
     if (viewMode !== "real") return
     writeClientWorkspace(user.email, workspace)
+    if (canCloudSync(user.email)) {
+      void pushClientCloud(user, workspace)
+    }
   }, [ready, user, viewMode, workspace])
 
   const value = useMemo<ClientContextValue>(() => {

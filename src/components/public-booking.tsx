@@ -17,8 +17,8 @@ import type { BusinessFieldId } from "@/lib/onboarding"
 import { fieldById } from "@/lib/onboarding"
 import {
   DEMO_BOOKING_SERVICES,
+  loadPublicBookingProfile,
   publishFromOwner,
-  readPublicBookingProfile,
   type PublicBookingService,
 } from "@/lib/public-booking-profile"
 import type { EventType } from "@/lib/types"
@@ -91,12 +91,14 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!authReady || !ready) return
+    let cancelled = false
 
     function applyServices(
       nextName: string,
       nextPhone: string,
       nextServices: PublicBookingService[]
     ) {
+      if (cancelled) return
       setStudioName(nextName)
       setStudioPhone(nextPhone)
       setServices(nextServices)
@@ -108,59 +110,67 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
       setProfileReady(true)
     }
 
-    // Data contoh: selalu isi paket contoh + harga supaya form bisa dicoba.
-    if (isDemo) {
-      const published = publishFromOwner(user, { demo: true })
+    async function boot() {
+      // Data contoh: selalu isi paket contoh + harga supaya form bisa dicoba.
+      if (isDemo) {
+        const published = publishFromOwner(user, { demo: true })
+        applyServices(
+          published.name,
+          published.phone,
+          published.services.length
+            ? published.services
+            : toPublicServices(DEMO_BOOKING_SERVICES)
+        )
+        return
+      }
+
+      // Mode nyata: snapshot layanan owner ke profil publik.
+      if (user?.services?.length) {
+        publishFromOwner(user)
+      }
+
+      const published = await loadPublicBookingProfile(slug)
+      if (published?.services.length) {
+        applyServices(
+          published.name || studio.name,
+          published.phone || studio.phone,
+          published.services
+        )
+        return
+      }
+
+      if (user?.services?.length) {
+        applyServices(
+          user.studioName?.trim() || user.name?.trim() || studio.name,
+          user.phone?.trim() || studio.phone,
+          toPublicServices(user.services)
+        )
+        return
+      }
+
       applyServices(
-        published.name,
-        published.phone,
-        published.services.length
-          ? published.services
-          : toPublicServices(DEMO_BOOKING_SERVICES)
+        user?.studioName?.trim() || user?.name?.trim() || studio.name,
+        user?.phone?.trim() || studio.phone,
+        []
       )
-      return
     }
 
-    // Mode nyata: snapshot layanan owner ke profil publik.
-    if (user?.services?.length) {
-      publishFromOwner(user)
+    void boot()
+    return () => {
+      cancelled = true
     }
-
-    const published = readPublicBookingProfile(slug)
-    if (published?.services.length) {
-      applyServices(
-        published.name || studio.name,
-        published.phone || studio.phone,
-        published.services
-      )
-      return
-    }
-
-    if (user?.services?.length && slug === studio.slug) {
-      applyServices(
-        user.studioName?.trim() || user.name?.trim() || studio.name,
-        user.phone?.trim() || studio.phone,
-        toPublicServices(user.services)
-      )
-      return
-    }
-
-    applyServices(
-      user?.studioName?.trim() || user?.name?.trim() || studio.name,
-      user?.phone?.trim() || studio.phone,
-      []
-    )
   }, [authReady, isDemo, ready, slug, user])
 
   const selected = services.find((item) => item.id === serviceId) ?? services[0]
 
-  if (slug !== studio.slug) {
+  if (profileReady && !services.length && slug !== studio.slug) {
     return (
       <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-16 text-center">
         <p className="text-sm text-primary">Link booking</p>
         <h1 className="mt-2 text-4xl">Studio ini belum punya halaman</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Alamat yang dibuka tidak cocok. Halaman booking yang tersedia milik {studio.name}.
+          Belum ada layanan yang dipublikasikan untuk alamat ini. Owner perlu mengisi layanan
+          di studio, atau buka contoh {studio.name}.
         </p>
         <Link href={`/p/${studio.slug}`} className="mt-6 text-sm font-medium text-primary">
           Buka link booking {studio.name}

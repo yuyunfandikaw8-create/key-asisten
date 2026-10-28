@@ -1,7 +1,13 @@
 import type { AuthUser } from "@/lib/auth"
 import { packages } from "@/lib/catalog"
+import {
+  canCloudSync,
+  pullPublicBookingProfileCloud,
+  pushPublicBookingProfileCloud,
+} from "@/lib/cloud-sync"
 import type { BusinessService } from "@/lib/onboarding"
 import { studioBrand } from "@/lib/studio-brand"
+import { supabase } from "@/lib/supabase"
 
 export const PUBLIC_BOOKING_PROFILE_KEY = "key-assistant.public-booking-profile.v1"
 
@@ -56,6 +62,23 @@ function normalizeService(service: BusinessService): PublicBookingService | null
   }
 }
 
+function coerceCloudServices(raw: unknown[]): PublicBookingService[] {
+  return raw
+    .map((item) => {
+      if (!item || typeof item !== "object") return null
+      const service = item as Partial<PublicBookingService>
+      return normalizeService({
+        id: String(service.id || ""),
+        name: String(service.name || ""),
+        price: Number(service.price),
+        durationHours: Number(service.durationHours) || 0,
+        fieldId: (service.fieldId as BusinessService["fieldId"]) || "other",
+        details: service.blurb,
+      })
+    })
+    .filter((service): service is PublicBookingService => Boolean(service))
+}
+
 function readMap(): ProfileMap {
   if (typeof window === "undefined") return {}
   try {
@@ -101,6 +124,30 @@ export function readPublicBookingProfile(slug: string): PublicBookingProfile | n
   }
 }
 
+/** Lokal dulu, lalu cloud — untuk /p/[slug] lintas perangkat. */
+export async function loadPublicBookingProfile(
+  slug: string
+): Promise<PublicBookingProfile | null> {
+  const local = readPublicBookingProfile(slug)
+  const cloud = await pullPublicBookingProfileCloud(slug)
+  if (!cloud) return local
+  const fromCloud: PublicBookingProfile = {
+    slug: cloud.slug,
+    name: cloud.name,
+    phone: cloud.phone,
+    city: cloud.city,
+    services: coerceCloudServices(cloud.services),
+    updatedAt: cloud.updatedAt,
+  }
+  const map = readMap()
+  map[fromCloud.slug] = fromCloud
+  writeMap(map)
+  if (!local) return fromCloud
+  return Date.parse(fromCloud.updatedAt) >= Date.parse(local.updatedAt)
+    ? fromCloud
+    : local
+}
+
 /** Simpan snapshot layanan + identitas owner agar halaman /p/[slug] tidak pakai katalog. */
 export function publishPublicBookingProfile(input: {
   slug: string
@@ -108,6 +155,7 @@ export function publishPublicBookingProfile(input: {
   phone: string
   city?: string
   services: BusinessService[] | undefined | null
+  ownerId?: string
 }): PublicBookingProfile {
   const slug = input.slug.trim().toLowerCase()
   const services = (input.services ?? [])
@@ -126,6 +174,16 @@ export function publishPublicBookingProfile(input: {
   const map = readMap()
   map[slug] = profile
   writeMap(map)
+
+  if (input.ownerId) {
+    void pushPublicBookingProfileCloud(input.ownerId, profile)
+  } else if (supabase) {
+    void supabase.auth.getUser().then(({ data }) => {
+      const id = data.user?.id
+      if (id) void pushPublicBookingProfileCloud(id, profile)
+    })
+  }
+
   return profile
 }
 
@@ -141,5 +199,6 @@ export function publishFromOwner(
     phone: brand.phone,
     city: brand.city,
     services: options?.demo ? DEMO_BOOKING_SERVICES : user?.services,
+    ownerId: user && canCloudSync(user.email) ? user.id : undefined,
   })
 }

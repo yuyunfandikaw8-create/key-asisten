@@ -56,6 +56,27 @@ Opsional di Supabase Dashboard → Authentication → Providers → Email: matik
 
 Tanpa Supabase (atau akun demo), data tetap hanya di `localStorage` perangkat itu.
 
+### Database Supabase (wajib untuk sinkron semua data)
+
+Project: `iukerqusjdlkkoyxvgjs`. Anon key saja **tidak** bisa membuat tabel.
+
+1. Buka [Supabase SQL Editor](https://supabase.com/dashboard/project/iukerqusjdlkkoyxvgjs/sql/new).
+2. Copy seluruh isi `supabase/schema.sql` → Run.
+3. Cek status: `GET /api/cloud-status` (harus `"ok": true`).
+
+Tabel yang dibuat:
+
+| Tabel | Isi |
+| --- | --- |
+| `profiles` | Akun Owner & Klien |
+| `studios` | Identitas studio ringkas |
+| `owner_data` | Profil bisnis + state studio (booking, invoice, partner, …) |
+| `client_data` | Workspace klien (acara, shortlist, status) |
+| `public_booking_profiles` | Pricelist `/p/[slug]` (bisa dibaca publik) |
+| `booking_requests` | Pengajuan dari link booking |
+
+Setelah skema aktif, login email/Google non-demo menyimpan data ke cloud (bukan hanya `localStorage`).
+
 ### Deploy Vercel
 
 1. Create repo GitHub dari chat Cursor (proyek ini masih Origin sementara).
