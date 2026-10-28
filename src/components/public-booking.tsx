@@ -84,7 +84,7 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
   const isDemo = viewMode === "demo"
 
   const stepsLabel = useMemo(
-    () => ["Layanan", "Jadwal", "Kontak", "Ringkasan", "Ajukan"] as const,
+    () => ["Layanan", "Jadwal", "Data diri", "Ringkasan", "Ajukan"] as const,
     []
   )
 
@@ -375,32 +375,36 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
               {step === 3 ? (
                 <div className="grid gap-3">
                   <div>
-                    <h2 className="font-display text-2xl">3. Nama + WhatsApp</h2>
+                    <h2 className="font-display text-2xl">3. Data Diri</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Hanya data yang dibutuhkan agar owner bisa menghubungi.
+                      Masukkan nama dan nomor WhatsApp agar kami bisa menghubungimu untuk
+                      konfirmasi booking.
                     </p>
                   </div>
                   <div className="grid gap-1.5">
-                    <Label htmlFor="booking-name">Nama</Label>
+                    <Label htmlFor="booking-name">Nama lengkap</Label>
                     <Input
                       id="booking-name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      placeholder="Nama lengkap"
+                      placeholder="Masukkan nama lengkap"
                       className="h-11 bg-background"
                     />
                   </div>
                   <div className="grid gap-1.5">
-                    <Label htmlFor="booking-wa">WhatsApp</Label>
+                    <Label htmlFor="booking-wa">Nomor WhatsApp</Label>
                     <Input
                       id="booking-wa"
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
-                      placeholder="08…"
+                      placeholder="08xxxxxxxxxx"
                       inputMode="tel"
                       className="h-11 bg-background"
                     />
                   </div>
+                  <p className="text-sm text-muted-foreground italic">
+                    Pastikan nomor WhatsApp yang kamu masukkan masih aktif.
+                  </p>
                 </div>
               ) : null}
 
