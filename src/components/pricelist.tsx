@@ -132,12 +132,13 @@ export function Pricelist({ slug }: { slug: string }) {
       <main className="mx-auto grid max-w-lg gap-6 px-4 py-8">
         <div>
           <p className="text-sm font-medium tracking-wide text-primary uppercase">
-            {studio.city} · {studio.instagram}
+            Link booking · {studio.city}
           </p>
           <h1 className="mt-2 text-4xl">{studio.name}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Ajukan booking singkat. Owner akan mengonfirmasi lewat WhatsApp — pembayaran
-            langsung ke {studio.name}, bukan ke Key Assistant.
+            5 langkah singkat: pilih layanan, jadwal, nama + WhatsApp, ringkasan, lalu{" "}
+            <span className="font-medium text-foreground">Ajukan Booking</span>. Owner
+            mengonfirmasi lewat WhatsApp — pembayaran langsung ke {studio.name}.
           </p>
         </div>
 
