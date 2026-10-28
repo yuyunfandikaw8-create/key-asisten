@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { ScheduleFields } from "@/components/schedule-fields"
 import { useStudio } from "@/components/studio-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -238,7 +239,8 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
           </p>
           <h1 className="mt-2 text-4xl">{studioName}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Cukup 5 langkah. {studioName} akan konfirmasi lewat WhatsApp.
+            Isi beberapa langkah berikut. Setelah kamu mengirim booking, kami akan mengonfirmasi
+            melalui WhatsApp.
           </p>
         </div>
 
@@ -352,21 +354,23 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
                   <div>
                     <h2 className="font-display text-2xl">2. Pilih tanggal & waktu</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Owner bisa menyesuaikan jika slot bentrok.
+                      Pilih tanggal dan waktu yang kamu inginkan.
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Jadwal akan dikonfirmasi oleh {studioName} setelah booking dikirim.
                     </p>
                   </div>
+                  <ScheduleFields
+                    date={date}
+                    time={time}
+                    onDateChange={setDate}
+                    onTimeChange={setTime}
+                    dateId="booking-date"
+                    timeId="booking-time"
+                    inputClassName="h-11 bg-background"
+                  />
                   <div className="grid gap-1.5">
-                    <Label htmlFor="booking-date">Tanggal</Label>
-                    <Input
-                      id="booking-date"
-                      type="date"
-                      value={date}
-                      onChange={(event) => setDate(event.target.value)}
-                      className="h-11 bg-background"
-                    />
-                  </div>
-                  <div className="grid gap-1.5">
-                    <Label>Waktu</Label>
+                    <Label>Pilihan cepat</Label>
                     <div className="grid grid-cols-4 gap-2">
                       {TIME_OPTIONS.map((option) => (
                         <button
