@@ -238,12 +238,6 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
       <header className="border-b">
         <div className="mx-auto flex h-14 max-w-lg items-center px-4">
           <span className="text-sm text-muted-foreground">Key Assistant</span>
-          <a
-            href={waLink(studioPhone, `Halo ${studioName}, saya ingin tanya jadwal.`)}
-            className="ml-auto text-sm font-medium text-primary"
-          >
-            Chat WA
-          </a>
         </div>
       </header>
 
