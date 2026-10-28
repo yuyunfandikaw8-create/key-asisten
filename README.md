@@ -15,16 +15,18 @@ Buka [http://127.0.0.1:43123](http://127.0.0.1:43123) (server listen di `0.0.0.0
 
 Studio dilindungi login. Daftar di `/daftar` (Step 1: akun), lalu lanjut `/onboarding` (workspace → bidang bisnis multi-select → profil → layanan opsional → dashboard). Akun contoh di bawah sudah selesai onboarding.
 
-Akun contoh (tersimpan di browser):
+Akun uji untuk ubah & perbaiki fitur (tersimpan di browser; juga ada pintasan di `/masuk`):
 
-Owner (studio):
+| Peran | Email | Kata sandi | Untuk |
+| --- | --- | --- | --- |
+| **Owner** | `owner@riasaja.id` | `owner123` | Portofolio (nav), profil publik `/p/laras`, layanan, booking |
+| **Klien** | `klien@riasaja.id` | `klien123` | Cari vendor, lihat portofolio Owner, Pilihan Saya |
 
-- Bandung: `laras@riasaja.id` / `laras123`
-- Surabaya: `nadya@riasaja.id` / `suro123`
+Akun contoh tambahan:
 
-Klien:
-
-- `dina@riasaja.id` / `dina123`
+- Owner Bandung: `laras@riasaja.id` / `laras123`
+- Owner Surabaya: `nadya@riasaja.id` / `suro123`
+- Klien: `dina@riasaja.id` / `dina123`
 
 Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh** — sama seperti Owner. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
 

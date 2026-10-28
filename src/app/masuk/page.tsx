@@ -9,7 +9,7 @@ import { GoogleAuthButton } from "@/components/google-auth-button"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { homePathForUser, type AuthUser } from "@/lib/auth"
+import { homePathForUser, QUICK_TEST_LOGINS, type AuthUser } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 function resolveNextPath(requested: string, user: AuthUser) {
@@ -69,6 +69,35 @@ function LoginForm() {
           Masuk untuk mengelola jadwal, klien, invoice, keuangan, dan kolaborasi
           dengan lebih mudah dalam satu tempat.
         </p>
+      </div>
+
+      <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <div>
+          <p className="text-sm font-medium">Akun uji (ubah & perbaiki fitur)</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Ketuk untuk mengisi email & sandi, lalu masuk.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {QUICK_TEST_LOGINS.map((account) => (
+            <button
+              key={account.email}
+              type="button"
+              className="rounded-xl bg-muted/50 px-3 py-3 text-left ring-1 ring-foreground/10 transition hover:bg-muted"
+              onClick={() => {
+                setEmail(account.email)
+                setPassword(account.password)
+                setError("")
+              }}
+            >
+              <span className="block text-sm font-medium">{account.label}</span>
+              <span className="mt-0.5 block font-mono text-xs text-muted-foreground">
+                {account.email}
+              </span>
+              <span className="mt-1 block text-xs text-muted-foreground">{account.hint}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">

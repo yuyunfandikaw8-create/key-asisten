@@ -152,7 +152,65 @@ export type GoogleChoice = {
 export const AUTH_STORAGE_KEY = "riasaja.auth.v1"
 export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v1"
 
+/** Akun uji lokal (@riasaja.id) — untuk ubah/perbaiki fitur di app tanpa Supabase. */
 export const DEMO_ACCOUNTS: StoredAccount[] = [
+  {
+    id: "user-owner",
+    name: "Owner Uji",
+    email: "owner@riasaja.id",
+    phone: "081211112222",
+    city: "Surabaya",
+    studioName: "Laras Makeup",
+    password: "owner123",
+    provider: "password",
+    role: "owner",
+    roleChosen: true,
+    onboardingStep: "done",
+    businessFields: ["makeup", "hair"],
+    bio: "Makeup untuk wedding, engagement, wisuda, dan acara spesial.",
+    rating: 4.9,
+    publicSlug: "laras",
+    portfolio: demoPortfolioItems(),
+    services: [
+      {
+        id: "owner-svc-pengantin",
+        fieldId: "makeup",
+        name: "Makeup Pengantin",
+        price: 2_500_000,
+        durationHours: 8,
+        details: "Soft glam untuk akad & resepsi",
+      },
+      {
+        id: "owner-svc-akad",
+        fieldId: "makeup",
+        name: "Makeup Akad",
+        price: 1_500_000,
+        durationHours: 4,
+        details: "Look natural untuk akad",
+      },
+      {
+        id: "owner-svc-wisuda",
+        fieldId: "makeup",
+        name: "Makeup Wisuda",
+        price: 500_000,
+        durationHours: 2,
+        details: "Natural untuk wisuda & foto",
+      },
+    ],
+  },
+  {
+    id: "user-klien",
+    name: "Klien Uji",
+    email: "klien@riasaja.id",
+    phone: "081233334444",
+    city: "Surabaya",
+    studioName: "",
+    password: "klien123",
+    provider: "password",
+    role: "client",
+    roleChosen: true,
+    onboardingStep: "done",
+  },
   {
     id: "user-laras",
     name: "Key Partner",
@@ -168,7 +226,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     businessFields: ["makeup", "hair", "baju"],
     bio: "Makeup untuk wedding, engagement, wisuda, dan acara spesial.",
     rating: 4.9,
-    publicSlug: "laras",
+    publicSlug: "key-partner",
     portfolio: demoPortfolioItems(),
   },
   {
@@ -208,6 +266,30 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     role: "client",
     roleChosen: true,
     onboardingStep: "done",
+  },
+]
+
+/** Pintasan login di halaman Masuk — Owner & Klien untuk uji fitur. */
+export const QUICK_TEST_LOGINS: {
+  role: AuthRole
+  label: string
+  email: string
+  password: string
+  hint: string
+}[] = [
+  {
+    role: "owner",
+    label: "Owner",
+    email: "owner@riasaja.id",
+    password: "owner123",
+    hint: "Portofolio, profil publik, booking",
+  },
+  {
+    role: "client",
+    label: "Klien",
+    email: "klien@riasaja.id",
+    password: "klien123",
+    hint: "Cari vendor & lihat portofolio",
   },
 ]
 
