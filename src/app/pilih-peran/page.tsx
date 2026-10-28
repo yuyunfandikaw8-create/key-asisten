@@ -107,8 +107,12 @@ export default function ChooseRolePage() {
 
       <button
         type="button"
-        className={cn(buttonVariants(), "h-11")}
-        disabled={!role || pending}
+        className={cn(
+          buttonVariants(),
+          "h-11",
+          !role && !pending ? "opacity-60" : null
+        )}
+        disabled={pending}
         onClick={() => void continueWithRole()}
       >
         {pending ? "Menyimpan…" : "Lanjutkan"}
