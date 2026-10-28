@@ -2,15 +2,15 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowLeft, ExternalLink } from "lucide-react"
+import { ArrowLeft, ExternalLink, Images } from "lucide-react"
 
 import { BusinessProfileEditor } from "@/components/business-profile-editor"
-import { PortfolioEditor } from "@/components/portfolio-editor"
 import { StudioLoading } from "@/components/studio-bits"
 import { useAuth } from "@/components/auth-provider"
 import { useStudio } from "@/components/studio-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { paymentMethodLabel } from "@/lib/auth"
+import { portfolioPhotoCount } from "@/lib/portfolio"
 import { publishFromOwner } from "@/lib/public-booking-profile"
 import { studioBrand } from "@/lib/studio-brand"
 import { cn } from "@/lib/utils"
@@ -35,6 +35,9 @@ export default function StudioProfilPage() {
   const methods = brand.payment.methods
   const publicPath = `/p/${brand.slug}`
   const publicUrl = origin ? `${origin}${publicPath}` : publicPath
+  const photoCount = portfolioPhotoCount(
+    viewMode === "demo" ? brand.portfolio : user?.portfolio
+  )
 
   return (
     <div className="mx-auto grid max-w-xl gap-5">
@@ -48,7 +51,7 @@ export default function StudioProfilPage() {
         </Link>
         <h1 className="text-4xl">Profil bisnis</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Identitas, portofolio, dan apa yang tampil di profil publik klien.
+          Identitas dan rekening. Portofolio diunggah lewat Menu → Portofolio.
         </p>
       </div>
 
@@ -57,20 +60,29 @@ export default function StudioProfilPage() {
           <div>
             <h2 className="text-lg font-medium">Profil publik</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Halaman yang dilihat klien: portofolio, layanan, dan booking.
+              Halaman klien: portofolio, layanan, dan booking.
             </p>
             <p className="mt-2 break-all font-mono text-xs text-muted-foreground">
               {publicUrl}
             </p>
           </div>
-          <Link
-            href={publicPath}
-            target="_blank"
-            className={cn(buttonVariants({ variant: "outline" }), "h-9 shrink-0")}
-          >
-            <ExternalLink className="size-4" />
-            Lihat
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/studio/portofolio"
+              className={cn(buttonVariants({ variant: "outline" }), "h-9")}
+            >
+              <Images className="size-4" />
+              Portofolio{photoCount ? ` (${photoCount})` : ""}
+            </Link>
+            <Link
+              href={publicPath}
+              target="_blank"
+              className={cn(buttonVariants({ variant: "outline" }), "h-9")}
+            >
+              <ExternalLink className="size-4" />
+              Lihat
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -80,14 +92,6 @@ export default function StudioProfilPage() {
           Nama studio, kontak, logo, dan alamat.
         </p>
         <BusinessProfileEditor />
-      </div>
-
-      <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <h2 className="text-lg font-medium">Portofolio & tentang</h2>
-        <p className="mt-1 mb-4 text-sm text-muted-foreground">
-          Hasil pekerjaan yang boleh dilihat klien sebelum memilih vendor.
-        </p>
-        <PortfolioEditor />
       </div>
 
       <div id="metode-pembayaran" className="scroll-mt-24 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">

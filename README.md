@@ -77,10 +77,12 @@ Tabel yang dibuat:
 
 ### Profil publik & portofolio
 
-Owner mengatur **Portofolio** di `Studio → Profil` (foto/video, judul, kategori, deskripsi, tahun, tampil/sembunyi). Klien melihatnya di:
+Owner mengunggah **Portofolio** dari **Menu → Portofolio** (`/studio/portofolio`): foto/video, judul, kategori, deskripsi, tahun, tampil/sembunyi. Setelah disimpan, profil publik ter-publish otomatis.
 
-- Profil publik: `/p/[slug]` (contoh `/p/laras`) — tentang, portofolio, layanan, hubungi, ajukan booking
-- `Klien → Cari Vendor` → profil vendor + ❤️ **Pilihan Saya**
+Klien melihat portofolio Owner yang sudah diunggah di:
+
+- `Klien → Cari Vendor` → bagian **Vendor di Key Assistant** (bukan hanya direktori contoh)
+- Profil publik: `/p/[slug]` (contoh `/p/laras`)
 - `Klien → Pilihan Saya` — bandingkan portofolio, rating, harga mulai, lokasi, status
 
 Setelah menambah kolom portofolio, jalankan ulang bagian ALTER di `supabase/schema.sql` (aman diulang).

@@ -2,6 +2,7 @@ import type { AuthUser } from "@/lib/auth"
 import { packages } from "@/lib/catalog"
 import {
   canCloudSync,
+  listPublicBookingProfilesCloud,
   pullPublicBookingProfileCloud,
   pushPublicBookingProfileCloud,
 } from "@/lib/cloud-sync"
@@ -279,4 +280,63 @@ export function publishFromOwner(
 export function startingPrice(services: PublicBookingService[] | undefined | null) {
   if (!services?.length) return null
   return Math.min(...services.map((service) => service.price))
+}
+
+export function listLocalPublicBookingProfiles(): PublicBookingProfile[] {
+  return Object.values(readMap())
+    .map((profile) => normalizeProfile(profile, profile.slug))
+    .filter(
+      (profile) =>
+        (profile.portfolio?.length ?? 0) > 0 || (profile.services?.length ?? 0) > 0
+    )
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+}
+
+/** Profil Owner yang sudah dipublish — sumber Cari Vendor klien. */
+export async function listDiscoverablePublicProfiles(): Promise<PublicBookingProfile[]> {
+  const local = listLocalPublicBookingProfiles()
+  const bySlug = new Map(local.map((profile) => [profile.slug, profile]))
+  const cloudRows = await listPublicBookingProfilesCloud()
+  for (const cloud of cloudRows) {
+    const fromCloud = normalizeProfile(
+      {
+        slug: cloud.slug,
+        name: cloud.name,
+        phone: cloud.phone,
+        city: cloud.city,
+        services: coerceCloudServices(cloud.services),
+        updatedAt: cloud.updatedAt,
+        bio: cloud.bio,
+        rating: cloud.rating,
+        address: cloud.address,
+        instagram: cloud.instagram,
+        logoDataUrl: cloud.logoDataUrl,
+        businessFields: cloud.businessFields,
+        portfolio: normalizePortfolioList(cloud.portfolio),
+      },
+      cloud.slug
+    )
+    if (!(fromCloud.portfolio?.length || fromCloud.services?.length)) continue
+    const existing = bySlug.get(fromCloud.slug)
+    if (
+      !existing ||
+      Date.parse(fromCloud.updatedAt) >= Date.parse(existing.updatedAt)
+    ) {
+      bySlug.set(fromCloud.slug, fromCloud)
+    }
+  }
+  const merged = [...bySlug.values()]
+  writeMap(Object.fromEntries(merged.map((profile) => [profile.slug, profile])))
+  return merged.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+}
+
+export const PUBLIC_VENDOR_SHORTLIST_PREFIX = "pub:"
+
+export function publicVendorShortlistId(slug: string) {
+  return `${PUBLIC_VENDOR_SHORTLIST_PREFIX}${slug.trim().toLowerCase()}`
+}
+
+export function parsePublicVendorShortlistId(id: string) {
+  if (!id.startsWith(PUBLIC_VENDOR_SHORTLIST_PREFIX)) return null
+  return id.slice(PUBLIC_VENDOR_SHORTLIST_PREFIX.length)
 }

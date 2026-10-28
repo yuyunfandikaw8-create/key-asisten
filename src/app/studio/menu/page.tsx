@@ -8,6 +8,7 @@ import {
   FileText,
   Globe,
   Handshake,
+  Images,
   Inbox,
   LayoutDashboard,
   MapPin,
@@ -43,130 +44,140 @@ type MenuSection = {
   items: MenuItem[]
 }
 
-const sections: MenuSection[] = [
-  {
-    id: "operasional",
-    label: "Operasional",
-    items: [
-      {
-        href: "/studio",
-        title: "Beranda",
-        body: "Laba, hari ini, besok, dan yang perlu dilihat",
-        Icon: LayoutDashboard,
-        tone: "bg-[oklch(0.93_0.04_15)] text-[oklch(0.45_0.12_15)]",
-      },
-      {
-        href: "/studio/jadwal",
-        title: "Jadwal",
-        body: "Kelola jadwal dan booking dengan mudah",
-        Icon: CalendarDays,
-        tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
-      },
-      {
-        href: "/studio/jadwal/baru",
-        title: "Booking baru",
-        body: "Tempel chat / screenshot WA·IG, atau isi manual",
-        Icon: Plus,
-        tone: "bg-[oklch(0.93_0.05_145)] text-[oklch(0.4_0.1_145)]",
-      },
-      {
-        href: "/studio/invoice",
-        title: "Invoice",
-        body: "Kelola invoice dan pembayaran klien dengan lebih mudah",
-        Icon: FileText,
-        tone: "bg-[oklch(0.94_0.03_350)] text-[oklch(0.45_0.1_350)]",
-      },
-      {
-        href: "/studio/inbox",
-        title: "Inbox partner",
-        body: "Chat Make Up Artist, hair, Decoration, Attire, foto, dan konten",
-        Icon: Inbox,
-        tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
-      },
-      {
-        href: "/studio/profil",
-        title: "Profil",
-        body: "Logo, nama, WhatsApp, Instagram, kota",
-        Icon: UserRound,
-        tone: "bg-[oklch(0.94_0.03_15)] text-[oklch(0.48_0.1_15)]",
-      },
-      {
-        href: "/studio/layanan",
-        title: "Katalog layanan & harga",
-        body: "Kelola paket, harga, dan durasi milik bisnis kamu",
-        Icon: Sparkles,
-        tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
-      },
-      {
-        href: "/studio/keuangan",
-        title: "Arus kas & laporan",
-        body: "Pemasukan, pengeluaran, dan Tagihan Klien",
-        Icon: Wallet,
-        tone: "bg-[oklch(0.93_0.04_160)] text-[oklch(0.4_0.09_160)]",
-      },
-      {
-        href: "/studio/link-booking",
-        title: "Link booking mandiri",
-        body: "Klien ajukan booking singkat — kamu yang konfirmasi",
-        Icon: Globe,
-        tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
-      },
-    ],
-  },
-  {
-    id: "kerja-sama",
-    label: "Kerja sama",
-    items: [
-      {
-        href: "/studio/partner",
-        title: "Cari partner",
-        body: "Ajak kerja sama di kota aktif, lalu buat kombo",
-        Icon: Handshake,
-        tone: "bg-[oklch(0.93_0.04_15)] text-[oklch(0.45_0.12_15)]",
-      },
-      {
-        href: "/studio/partner",
-        title: "Make Up & Hair Stylist",
-        body: "Saring Make Up Artist serta Hijab & Hair Stylist lokal",
-        Icon: Scissors,
-        tone: "bg-[oklch(0.94_0.03_320)] text-[oklch(0.45_0.1_320)]",
-      },
-      {
-        href: `/p/${studio.slug}`,
-        title: "Pricelist & kombo publik",
-        body: "Taruh di bio. Klien ajukan tanggal sendiri",
-        Icon: Globe,
-        tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
-      },
-    ],
-  },
-  {
-    id: "pengaturan",
-    label: "Pengaturan",
-    items: [
-      {
-        href: "/studio/menu#lokasi",
-        title: "Lokasi aktif",
-        body: "Bandung, Surabaya, Jakarta, dan kota lain",
-        Icon: MapPin,
-        tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
-      },
-      {
-        href: "/studio/profil",
-        title: "Identitas & rekening",
-        body: "Nama studio, Instagram, profil bisnis, dan metode pembayaran",
-        Icon: Settings2,
-        tone: "bg-[oklch(0.94_0.02_80)] text-[oklch(0.42_0.05_60)]",
-      },
-    ],
-  },
-]
+function buildSections(publicSlug: string): MenuSection[] {
+  return [
+    {
+      id: "operasional",
+      label: "Operasional",
+      items: [
+        {
+          href: "/studio",
+          title: "Beranda",
+          body: "Laba, hari ini, besok, dan yang perlu dilihat",
+          Icon: LayoutDashboard,
+          tone: "bg-[oklch(0.93_0.04_15)] text-[oklch(0.45_0.12_15)]",
+        },
+        {
+          href: "/studio/portofolio",
+          title: "Portofolio",
+          body: "Unggah foto/video hasil kerja — tampil di profil publik klien",
+          Icon: Images,
+          tone: "bg-[oklch(0.94_0.04_35)] text-[oklch(0.45_0.12_25)]",
+        },
+        {
+          href: "/studio/jadwal",
+          title: "Jadwal",
+          body: "Kelola jadwal dan booking dengan mudah",
+          Icon: CalendarDays,
+          tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
+        },
+        {
+          href: "/studio/jadwal/baru",
+          title: "Booking baru",
+          body: "Tempel chat / screenshot WA·IG, atau isi manual",
+          Icon: Plus,
+          tone: "bg-[oklch(0.93_0.05_145)] text-[oklch(0.4_0.1_145)]",
+        },
+        {
+          href: "/studio/invoice",
+          title: "Invoice",
+          body: "Kelola invoice dan pembayaran klien dengan lebih mudah",
+          Icon: FileText,
+          tone: "bg-[oklch(0.94_0.03_350)] text-[oklch(0.45_0.1_350)]",
+        },
+        {
+          href: "/studio/inbox",
+          title: "Inbox partner",
+          body: "Chat Make Up Artist, hair, Decoration, Attire, foto, dan konten",
+          Icon: Inbox,
+          tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
+        },
+        {
+          href: "/studio/profil",
+          title: "Profil",
+          body: "Logo, nama, WhatsApp, Instagram, kota",
+          Icon: UserRound,
+          tone: "bg-[oklch(0.94_0.03_15)] text-[oklch(0.48_0.1_15)]",
+        },
+        {
+          href: "/studio/layanan",
+          title: "Katalog layanan & harga",
+          body: "Kelola paket, harga, dan durasi milik bisnis kamu",
+          Icon: Sparkles,
+          tone: "bg-[oklch(0.94_0.04_75)] text-[oklch(0.45_0.1_55)]",
+        },
+        {
+          href: "/studio/keuangan",
+          title: "Arus kas & laporan",
+          body: "Pemasukan, pengeluaran, dan Tagihan Klien",
+          Icon: Wallet,
+          tone: "bg-[oklch(0.93_0.04_160)] text-[oklch(0.4_0.09_160)]",
+        },
+        {
+          href: "/studio/link-booking",
+          title: "Link booking mandiri",
+          body: "Klien ajukan booking singkat — kamu yang konfirmasi",
+          Icon: Globe,
+          tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
+        },
+      ],
+    },
+    {
+      id: "kerja-sama",
+      label: "Kerja sama",
+      items: [
+        {
+          href: "/studio/partner",
+          title: "Cari partner",
+          body: "Ajak kerja sama di kota aktif, lalu buat kombo",
+          Icon: Handshake,
+          tone: "bg-[oklch(0.93_0.04_15)] text-[oklch(0.45_0.12_15)]",
+        },
+        {
+          href: "/studio/partner",
+          title: "Make Up & Hair Stylist",
+          body: "Saring Make Up Artist serta Hijab & Hair Stylist lokal",
+          Icon: Scissors,
+          tone: "bg-[oklch(0.94_0.03_320)] text-[oklch(0.45_0.1_320)]",
+        },
+        {
+          href: `/p/${publicSlug}`,
+          title: "Profil publik",
+          body: "Portofolio + layanan yang dilihat klien",
+          Icon: Globe,
+          tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
+        },
+      ],
+    },
+    {
+      id: "pengaturan",
+      label: "Pengaturan",
+      items: [
+        {
+          href: "/studio/menu#lokasi",
+          title: "Lokasi aktif",
+          body: "Bandung, Surabaya, Jakarta, dan kota lain",
+          Icon: MapPin,
+          tone: "bg-[oklch(0.93_0.04_220)] text-[oklch(0.42_0.1_220)]",
+        },
+        {
+          href: "/studio/profil",
+          title: "Identitas & rekening",
+          body: "Nama studio, Instagram, profil bisnis, dan metode pembayaran",
+          Icon: Settings2,
+          tone: "bg-[oklch(0.94_0.02_80)] text-[oklch(0.42_0.05_60)]",
+        },
+      ],
+    },
+  ]
+}
 
 export default function MenuPage() {
   const { user } = useAuth()
   const { ready, city, messages, partnerships, combos, viewMode } = useStudio()
   const brand = studioBrand(user, { demo: viewMode === "demo" })
   const [query, setQuery] = useState("")
+  const sections = useMemo(() => buildSections(brand.slug || studio.slug), [brand.slug])
 
   const unread = messages.filter(
     (message) => message.city === city && message.sender === "partner" && !message.read
@@ -186,7 +197,7 @@ export default function MenuPage() {
         }),
       }))
       .filter((section) => section.items.length > 0)
-  }, [query])
+  }, [query, sections])
 
   useEffect(() => {
     if (!ready || typeof window === "undefined") return
@@ -297,6 +308,10 @@ export default function MenuPage() {
           <div className="flex flex-wrap gap-2 text-sm">
             <Link href="/studio/profil" className="font-medium text-primary hover:underline">
               Edit profil
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <Link href="/studio/portofolio" className="font-medium text-primary hover:underline">
+              Portofolio
             </Link>
             <span className="text-muted-foreground">·</span>
             <Link href="/studio/layanan" className="font-medium text-primary hover:underline">

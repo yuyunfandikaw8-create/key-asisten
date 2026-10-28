@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { Heart, Star } from "lucide-react"
 
 import { useClientWorkspace } from "@/components/client-provider"
@@ -8,6 +9,13 @@ import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
 import { partnerById, tradeLabelForPartner } from "@/lib/client-workspace"
 import { rupiah } from "@/lib/format"
+import { portfolioPhotoCount } from "@/lib/portfolio"
+import {
+  listDiscoverablePublicProfiles,
+  parsePublicVendorShortlistId,
+  startingPrice,
+  type PublicBookingProfile,
+} from "@/lib/public-booking-profile"
 import {
   partnerAvailable,
   partnerPortfolioCount,
@@ -16,31 +24,22 @@ import {
 } from "@/lib/partners"
 import { cn } from "@/lib/utils"
 
-function CompareTable({ items }: { items: Partner[] }) {
-  if (items.length < 2) return null
-  const columns = items.slice(0, 4)
-  const rows: { label: string; value: (partner: Partner) => string }[] = [
-    {
-      label: "Portofolio",
-      value: (partner) => `${partnerPortfolioCount(partner)} foto`,
-    },
-    {
-      label: "Rating",
-      value: (partner) => `⭐ ${partnerRating(partner).toFixed(1)}`,
-    },
-    {
-      label: "Harga mulai",
-      value: (partner) => rupiah(partner.share).replace("Rp", "Rp").replace(",00", ""),
-    },
-    {
-      label: "Lokasi",
-      value: (partner) => partner.city,
-    },
-    {
-      label: "Status",
-      value: (partner) => (partnerAvailable(partner) ? "Tersedia" : "Padat"),
-    },
-  ]
+type ShortItem =
+  | { kind: "partner"; id: string; partner: Partner }
+  | { kind: "public"; id: string; profile: PublicBookingProfile }
+
+function CompareTable({
+  partners,
+  publics,
+}: {
+  partners: Partner[]
+  publics: PublicBookingProfile[]
+}) {
+  const total = partners.length + publics.length
+  if (total < 2) return null
+
+  const partnerCols = partners.slice(0, 4)
+  const publicCols = publics.slice(0, Math.max(0, 4 - partnerCols.length))
 
   return (
     <section className="grid gap-3 overflow-x-auto rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
@@ -54,26 +53,95 @@ function CompareTable({ items }: { items: Partner[] }) {
         <thead>
           <tr>
             <th className="py-2 pr-3 text-left font-medium text-muted-foreground"> </th>
-            {columns.map((partner) => (
+            {partnerCols.map((partner) => (
               <th key={partner.id} className="px-2 py-2 text-left font-medium">
                 <Link href={`/klien/vendor/${partner.id}`} className="hover:text-primary">
                   {partner.name}
                 </Link>
               </th>
             ))}
+            {publicCols.map((profile) => (
+              <th key={profile.slug} className="px-2 py-2 text-left font-medium">
+                <Link href={`/p/${profile.slug}`} className="hover:text-primary">
+                  {profile.name}
+                </Link>
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.label} className="border-t border-foreground/10">
-              <td className="py-2.5 pr-3 text-muted-foreground">{row.label}</td>
-              {columns.map((partner) => (
-                <td key={`${row.label}-${partner.id}`} className="px-2 py-2.5 font-medium">
-                  {row.value(partner)}
+          <tr className="border-t border-foreground/10">
+            <td className="py-2.5 pr-3 text-muted-foreground">Portofolio</td>
+            {partnerCols.map((partner) => (
+              <td key={`p-${partner.id}`} className="px-2 py-2.5 font-medium">
+                {partnerPortfolioCount(partner)} foto
+              </td>
+            ))}
+            {publicCols.map((profile) => (
+              <td key={`pf-${profile.slug}`} className="px-2 py-2.5 font-medium">
+                {portfolioPhotoCount(profile.portfolio)} foto
+              </td>
+            ))}
+          </tr>
+          <tr className="border-t border-foreground/10">
+            <td className="py-2.5 pr-3 text-muted-foreground">Rating</td>
+            {partnerCols.map((partner) => (
+              <td key={`r-${partner.id}`} className="px-2 py-2.5 font-medium">
+                ⭐ {partnerRating(partner).toFixed(1)}
+              </td>
+            ))}
+            {publicCols.map((profile) => (
+              <td key={`rf-${profile.slug}`} className="px-2 py-2.5 font-medium">
+                {typeof profile.rating === "number"
+                  ? `⭐ ${profile.rating.toFixed(1)}`
+                  : "—"}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-t border-foreground/10">
+            <td className="py-2.5 pr-3 text-muted-foreground">Harga mulai</td>
+            {partnerCols.map((partner) => (
+              <td key={`h-${partner.id}`} className="px-2 py-2.5 font-medium">
+                {rupiah(partner.share)}
+              </td>
+            ))}
+            {publicCols.map((profile) => {
+              const from = startingPrice(profile.services)
+              return (
+                <td key={`hf-${profile.slug}`} className="px-2 py-2.5 font-medium">
+                  {from != null ? rupiah(from) : "—"}
                 </td>
-              ))}
-            </tr>
-          ))}
+              )
+            })}
+          </tr>
+          <tr className="border-t border-foreground/10">
+            <td className="py-2.5 pr-3 text-muted-foreground">Lokasi</td>
+            {partnerCols.map((partner) => (
+              <td key={`l-${partner.id}`} className="px-2 py-2.5 font-medium">
+                {partner.city}
+              </td>
+            ))}
+            {publicCols.map((profile) => (
+              <td key={`lf-${profile.slug}`} className="px-2 py-2.5 font-medium">
+                {profile.city || "—"}
+              </td>
+            ))}
+          </tr>
+          <tr className="border-t border-foreground/10">
+            <td className="py-2.5 pr-3 text-muted-foreground">Status</td>
+            {partnerCols.map((partner) => (
+              <td key={`s-${partner.id}`} className="px-2 py-2.5 font-medium">
+                {partnerAvailable(partner) ? "Tersedia" : "Padat"}
+              </td>
+            ))}
+            {publicCols.map((profile) => (
+              <td key={`sf-${profile.slug}`} className="px-2 py-2.5 font-medium">
+                {profile.services.length || profile.portfolio?.length
+                  ? "Tersedia"
+                  : "—"}
+              </td>
+            ))}
+          </tr>
         </tbody>
       </table>
     </section>
@@ -83,19 +151,46 @@ function CompareTable({ items }: { items: Partner[] }) {
 export default function ClientShortlistPage() {
   const { ready, workspace, toggleShortlist, activeEvent, assignVendor } =
     useClientWorkspace()
+  const [publicMap, setPublicMap] = useState<Record<string, PublicBookingProfile>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    void listDiscoverablePublicProfiles().then((profiles) => {
+      if (cancelled) return
+      setPublicMap(Object.fromEntries(profiles.map((profile) => [profile.slug, profile])))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   if (!ready) return <StudioLoading />
 
-  const items = workspace.shortlist
-    .map((id) => partnerById(id))
-    .filter((partner): partner is Partner => Boolean(partner))
+  const items: ShortItem[] = workspace.shortlist
+    .map((id) => {
+      const slug = parsePublicVendorShortlistId(id)
+      if (slug) {
+        const profile = publicMap[slug]
+        return profile ? ({ kind: "public", id, profile } as const) : null
+      }
+      const partner = partnerById(id)
+      return partner ? ({ kind: "partner", id, partner } as const) : null
+    })
+    .filter((item): item is ShortItem => Boolean(item))
+
+  const partners = items
+    .filter((item): item is Extract<ShortItem, { kind: "partner" }> => item.kind === "partner")
+    .map((item) => item.partner)
+  const publics = items
+    .filter((item): item is Extract<ShortItem, { kind: "public" }> => item.kind === "public")
+    .map((item) => item.profile)
 
   return (
     <div className="grid gap-5">
       <div>
         <h1 className="text-4xl">Pilihan Saya</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Simpan beberapa vendor, bandingkan portofolio & harga, lalu booking.
+          Simpan vendor (termasuk yang sudah unggah portofolio di app), bandingkan, lalu booking.
         </p>
       </div>
 
@@ -110,54 +205,99 @@ export default function ClientShortlistPage() {
         </div>
       ) : (
         <>
-          <CompareTable items={items} />
+          <CompareTable partners={partners} publics={publics} />
 
           <div className="grid gap-3">
-            {items.map((partner) => {
-              const rating = partnerRating(partner)
-              const photos = partnerPortfolioCount(partner)
-              const available = partnerAvailable(partner)
-              return (
+            {items.map((item) =>
+              item.kind === "public" ? (
                 <article
-                  key={partner.id}
+                  key={item.id}
                   className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="font-medium">
                         <Link
-                          href={`/klien/vendor/${partner.id}`}
+                          href={`/p/${item.profile.slug}`}
                           className="hover:text-primary"
                         >
-                          {partner.name}
+                          {item.profile.name}
                         </Link>{" "}
                         <Heart className="ml-1 inline size-3.5 fill-primary text-primary" />
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {tradeLabelForPartner(partner)} · {partner.area}, {partner.city}
+                        {item.profile.city || "Lokasi belum diisi"} ·{" "}
+                        {portfolioPhotoCount(item.profile.portfolio)} foto
+                      </p>
+                      {typeof item.profile.rating === "number" ? (
+                        <p className="mt-1 inline-flex items-center gap-1 text-sm">
+                          <Star className="size-3.5 fill-current text-primary" />
+                          {item.profile.rating.toFixed(1)}
+                        </p>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9")}
+                      onClick={() => toggleShortlist(item.id)}
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                  {item.profile.bio ? (
+                    <p className="text-sm text-muted-foreground">{item.profile.bio}</p>
+                  ) : null}
+                  <Link
+                    href={`/p/${item.profile.slug}`}
+                    className={cn(buttonVariants({ variant: "outline" }), "h-10 w-fit")}
+                  >
+                    Lihat portofolio
+                  </Link>
+                </article>
+              ) : (
+                <article
+                  key={item.id}
+                  className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium">
+                        <Link
+                          href={`/klien/vendor/${item.partner.id}`}
+                          className="hover:text-primary"
+                        >
+                          {item.partner.name}
+                        </Link>{" "}
+                        <Heart className="ml-1 inline size-3.5 fill-primary text-primary" />
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {tradeLabelForPartner(item.partner)} · {item.partner.area},{" "}
+                        {item.partner.city}
                       </p>
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
                         <span className="inline-flex items-center gap-1">
                           <Star className="size-3.5 fill-current text-primary" />
-                          {rating.toFixed(1)}
+                          {partnerRating(item.partner).toFixed(1)}
                         </span>
-                        <span>mulai {rupiah(partner.share)}</span>
-                        <span>{photos} foto</span>
-                        <span>{available ? "Tersedia" : "Padat"}</span>
+                        <span>mulai {rupiah(item.partner.share)}</span>
+                        <span>{partnerPortfolioCount(item.partner)} foto</span>
+                        <span>
+                          {partnerAvailable(item.partner) ? "Tersedia" : "Padat"}
+                        </span>
                       </p>
                     </div>
                     <button
                       type="button"
                       className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-9")}
-                      onClick={() => toggleShortlist(partner.id)}
+                      onClick={() => toggleShortlist(item.id)}
                     >
                       Hapus
                     </button>
                   </div>
-                  <p className="text-sm text-muted-foreground">{partner.blurb}</p>
+                  <p className="text-sm text-muted-foreground">{item.partner.blurb}</p>
                   <div className="flex flex-wrap gap-2">
                     <Link
-                      href={`/klien/vendor/${partner.id}`}
+                      href={`/klien/vendor/${item.partner.id}`}
                       className={cn(buttonVariants({ variant: "outline" }), "h-10")}
                     >
                       Lihat profil
@@ -168,21 +308,21 @@ export default function ClientShortlistPage() {
                         className={cn(buttonVariants({ variant: "outline" }), "h-10")}
                         onClick={() => {
                           const need =
-                            partner.trade === "makeup"
+                            item.partner.trade === "makeup"
                               ? "makeup"
-                              : partner.trade === "hair"
+                              : item.partner.trade === "hair"
                                 ? "hair"
-                                : partner.trade === "dekor"
+                                : item.partner.trade === "dekor"
                                   ? "dekor"
-                                  : partner.trade === "baju"
+                                  : item.partner.trade === "baju"
                                     ? "baju"
-                                    : partner.trade === "content"
+                                    : item.partner.trade === "content"
                                       ? "content"
                                       : "photo"
                           assignVendor(
                             activeEvent.id,
                             need,
-                            partner.id,
+                            item.partner.id,
                             "menunggu_konfirmasi"
                           )
                         }}
@@ -193,7 +333,7 @@ export default function ClientShortlistPage() {
                   </div>
                 </article>
               )
-            })}
+            )}
           </div>
         </>
       )}

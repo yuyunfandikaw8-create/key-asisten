@@ -359,6 +359,65 @@ export async function pushClientCloud(user: AuthUser, workspace: ClientWorkspace
   }
 }
 
+function mapCloudPublicRow(data: Record<string, unknown>, slug: string): CloudPublicBookingProfile {
+  return {
+    slug,
+    name: typeof data.name === "string" ? data.name : "",
+    phone: typeof data.phone === "string" ? data.phone : "",
+    city: typeof data.city === "string" ? data.city : "",
+    services: Array.isArray(data.services) ? data.services : [],
+    updatedAt:
+      typeof data.updated_at === "string" ? data.updated_at : new Date().toISOString(),
+    bio: typeof data.bio === "string" ? data.bio : undefined,
+    rating:
+      typeof data.rating === "number"
+        ? data.rating
+        : data.rating != null
+          ? Number(data.rating)
+          : undefined,
+    address: typeof data.address === "string" ? data.address : undefined,
+    instagram: typeof data.instagram === "string" ? data.instagram : undefined,
+    logoDataUrl:
+      typeof data.logo_data_url === "string" ? data.logo_data_url : undefined,
+    businessFields: Array.isArray(data.business_fields)
+      ? (data.business_fields as AuthUser["businessFields"])
+      : undefined,
+    portfolio: Array.isArray(data.portfolio)
+      ? normalizePortfolioList(data.portfolio)
+      : undefined,
+  }
+}
+
+/** Daftar profil publik (untuk Cari Vendor klien) — hanya yang sudah dipublish Owner. */
+export async function listPublicBookingProfilesCloud(): Promise<CloudPublicBookingProfile[]> {
+  if (!supabase) return []
+  try {
+    const { data, error } = await supabase
+      .from("public_booking_profiles")
+      .select(
+        "slug, name, phone, city, services, updated_at, bio, rating, address, instagram, logo_data_url, business_fields, portfolio"
+      )
+      .order("updated_at", { ascending: false })
+      .limit(40)
+    if (!error && data) {
+      return data.map((row) =>
+        mapCloudPublicRow(row as Record<string, unknown>, String(row.slug || "").toLowerCase())
+      )
+    }
+    const legacy = await supabase
+      .from("public_booking_profiles")
+      .select("slug, name, phone, city, services, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(40)
+    if (legacy.error || !legacy.data) return []
+    return legacy.data.map((row) =>
+      mapCloudPublicRow(row as Record<string, unknown>, String(row.slug || "").toLowerCase())
+    )
+  } catch {
+    return []
+  }
+}
+
 export async function pullPublicBookingProfileCloud(
   slug: string
 ): Promise<CloudPublicBookingProfile | null> {
