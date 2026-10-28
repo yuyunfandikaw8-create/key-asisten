@@ -9,8 +9,8 @@ type Props = {
 }
 
 export const metadata: Metadata = {
-  title: `Pricelist ${studio.name}`,
-  description: studio.bio,
+  title: `Booking ${studio.name}`,
+  description: `Ajukan booking singkat ke ${studio.name}. Owner mengonfirmasi lewat WhatsApp.`,
 }
 
 async function PricelistFromParams({ params }: Props) {
@@ -23,7 +23,7 @@ export default function PricelistPage({ params }: Props) {
     <Suspense
       fallback={
         <main className="mx-auto max-w-3xl px-4 py-16 text-sm text-muted-foreground">
-          Memuat pricelist…
+          Memuat link booking…
         </main>
       }
     >

@@ -1,4 +1,4 @@
-import type { EventType, PaymentStatus } from "@/lib/types"
+import type { BookingApprovalStatus, EventType, PaymentStatus } from "@/lib/types"
 
 export const EVENT_LABEL: Record<EventType, string> = {
   pengantin: "Rias pengantin",
@@ -13,6 +13,13 @@ export const PAYMENT_LABEL: Record<PaymentStatus, string> = {
   belum_dp: "Belum Bayar DP",
   belum_lunas: "Belum Lunas",
   lunas: "Lunas",
+}
+
+export const APPROVAL_LABEL: Record<BookingApprovalStatus, string> = {
+  diajukan: "Menunggu keputusan",
+  menunggu_konfirmasi: "Perlu dikonfirmasi",
+  diterima: "Diterima",
+  ditolak: "Ditolak",
 }
 
 export function rupiah(value: number) {

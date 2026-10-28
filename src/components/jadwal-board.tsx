@@ -7,16 +7,17 @@ import { useMemo, useState } from "react"
 
 import { EmptyState, StatusBadge, StudioLoading } from "@/components/studio-bits"
 import { useStudio } from "@/components/studio-provider"
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { bookingEventLabel, bookingPackageName } from "@/lib/catalog"
-import { daysUntil, formatShortDate, formatTime } from "@/lib/format"
+import { APPROVAL_LABEL, daysUntil, formatShortDate, formatTime } from "@/lib/format"
 import { conflictPairs, paymentStatus, sortBookings } from "@/lib/metrics"
-import type { PaymentStatus } from "@/lib/types"
+import type { BookingApprovalStatus, PaymentStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const filters: { id: string; label: string }[] = [
   { id: "semua", label: "Semua" },
+  { id: "pengajuan", label: "Pengajuan" },
   { id: "hari_ini", label: "Hari ini" },
   { id: "besok", label: "Besok" },
   { id: "belum_dp", label: "Belum Bayar DP" },
@@ -25,10 +26,14 @@ const filters: { id: string; label: string }[] = [
   { id: "bentrok", label: "Bentrok" },
 ]
 
+function approvalOf(booking: { approvalStatus?: BookingApprovalStatus }): BookingApprovalStatus {
+  return booking.approvalStatus ?? "diterima"
+}
+
 export function JadwalBoard() {
   const params = useSearchParams()
   const status = params.get("status") ?? "semua"
-  const { ready, bookings } = useStudio()
+  const { ready, bookings, updateBooking } = useStudio()
   const [query, setQuery] = useState("")
 
   const conflictIds = useMemo(() => {
@@ -45,6 +50,10 @@ export function JadwalBoard() {
   const filtered = sortBookings(bookings).filter((booking) => {
     const haystack = `${booking.clientName} ${booking.location}`.toLowerCase()
     if (query && !haystack.includes(query.toLowerCase())) return false
+    if (status === "pengajuan") {
+      const approval = approvalOf(booking)
+      return approval === "diajukan" || approval === "menunggu_konfirmasi"
+    }
     if (status === "hari_ini") return daysUntil(booking.date) === 0
     if (status === "besok") return daysUntil(booking.date) === 1
     if (status === "bentrok") return conflictIds.has(booking.id)
@@ -60,7 +69,7 @@ export function JadwalBoard() {
         <div>
           <h1 className="text-4xl">Jadwal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Kelola jadwal dan booking dengan mudah.
+            Kelola jadwal dan booking dengan mudah. Pengajuan dari link booking menunggu keputusanmu.
           </p>
         </div>
         <Link
@@ -103,31 +112,95 @@ export function JadwalBoard() {
           body={
             query
               ? `Tidak ada klien atau lokasi yang memuat “${query}”.`
-              : "Belum ada booking yang sesuai dengan pilihanmu."
+              : status === "pengajuan"
+                ? "Belum ada pengajuan dari link booking yang menunggu keputusan."
+                : "Belum ada booking yang sesuai dengan pilihanmu."
           }
         />
       ) : (
         <div className="grid gap-2">
-          {filtered.map((booking) => (
-            <Link
-              key={booking.id}
-              href={`/studio/invoice/${booking.id}`}
-              className="rounded-2xl bg-card px-4 py-3 ring-1 ring-foreground/10"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium">{booking.clientName}</p>
-                <StatusBadge status={paymentStatus(booking)} />
-                {conflictIds.has(booking.id) ? (
-                  <span className="rounded-full bg-accent px-2 py-0.5 text-xs">Bentrok</span>
+          {filtered.map((booking) => {
+            const approval = approvalOf(booking)
+            const needsDecision =
+              approval === "diajukan" || approval === "menunggu_konfirmasi"
+            return (
+              <div
+                key={booking.id}
+                className="rounded-2xl bg-card px-4 py-3 ring-1 ring-foreground/10"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/studio/invoice/${booking.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {booking.clientName}
+                  </Link>
+                  <StatusBadge status={paymentStatus(booking)} />
+                  {approval !== "diterima" ? (
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-xs",
+                        approval === "ditolak"
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-accent text-accent-foreground"
+                      )}
+                    >
+                      {APPROVAL_LABEL[approval]}
+                    </span>
+                  ) : null}
+                  {conflictIds.has(booking.id) ? (
+                    <span className="rounded-full bg-accent px-2 py-0.5 text-xs">Bentrok</span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {formatShortDate(booking.date)} · {formatTime(booking.time)} ·{" "}
+                  {bookingEventLabel(booking)} · {bookingPackageName(booking)}
+                </p>
+                <p className="text-sm text-muted-foreground">{booking.location}</p>
+                {needsDecision ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() =>
+                        updateBooking(booking.id, { approvalStatus: "diterima" })
+                      }
+                    >
+                      Terima
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        updateBooking(booking.id, {
+                          approvalStatus: "menunggu_konfirmasi",
+                        })
+                      }
+                    >
+                      Perlu dikonfirmasi
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        updateBooking(booking.id, { approvalStatus: "ditolak" })
+                      }
+                    >
+                      Tolak
+                    </Button>
+                    <Link
+                      href={`/studio/invoice/${booking.id}`}
+                      className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                    >
+                      Lihat detail
+                    </Link>
+                  </div>
                 ) : null}
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {formatShortDate(booking.date)} · {formatTime(booking.time)} ·{" "}
-                {bookingEventLabel(booking)} · {bookingPackageName(booking)}
-              </p>
-              <p className="text-sm text-muted-foreground">{booking.location}</p>
-            </Link>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

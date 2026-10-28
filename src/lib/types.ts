@@ -10,6 +10,13 @@ export type BookingSource = "studio" | "pricelist" | "chat"
 
 export type PaymentStatus = "belum_dp" | "belum_lunas" | "lunas"
 
+/** Status persetujuan owner untuk pengajuan dari link booking. */
+export type BookingApprovalStatus =
+  | "diajukan"
+  | "menunggu_konfirmasi"
+  | "diterima"
+  | "ditolak"
+
 /** Metode pembayaran yang ditampilkan di invoice booking ini. */
 export type InvoicePaymentMethod = "transfer" | "qris" | "ewallet" | "cash"
 
@@ -46,6 +53,11 @@ export type Booking = {
   source: BookingSource
   attireReturned: boolean
   createdAt: string
+  /**
+   * Persetujuan owner. Pengajuan link booking mulai dari "diajukan".
+   * Booking yang dibuat di studio default "diterima".
+   */
+  approvalStatus?: BookingApprovalStatus
   /** Teks bebas dari owner bila tidak memakai opsi katalog. */
   eventLabel?: string
   packageName?: string

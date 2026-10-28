@@ -2,370 +2,383 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { ArrowLeft, Check } from "lucide-react"
 
 import { useStudio } from "@/components/studio-provider"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { attires, packageById, packages, studio } from "@/lib/catalog"
-import { dpFor, EVENT_LABEL, formatDate, rupiah, waLink } from "@/lib/format"
-import { attireStatus, conflictsFor } from "@/lib/metrics"
-import { comboTotal, partnerById, TRADE_LABEL } from "@/lib/partners"
+import { packageById, packages, studio } from "@/lib/catalog"
+import { dpFor, formatDate, formatTime, rupiah, waLink } from "@/lib/format"
 import type { EventType } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-function ComboSection() {
-  const { ready, combos, addBooking } = useStudio()
-  const published = combos.filter((combo) => combo.published)
-  const [comboId, setComboId] = useState(published[0]?.id ?? "")
-  const [name, setName] = useState("")
-  const [phone, setPhone] = useState("")
-  const [date, setDate] = useState("")
-  const [error, setError] = useState("")
-  const [sent, setSent] = useState("")
-  const selected = published.find((combo) => combo.id === comboId) ?? published[0]
+type Step = 1 | 2 | 3 | 4 | 5
 
-  if (!ready) {
-    return <p className="text-sm text-muted-foreground">Memuat kombo…</p>
-  }
+const TIME_OPTIONS = [
+  "07:00",
+  "08:00",
+  "09:00",
+  "10:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+]
 
-  if (!published.length) {
-    return (
-      <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-        <h2 className="text-3xl">Kombo bersama partner</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Belum ada paket gabungan yang ditampilkan. Studio masih menyusun kerja sama dengan Decsets, Attire, foto, dan partner lain.
-        </p>
-      </section>
-    )
-  }
-
-  const price = selected
-    ? comboTotal(packageById(selected.packageId)?.price ?? 0, selected.partnerIds, selected.discount)
-    : 0
-
-  return (
-    <section className="grid gap-3">
-      <h2 className="text-3xl">Kombo bersama partner</h2>
-      <p className="text-sm text-muted-foreground">
-        Satu harga untuk rias dan partner yang sudah setuju. Jam sementara 08.00, studio yang mengunci.
-      </p>
-      {published.map((combo) => {
-        const pkg = packageById(combo.packageId)
-        const total = comboTotal(pkg?.price ?? 0, combo.partnerIds, combo.discount)
-        return (
-          <article key={combo.id} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-display text-2xl">{combo.name}</h3>
-              <p className="font-medium">{rupiah(total)}</p>
-            </div>
-            <ul className="mt-2 grid gap-1 text-sm text-muted-foreground">
-              <li>Rias {pkg?.name}</li>
-              {combo.partnerIds.map((id) => {
-                const partner = partnerById(id)
-                return partner ? (
-                  <li key={id}>
-                    {TRADE_LABEL[partner.trade]} · {partner.name}
-                  </li>
-                ) : null
-              })}
-            </ul>
-            {combo.note ? <p className="mt-2 text-sm">{combo.note}</p> : null}
-          </article>
-        )
-      })}
-      {sent ? (
-        <p className="rounded-xl bg-accent px-4 py-3 text-sm">{sent}</p>
-      ) : (
-        <form
-          className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
-          onSubmit={(event) => {
-            event.preventDefault()
-            if (!ready || !selected) return
-            if (!name.trim() || !phone.trim() || !date) {
-              setError("Nama, WhatsApp, dan tanggal wajib diisi.")
-              return
-            }
-            addBooking({
-              clientName: name.trim(),
-              phone: phone.trim(),
-              eventType: "pengantin",
-              date,
-              time: "08:00",
-              location: "Dari pricelist kombo, lokasi menyusul",
-              packageId: selected.packageId,
-              attireId: null,
-              price,
-              dp: dpFor(price),
-              paid: 0,
-              notes: `Kombo ${selected.name}`,
-              source: "pricelist",
-              attireReturned: false,
-            })
-            setSent(`Pengajuan kombo ${selected.name} untuk ${formatDate(date)} sudah masuk ke studio.`)
-            setError("")
-          }}
-        >
-          <h3 className="font-display text-2xl">Ajukan kombo</h3>
-          <div className="grid gap-1.5">
-            <Label>Kombo</Label>
-            <Select value={selected?.id ?? comboId} onValueChange={(value) => setComboId(value ?? published[0].id)}>
-              <SelectTrigger className="h-10 w-full">
-                <SelectValue>{() => selected?.name ?? "Pilih kombo"}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {published.map((combo) => (
-                  <SelectItem key={combo.id} value={combo.id}>
-                    {combo.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="nama-kombo-klien">Nama</Label>
-            <Input id="nama-kombo-klien" value={name} onChange={(event) => setName(event.target.value)} className="h-10" />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="wa-kombo">WhatsApp</Label>
-            <Input id="wa-kombo" value={phone} onChange={(event) => setPhone(event.target.value)} className="h-10" placeholder="08…" />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="tanggal-kombo">Tanggal</Label>
-            <Input id="tanggal-kombo" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="h-10" />
-          </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button type="submit" disabled={!ready} className="h-10">
-            Kirim pengajuan kombo
-          </Button>
-        </form>
-      )}
-    </section>
-  )
+function eventTypeForPackage(packageId: string): EventType {
+  if (packageId === "wisuda") return "wisuda"
+  if (packageId === "perak") return "engagement"
+  return "pengantin"
 }
 
 export function Pricelist({ slug }: { slug: string }) {
-  const { ready, bookings, addBooking } = useStudio()
+  const { ready, addBooking } = useStudio()
+  const [step, setStep] = useState<Step>(1)
+  const [packageId, setPackageId] = useState(packages[0]?.id ?? "")
+  const [date, setDate] = useState("")
+  const [time, setTime] = useState("08:00")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
-  const [date, setDate] = useState("")
-  const [packageId, setPackageId] = useState(packages[0].id)
-  const [attireId, setAttireId] = useState("none")
-  const [note, setNote] = useState("")
   const [error, setError] = useState("")
-  const [sent, setSent] = useState("")
+  const [submitted, setSubmitted] = useState(false)
 
   const selected = packageById(packageId) ?? packages[0]
-  const clashes = useMemo(() => {
-    if (!date) return []
-    return conflictsFor(bookings, {
-      date,
-      time: "08:00",
-      attireId: attireId === "none" ? null : attireId,
-    })
-  }, [attireId, bookings, date])
+  const stepsLabel = useMemo(
+    () => ["Layanan", "Jadwal", "Kontak", "Ringkasan", "Ajukan"] as const,
+    []
+  )
 
   if (slug !== studio.slug) {
     return (
       <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-16 text-center">
-        <p className="text-sm text-primary">Pricelist</p>
+        <p className="text-sm text-primary">Link booking</p>
         <h1 className="mt-2 text-4xl">Studio ini belum punya halaman</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Alamat yang dibuka tidak cocok dengan studio demo. Pricelist yang tersedia milik {studio.name}.
+          Alamat yang dibuka tidak cocok. Halaman booking yang tersedia milik {studio.name}.
         </p>
         <Link href={`/p/${studio.slug}`} className="mt-6 text-sm font-medium text-primary">
-          Buka pricelist {studio.name}
+          Buka link booking {studio.name}
         </Link>
       </main>
     )
   }
 
+  function goNext() {
+    setError("")
+    if (step === 1 && !selected) {
+      setError("Pilih layanan dulu.")
+      return
+    }
+    if (step === 2) {
+      if (!date || !time) {
+        setError("Pilih tanggal dan waktu.")
+        return
+      }
+    }
+    if (step === 3) {
+      if (!name.trim() || !phone.trim()) {
+        setError("Isi nama dan WhatsApp.")
+        return
+      }
+    }
+    setStep((current) => Math.min(5, current + 1) as Step)
+  }
+
+  function submitBooking() {
+    if (!ready || !selected) return
+    if (!name.trim() || !phone.trim() || !date || !time) {
+      setError("Lengkapi layanan, jadwal, nama, dan WhatsApp.")
+      setStep(1)
+      return
+    }
+    addBooking({
+      clientName: name.trim(),
+      phone: phone.trim(),
+      eventType: eventTypeForPackage(selected.id),
+      date,
+      time,
+      location: "Lokasi menyusul (dikunci owner)",
+      packageId: selected.id,
+      attireId: null,
+      price: selected.price,
+      dp: dpFor(selected.price),
+      paid: 0,
+      notes: "Pengajuan dari link booking mandiri",
+      source: "pricelist",
+      attireReturned: false,
+      approvalStatus: "diajukan",
+    })
+    setSubmitted(true)
+    setError("")
+  }
+
   return (
     <div className="min-h-screen">
       <header className="border-b">
-        <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
+        <div className="mx-auto flex h-16 max-w-lg items-center px-4">
           <Link href="/" className="text-sm text-muted-foreground">
             Key Assistant
           </Link>
-          <Link href="/studio" className="ml-auto text-sm font-medium">
-            Masuk studio
-          </Link>
+          <a
+            href={waLink(studio.phone, `Halo ${studio.name}, saya ingin tanya jadwal.`)}
+            className="ml-auto text-sm font-medium text-primary"
+          >
+            Chat WA
+          </a>
         </div>
       </header>
-      <main className="mx-auto grid max-w-3xl gap-8 px-4 py-10">
+
+      <main className="mx-auto grid max-w-lg gap-6 px-4 py-8">
         <div>
           <p className="text-sm font-medium tracking-wide text-primary uppercase">
             {studio.city} · {studio.instagram}
           </p>
-          <h1 className="mt-2 text-5xl">{studio.name}</h1>
-          <p className="mt-3 max-w-xl text-muted-foreground">{studio.bio}</p>
-          <a
-            className="mt-4 inline-flex text-sm font-medium text-primary"
-            href={waLink(studio.phone, `Halo ${studio.name}, saya ingin tanya jadwal.`)}
-          >
-            Chat WhatsApp {studio.phone}
-          </a>
+          <h1 className="mt-2 text-4xl">{studio.name}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Ajukan booking singkat. Owner akan mengonfirmasi lewat WhatsApp — pembayaran
+            langsung ke {studio.name}, bukan ke Key Assistant.
+          </p>
         </div>
 
-        <section className="grid gap-3">
-          <h2 className="text-3xl">Paket</h2>
-          {packages.map((item) => (
-            <article key={item.id} className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-              <div className="flex items-baseline justify-between gap-3">
-                <h3 className="font-display text-2xl">{item.name}</h3>
-                <p className="font-medium">{rupiah(item.price)}</p>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">{item.blurb}</p>
-              <ul className="mt-3 grid gap-1 text-sm">
-                {item.includes.map((include) => (
-                  <li key={include}>{include}</li>
-                ))}
-              </ul>
-              <p className="mt-3 text-xs text-muted-foreground">DP {rupiah(dpFor(item.price))}</p>
-            </article>
-          ))}
-        </section>
-
-        <ComboSection />
-
-        <section className="grid gap-3">
-          <h2 className="text-3xl">Gaun yang bisa ditahan</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {attires.map((attire) => {
-              const status = ready ? attireStatus(attire.id, bookings) : null
-              return (
-                <article key={attire.id} className="flex gap-3 rounded-2xl bg-card p-3 ring-1 ring-foreground/10">
-                  <span className="size-14 rounded-xl ring-1 ring-foreground/10" style={{ background: attire.tone }} />
-                  <div>
-                    <p className="font-medium">{attire.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {attire.category} · {attire.size}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{status?.label ?? "Memuat status…"}</p>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-          <h2 className="text-3xl">Ajukan tanggal</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pengajuan masuk ke studio sebagai Belum Bayar DP. Jam sementara 08.00, studio yang mengunci jam akhirnya.
-          </p>
-          {sent ? (
-            <p className="mt-4 rounded-xl bg-accent px-4 py-3 text-sm">{sent}</p>
-          ) : (
-            <form
-              className="mt-4 grid gap-3"
-              onSubmit={(event) => {
-                event.preventDefault()
-                if (!ready) return
-                if (!name.trim() || !phone.trim() || !date) {
-                  setError("Nama, WhatsApp, dan tanggal wajib diisi.")
-                  return
-                }
-                const eventType: EventType = packageId === "wisuda" ? "wisuda" : packageId === "perak" ? "engagement" : "pengantin"
-                addBooking({
-                  clientName: name.trim(),
-                  phone: phone.trim(),
-                  eventType,
-                  date,
-                  time: "08:00",
-                  location: "Dari pricelist, lokasi menyusul",
-                  packageId: selected.id,
-                  attireId: attireId === "none" ? null : attireId,
-                  price: selected.price,
-                  dp: dpFor(selected.price),
-                  paid: 0,
-                  notes: note.trim(),
-                  source: "pricelist",
-                  attireReturned: false,
-                })
-                setSent(
-                  `Tanggal ${formatDate(date)} untuk ${name.trim()} sudah masuk ke ${studio.name}. Studio akan mengunci jam lewat WhatsApp.`
-                )
-                setError("")
-              }}
+        {submitted ? (
+          <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+            <p className="text-2xl font-display">Booking berhasil diajukan 🎉</p>
+            <p className="text-sm text-muted-foreground">
+              Permintaan booking kamu sudah diterima. {studio.name} akan menghubungimu melalui
+              WhatsApp untuk konfirmasi jadwal dan pembayaran.
+            </p>
+            <div className="rounded-xl bg-muted/40 px-4 py-3 text-sm">
+              <p className="font-medium">{selected.name}</p>
+              <p className="text-muted-foreground">
+                {formatDate(date)} · {formatTime(time)}
+              </p>
+              <p className="text-muted-foreground">
+                {name.trim()} · {phone.trim()}
+              </p>
+            </div>
+            <a
+              href={waLink(
+                studio.phone,
+                `Halo ${studio.name}, saya baru mengajukan booking ${selected.name} untuk ${formatDate(date)} jam ${formatTime(time)}.`
+              )}
+              className={cn(buttonVariants(), "h-11")}
             >
-              <div className="grid gap-1.5">
-                <Label htmlFor="nama-klien">Nama</Label>
-                <Input id="nama-klien" value={name} onChange={(event) => setName(event.target.value)} className="h-10" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="wa-klien">WhatsApp</Label>
-                <Input id="wa-klien" value={phone} onChange={(event) => setPhone(event.target.value)} className="h-10" placeholder="08…" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="tanggal-klien">Tanggal</Label>
-                <Input id="tanggal-klien" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="h-10" />
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Paket</Label>
-                <Select value={packageId} onValueChange={(value) => setPackageId(value ?? packages[0].id)}>
-                  <SelectTrigger className="h-10 w-full">
-                    <SelectValue>
-                      {(value) => packageById(String(value ?? packages[0].id))?.name ?? "Pilih paket"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {packages.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label>Gaun</Label>
-                <Select value={attireId} onValueChange={(value) => setAttireId(value ?? "none")}>
-                  <SelectTrigger className="h-10 w-full">
-                    <SelectValue>
-                      {(value) =>
-                        value === "none" || !value
-                          ? "Nanti ditentukan"
-                          : (attires.find((item) => item.id === value)?.name ?? "Pilih gaun")
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nanti ditentukan</SelectItem>
-                    {attires.map((attire) => (
-                      <SelectItem key={attire.id} value={attire.id}>
-                        {attire.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="catatan-klien">Catatan</Label>
-                <Textarea id="catatan-klien" value={note} onChange={(event) => setNote(event.target.value)} className="min-h-20" />
-              </div>
-              {date && clashes.length ? (
-                <p className="text-sm text-destructive">
-                  Tanggal ini sudah ada jadwal ({clashes.map((item) => item.clientName).join(", ")}). Studio tetap menerima pengajuan, lalu mengonfirmasi.
-                </p>
+              Chat WhatsApp {studio.name}
+            </a>
+          </section>
+        ) : (
+          <>
+            <ol className="grid grid-cols-5 gap-1">
+              {stepsLabel.map((label, index) => {
+                const n = (index + 1) as Step
+                const active = step === n
+                const done = step > n
+                return (
+                  <li
+                    key={label}
+                    className={cn(
+                      "rounded-xl px-1 py-2 text-center text-[10px] font-medium sm:text-xs",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : done
+                          ? "bg-primary/15 text-primary"
+                          : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <span className="block font-semibold">{n}</span>
+                    {label}
+                  </li>
+                )
+              })}
+            </ol>
+
+            <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+              {step === 1 ? (
+                <div className="grid gap-3">
+                  <div>
+                    <h2 className="text-2xl font-display">Pilih layanan</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Satu pilihan saja — detail lain dikonfirmasi owner nanti.
+                    </p>
+                  </div>
+                  <div className="grid gap-2">
+                    {packages.map((item) => {
+                      const active = item.id === selected.id
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setPackageId(item.id)}
+                          className={cn(
+                            "rounded-xl px-4 py-3 text-left ring-1 transition",
+                            active
+                              ? "bg-primary/8 ring-primary"
+                              : "bg-background ring-foreground/10 hover:bg-muted/50"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-medium">{item.name}</p>
+                              <p className="mt-0.5 text-sm text-muted-foreground">{item.blurb}</p>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <p className="text-sm font-medium">{rupiah(item.price)}</p>
+                              {active ? <Check className="size-4 text-primary" /> : null}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               ) : null}
+
+              {step === 2 ? (
+                <div className="grid gap-3">
+                  <div>
+                    <h2 className="text-2xl font-display">Pilih tanggal & waktu</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Owner bisa menyesuaikan jika slot bentrok.
+                    </p>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="booking-date">Tanggal</Label>
+                    <Input
+                      id="booking-date"
+                      type="date"
+                      value={date}
+                      onChange={(event) => setDate(event.target.value)}
+                      className="h-11 bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Waktu</Label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {TIME_OPTIONS.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setTime(option)}
+                          className={cn(
+                            "h-10 rounded-xl text-sm ring-1 transition",
+                            time === option
+                              ? "bg-primary text-primary-foreground ring-primary"
+                              : "bg-background ring-foreground/10 hover:bg-muted/50"
+                          )}
+                        >
+                          {formatTime(option)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {step === 3 ? (
+                <div className="grid gap-3">
+                  <div>
+                    <h2 className="text-2xl font-display">Nama + WhatsApp</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Cukup data yang dibutuhkan agar owner bisa menghubungi.
+                    </p>
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="booking-name">Nama</Label>
+                    <Input
+                      id="booking-name"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Nama lengkap"
+                      className="h-11 bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="booking-wa">WhatsApp</Label>
+                    <Input
+                      id="booking-wa"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder="08…"
+                      inputMode="tel"
+                      className="h-11 bg-background"
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {step === 4 || step === 5 ? (
+                <div className="grid gap-3">
+                  <div>
+                    <h2 className="text-2xl font-display">
+                      {step === 4 ? "Lihat ringkasan" : "Ajukan booking"}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Ini masih pengajuan. Belum berarti booking diterima.
+                    </p>
+                  </div>
+                  <dl className="grid gap-2 rounded-xl bg-muted/40 px-4 py-3 text-sm">
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Layanan</dt>
+                      <dd className="font-medium text-right">{selected.name}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Harga</dt>
+                      <dd className="font-medium">{rupiah(selected.price)}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Jadwal</dt>
+                      <dd className="font-medium text-right">
+                        {date ? formatDate(date) : "—"} · {formatTime(time)}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Nama</dt>
+                      <dd className="font-medium text-right">{name.trim() || "—"}</dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">WhatsApp</dt>
+                      <dd className="font-medium text-right">{phone.trim() || "—"}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ) : null}
+
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button type="submit" disabled={!ready} className="h-10">
-                {ready ? "Kirim ke studio" : "Memuat studio…"}
-              </Button>
-            </form>
-          )}
-          <p className="mt-3 text-xs text-muted-foreground">
-            Acara yang dipilih mengikuti paket: {EVENT_LABEL[packageId === "wisuda" ? "wisuda" : packageId === "perak" ? "engagement" : "pengantin"]}.
-          </p>
-        </section>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {step > 1 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11"
+                    onClick={() => {
+                      setError("")
+                      setStep((current) => Math.max(1, current - 1) as Step)
+                    }}
+                  >
+                    <ArrowLeft className="size-4" />
+                    Kembali
+                  </Button>
+                ) : null}
+                {step < 5 ? (
+                  <Button type="button" className="h-11 flex-1" onClick={goNext}>
+                    Lanjut
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="h-11 flex-1"
+                    disabled={!ready}
+                    onClick={submitBooking}
+                  >
+                    {ready ? "Ajukan Booking" : "Memuat…"}
+                  </Button>
+                )}
+              </div>
+            </section>
+          </>
+        )}
       </main>
     </div>
   )

@@ -14,6 +14,15 @@ import { waLink } from "@/lib/format"
 import { studioBrand } from "@/lib/studio-brand"
 import { cn } from "@/lib/utils"
 
+const CLIENT_FLOW = [
+  "Pilih layanan",
+  "Pilih tanggal & waktu",
+  "Isi nama + WhatsApp",
+  "Lihat ringkasan",
+  "Ajukan Booking",
+  "Owner menerima booking",
+] as const
+
 export default function LinkBookingPage() {
   const { ready: authReady, user } = useAuth()
   const { ready, viewMode } = useStudio()
@@ -36,7 +45,7 @@ export default function LinkBookingPage() {
     () =>
       [
         `Halo, ini link booking ${brand.name}.`,
-        "Kamu bisa lihat layanan/harga dan ajukan tanggal langsung di sini:",
+        "Pilih layanan, jadwal, lalu ajukan booking — kami yang konfirmasi lewat WhatsApp:",
         shareUrl,
       ].join("\n"),
     [brand.name, shareUrl]
@@ -59,7 +68,7 @@ export default function LinkBookingPage() {
       try {
         await navigator.share({
           title: `Booking ${brand.name}`,
-          text: `Ajukan tanggal lewat link booking ${brand.name}`,
+          text: `Ajukan booking lewat link ${brand.name}`,
           url: shareUrl,
         })
         setShareNotice("Link dibagikan.")
@@ -85,7 +94,8 @@ export default function LinkBookingPage() {
         </Link>
         <h1 className="text-4xl">Link booking mandiri</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Bagikan link ini ke calon klien. Mereka bisa isi sendiri, lalu masuk ke jadwal kamu.
+          Alur pendek untuk klien: sedikit isian, lalu kamu yang memutuskan diterima, ditolak,
+          atau perlu dikonfirmasi.
         </p>
       </div>
 
@@ -130,6 +140,34 @@ export default function LinkBookingPage() {
             Cocok untuk bio Instagram, broadcast WhatsApp, atau dikirim langsung ke calon klien.
           </p>
         )}
+      </section>
+
+      <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <h2 className="text-lg font-medium">Alur klien</h2>
+        <p className="text-sm text-muted-foreground">
+          Jangan membuat klien mengisi terlalu banyak. Tombol di halaman klien adalah{" "}
+          <span className="font-medium text-foreground">Ajukan Booking</span> — bukan “Booking
+          Sekarang”, karena kamu belum tentu menyetujui.
+        </p>
+        <ol className="grid gap-2">
+          {CLIENT_FLOW.map((item, index) => (
+            <li key={item} className="flex items-start gap-3 text-sm">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                {index + 1}
+              </span>
+              <span className="pt-1 font-medium">{item}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          Setelah diajukan, klien melihat bahwa permintaan sudah diterima dan{" "}
+          <span className="font-medium text-foreground">{brand.name}</span> akan menghubungi via
+          WhatsApp untuk konfirmasi jadwal dan pembayaran. Pembayaran tetap langsung ke kamu,
+          bukan ke Key Assistant.
+        </p>
+        <Link href="/studio/jadwal?status=pengajuan" className="text-sm font-medium text-primary hover:underline">
+          Buka pengajuan di Jadwal →
+        </Link>
       </section>
     </div>
   )

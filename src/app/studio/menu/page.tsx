@@ -107,7 +107,7 @@ const sections: MenuSection[] = [
       {
         href: "/studio/link-booking",
         title: "Link booking mandiri",
-        body: "Link untuk diisi calon klien",
+        body: "Klien ajukan booking singkat — kamu yang konfirmasi",
         Icon: Globe,
         tone: "bg-[oklch(0.93_0.04_250)] text-[oklch(0.42_0.1_250)]",
       },

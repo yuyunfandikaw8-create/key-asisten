@@ -318,6 +318,7 @@ export default function NewBookingPage() {
       notes: notes.trim(),
       source: chat.trim() || screenshotName ? "chat" : "studio",
       attireReturned: false,
+      approvalStatus: "diterima",
       // Default: semua metode aktif di Keuangan; bisa diubah di halaman invoice.
       invoicePaymentMethods: demoMode
         ? ["transfer", "qris"]

@@ -104,12 +104,13 @@ HP 081234009911`
 
 function booking(
   input: Omit<Booking, "createdAt" | "source" | "attireReturned" | "notes"> &
-    Partial<Pick<Booking, "createdAt" | "source" | "attireReturned" | "notes">>
+    Partial<Pick<Booking, "createdAt" | "source" | "attireReturned" | "notes" | "approvalStatus">>
 ): Booking {
   return {
     source: "studio",
     attireReturned: false,
     notes: "",
+    approvalStatus: "diterima",
     createdAt: new Date().toISOString(),
     ...input,
   }
