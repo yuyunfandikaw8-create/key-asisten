@@ -30,6 +30,10 @@ export function AuthGate({
       router.replace(`/masuk?next=${next}`)
       return
     }
+    if (user.roleChosen === false) {
+      router.replace("/pilih-peran")
+      return
+    }
     if (allowRole !== "any" && user.role !== allowRole) {
       router.replace(homePathForUser(user))
       return
@@ -62,6 +66,10 @@ export function AuthGate({
         </div>
       </>
     )
+  }
+
+  if (user.roleChosen === false) {
+    return <StudioLoading />
   }
 
   if (allowRole !== "any" && user.role !== allowRole) {

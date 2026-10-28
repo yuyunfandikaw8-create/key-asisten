@@ -84,6 +84,11 @@ export type AuthUser = {
   studioName: string
   provider: AuthProviderKind
   role: AuthRole
+  /**
+   * false = baru login Google, belum memilih Owner/Klien.
+   * undefined/true = sudah punya peran (akun lama atau daftar email).
+   */
+  roleChosen?: boolean
   avatar?: string
   /** ISO timestamp when the 14-day trial began */
   trialStartedAt?: string
@@ -113,6 +118,7 @@ export function normalizeRole(role: unknown): AuthRole {
 }
 
 export function homePathForUser(user: AuthUser | null | undefined) {
+  if (user && user.roleChosen === false) return "/pilih-peran"
   if (user?.role === "client") return "/klien"
   if (needsOnboarding(user)) return "/onboarding"
   return "/studio"
@@ -147,6 +153,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     password: "laras123",
     provider: "password",
     role: "owner",
+    roleChosen: true,
     onboardingStep: "done",
     businessFields: ["makeup", "hair", "baju"],
   },
@@ -160,6 +167,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     password: "suro123",
     provider: "password",
     role: "owner",
+    roleChosen: true,
     onboardingStep: "done",
     businessFields: ["makeup", "hair"],
   },
@@ -169,12 +177,12 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
 export const GOOGLE_CHOICES: GoogleChoice[] = [
   {
     id: "gmail-laras",
-    name: "Key Partner",
-    email: "key.partner@gmail.com",
+    name: "Laras Ayu",
+    email: "laras.ayu@gmail.com",
     city: "Bandung",
-    studioName: "Key Partner",
+    studioName: "",
     phone: "081223334455",
-    initial: "K",
+    initial: "L",
     tone: "bg-[oklch(0.55_0.14_25)] text-white",
   },
   {
@@ -182,17 +190,17 @@ export const GOOGLE_CHOICES: GoogleChoice[] = [
     name: "Nadya Suro",
     email: "nadya.rias.sby@gmail.com",
     city: "Surabaya",
-    studioName: "Nadya Rias Surabaya",
+    studioName: "",
     phone: "081255566677",
     initial: "N",
     tone: "bg-[oklch(0.5_0.1_250)] text-white",
   },
   {
     id: "gmail-mira",
-    name: "Mira Hairdo",
-    email: "mira.hairdo@gmail.com",
+    name: "Mira Handayani",
+    email: "mira.handayani@gmail.com",
     city: "Jakarta",
-    studioName: "Mira Hair Studio",
+    studioName: "",
     phone: "081288877766",
     initial: "M",
     tone: "bg-[oklch(0.52_0.1_160)] text-white",

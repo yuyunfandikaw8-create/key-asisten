@@ -29,6 +29,10 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!ready || !user) return
+    if (user.roleChosen === false) {
+      router.replace("/pilih-peran")
+      return
+    }
     if (needsOnboarding(user)) return
     router.replace(homePathForUser(user))
   }, [ready, router, user])
@@ -67,6 +71,14 @@ export default function RegisterPage() {
     router.replace("/onboarding")
   }
 
+  if (ready && user && user.roleChosen === false) {
+    return (
+      <div className="mx-auto grid min-h-screen max-w-md content-center px-4 py-10 text-sm text-muted-foreground">
+        Memuat…
+      </div>
+    )
+  }
+
   if (ready && user && needsOnboarding(user)) {
     return (
       <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
@@ -102,9 +114,33 @@ export default function RegisterPage() {
           <Link href="/" className="font-display text-2xl">
             Key Assistant
           </Link>
-          <h1 className="mt-4 text-4xl">Pilih cara kamu menggunakan Key Assistant</h1>
+          <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Owner mengelola bisnis. Klien mengatur acara dan memilih beberapa vendor sekaligus.
+            Satu akun Google bisa dipakai sebagai Owner maupun Klien. Pilih peran setelah
+            masuk, atau lanjut daftar dengan email.
+          </p>
+        </div>
+
+        <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+          <GoogleAuthButton
+            mode="daftar"
+            nextPath="/pilih-peran"
+            onSuccess={(nextUser) => {
+              router.replace(homePathForUser(nextUser))
+            }}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          atau daftar dengan email
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <div>
+          <p className="text-sm font-medium">Kamu menggunakan Key Assistant sebagai apa?</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pilihan ini hanya untuk daftar dengan email.
           </p>
         </div>
 
@@ -121,7 +157,7 @@ export default function RegisterPage() {
           >
             <p className="text-lg font-medium">💼 Saya mengelola bisnis</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Kelola booking, klien, jadwal, invoice, keuangan, dan partner.
+              Kelola booking, jadwal, invoice, keuangan, layanan, dan partner.
             </p>
           </button>
           <button
@@ -136,8 +172,8 @@ export default function RegisterPage() {
           >
             <p className="text-lg font-medium">💍 Saya sedang mencari jasa</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Cari MUA, Hair Stylist, Decoration, Attire, Photographer, Videographer, dan
-              vendor lainnya.
+              Cari dan pilih MUA, Hair Stylist, Decoration, Photographer, Videographer,
+              dan vendor lainnya.
             </p>
           </button>
         </div>
@@ -192,19 +228,6 @@ export default function RegisterPage() {
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <GoogleAuthButton
-          mode="daftar"
-          nextPath={role === "client" ? "/klien" : "/onboarding"}
-          role={role ?? "owner"}
-          onSuccess={(nextUser) => {
-            router.replace(homePathForUser(nextUser))
-          }}
-        />
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          atau
-          <span className="h-px flex-1 bg-border" />
-        </div>
         <p className="text-center text-sm font-medium">Daftar dengan email</p>
         <form onSubmit={submit} className="grid gap-3">
           <div className="grid gap-1.5">

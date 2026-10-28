@@ -66,6 +66,8 @@ type AuthContextValue = {
   }) => Promise<AuthResult>
   continueWithGoogle: (choice: GoogleChoice, role?: AuthRole) => Promise<AuthResult>
   startGoogleOAuth: (nextPath?: string) => Promise<AuthResult>
+  /** Setelah login Google: pilih Owner atau Klien. */
+  chooseRole: (role: AuthRole) => Promise<AuthResult>
   /** Owner-only: persist studio wilayah on the account profile. */
   updateOwnerCity: (city: string) => Promise<void>
   /** Merge profile / onboarding fields into the signed-in account. */
@@ -109,6 +111,7 @@ function readLocalAuthUser(): AuthUser | null {
       ...parsed,
       provider: parsed.provider ?? "password",
       role: normalizeRole(parsed.role),
+      roleChosen: parsed.roleChosen,
       onboardingStep: normalizeOnboardingStep(parsed.onboardingStep),
     }
   } catch {
@@ -156,6 +159,10 @@ function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUse
     city: local.city || remote.city,
     studioName: local.studioName || remote.studioName,
     role: normalizeRole(local.role || remote.role),
+    roleChosen:
+      local.roleChosen === false || remote.roleChosen === false
+        ? false
+        : (local.roleChosen ?? remote.roleChosen),
     trialStartedAt: local.trialStartedAt || remote.trialStartedAt,
     onboardingStep: step,
     businessEmail: local.businessEmail || remote.businessEmail,
@@ -229,20 +236,24 @@ function withTrial(user: AuthUser): AuthUser {
   return { ...user, trialStartedAt: nowIso() }
 }
 
-/** Ambil pilihan role dari halaman daftar sebelum OAuth Google redirect. */
+/** Setelah OAuth Google: arahkan ke pilih peran, jangan pakai role dari form daftar. */
 function withPendingRegisterRole(user: AuthUser): AuthUser {
   if (typeof window === "undefined") return user
   try {
     const pending = sessionStorage.getItem("key-assistant.register-role")
-    if (!pending) return user
-    sessionStorage.removeItem("key-assistant.register-role")
-    const role = normalizeRole(pending)
-    if (role === user.role) return user
-    const next = { ...user, role }
-    if (supabase && !isDemoEmail(user.email)) {
-      void supabase.auth.updateUser({ data: { role } })
+    if (pending) sessionStorage.removeItem("key-assistant.register-role")
+    if (user.roleChosen === false) return user
+    if (user.roleChosen === true) return user
+    // Login Google baru / tanpa sinyal profil → minta pilih Owner atau Klien.
+    const incompleteGoogle =
+      user.provider === "google" &&
+      !user.studioName &&
+      user.onboardingStep !== "done" &&
+      !isOnboardingMarkedDone(user.email)
+    if (pending === "choose" || incompleteGoogle) {
+      return { ...user, roleChosen: false }
     }
-    return next
+    return user
   } catch {
     return user
   }
@@ -287,6 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...parsed,
             provider: parsed.provider ?? "password",
             role: normalizeRole(parsed.role),
+            roleChosen: parsed.roleChosen,
             onboardingStep: markedDone
               ? "done"
               : normalizeOnboardingStep(parsed.onboardingStep),
@@ -648,6 +660,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password: input.password.trim(),
           provider: "password",
           role,
+          roleChosen: true,
           onboardingStep: isClient ? "done" : 2,
           businessEmail: email,
           trialStartedAt,
@@ -670,7 +683,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         return { ok: true, user: publicUser }
       },
-      continueWithGoogle: async (choice, role = "owner") => {
+      continueWithGoogle: async (choice) => {
         const email = normalizeEmail(choice.email)
         if (!email) {
           return { ok: false, error: "Email Google tidak valid." }
@@ -684,6 +697,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               provider: "google",
               name: existing.name || choice.name,
               role: normalizeRole(existing.role),
+              // Akun lama tanpa flag dianggap sudah punya peran.
+              roleChosen: existing.roleChosen !== false,
             })
           )
           if (!existing.trialStartedAt && publicUser.trialStartedAt) {
@@ -693,7 +708,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
           return { ok: true, user: publicUser }
         }
-        const nextRole = normalizeRole(role)
+        // Akun Google baru: peran dipilih setelah login di /pilih-peran.
         const account: StoredAccount = {
           id: crypto.randomUUID(),
           name: choice.name,
@@ -703,9 +718,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           studioName: "",
           password: `google:${email}`,
           provider: "google",
-          role: nextRole,
+          role: "owner",
+          roleChosen: false,
           avatar: choice.initial,
-          onboardingStep: nextRole === "owner" ? 2 : "done",
+          onboardingStep: 2,
           businessEmail: email,
           trialStartedAt: nowIso(),
         }
@@ -713,10 +729,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const publicUser = toPublicUser(account)
         setUser(publicUser)
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(publicUser))
-        if (nextRole === "client") markOnboardingDone(publicUser.email)
         return { ok: true, user: publicUser }
       },
-      startGoogleOAuth: async (nextPath = "/studio") => {
+      startGoogleOAuth: async (nextPath = "/pilih-peran") => {
         if (!supabase) {
           return { ok: false, error: "Supabase belum dikonfigurasi." }
         }
@@ -724,8 +739,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return {
             ok: false,
             error:
-              "Provider Google belum aktif di Supabase. Pilih Gmail di daftar, atau masukkan Gmail kamu di bawah.",
+              "Provider Google belum aktif di Supabase. Pilih akun Google di daftar, atau masukkan email Google kamu di bawah.",
           }
+        }
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("key-assistant.register-role", "choose")
         }
         const redirectTo =
           typeof window !== "undefined"
@@ -740,6 +758,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ok: false,
           error: "Mengalihkan ke Google…",
         }
+      },
+      chooseRole: async (role) => {
+        if (!user) {
+          return { ok: false, error: "Belum masuk. Masuk dengan Google dulu." }
+        }
+        const nextRole = normalizeRole(role)
+        const isClient = nextRole === "client"
+        if (isClient) {
+          markOnboardingDone(user.email)
+        } else if (user.onboardingStep !== "done") {
+          clearOnboardingDone(user.email)
+        }
+        const nextUser: AuthUser = {
+          ...user,
+          role: nextRole,
+          roleChosen: true,
+          onboardingStep: isClient
+            ? "done"
+            : user.onboardingStep === "done"
+              ? "done"
+              : 2,
+        }
+        setUser(nextUser)
+        persistAuthUser(nextUser)
+
+        const accounts = readAccounts()
+        const index = accounts.findIndex(
+          (item) => item.email === normalizeEmail(user.email)
+        )
+        if (index >= 0) {
+          const nextAccounts = [...accounts]
+          nextAccounts[index] = { ...nextAccounts[index], ...nextUser }
+          writeAccounts(nextAccounts)
+        }
+
+        if (supabase && !isDemoEmail(user.email)) {
+          void supabase.auth
+            .updateUser({
+              data: {
+                role: nextUser.role,
+                role_chosen: true,
+                onboarding_step: nextUser.onboardingStep,
+              },
+            })
+            .catch(() => {
+              // Sinkron cloud opsional.
+            })
+          void pushOwnerProfile(nextUser)
+        }
+
+        return { ok: true, user: nextUser }
       },
       updateOwnerCity: async (city) => {
         const nextCity = city.trim()
@@ -818,6 +887,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 city: nextUser.city,
                 studio_name: nextUser.studioName,
                 role: nextUser.role,
+                role_chosen: nextUser.roleChosen !== false,
                 onboarding_step: nextUser.onboardingStep,
                 business_email: nextUser.businessEmail,
                 instagram: nextUser.instagram,

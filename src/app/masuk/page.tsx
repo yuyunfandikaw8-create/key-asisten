@@ -14,7 +14,9 @@ import { cn } from "@/lib/utils"
 
 function resolveNextPath(requested: string, user: AuthUser) {
   const home = homePathForUser(user)
+  if (user.roleChosen === false) return home
   if (!requested.startsWith("/")) return home
+  if (requested.startsWith("/pilih-peran")) return home
   if (user.role === "client" && requested.startsWith("/studio")) return home
   if (user.role === "owner" && requested.startsWith("/klien")) return home
   return requested
@@ -72,7 +74,7 @@ function LoginForm() {
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
           mode="masuk"
-          nextPath={requestedNext || "/studio"}
+          nextPath={requestedNext || "/pilih-peran"}
           onSuccess={(nextUser) => {
             router.replace(
               resolveNextPath(requestedNext || homePathForUser(nextUser), nextUser)

@@ -7,7 +7,6 @@ import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   GOOGLE_CHOICES,
-  type AuthRole,
   type AuthUser,
   type GoogleChoice,
 } from "@/lib/auth"
@@ -46,8 +45,8 @@ function choiceFromEmail(email: string): GoogleChoice {
     id: `gmail-custom-${normalized}`,
     name,
     email: normalized,
-    city: "Bandung",
-    studioName: name,
+    city: "",
+    studioName: "",
     phone: "",
     initial: name.charAt(0).toUpperCase() || "G",
     tone: "bg-[oklch(0.55_0.12_25)] text-white",
@@ -56,15 +55,12 @@ function choiceFromEmail(email: string): GoogleChoice {
 
 export function GoogleAuthButton({
   mode,
-  nextPath = "/studio",
-  role = "owner",
+  nextPath = "/pilih-peran",
   onSuccess,
   className,
 }: {
   mode: "masuk" | "daftar"
   nextPath?: string
-  /** Dipakai saat daftar akun baru lewat Google. */
-  role?: AuthRole
   onSuccess: (user: AuthUser) => void
   className?: string
 }) {
@@ -78,10 +74,7 @@ export function GoogleAuthButton({
     setError("")
     setPending(true)
     try {
-      const result = await continueWithGoogle(
-        choice,
-        mode === "daftar" ? role : undefined
-      )
+      const result = await continueWithGoogle(choice)
       if (!result.ok) {
         setError(result.error)
         return
@@ -98,8 +91,8 @@ export function GoogleAuthButton({
     if (googleEnabled) {
       setPending(true)
       try {
-        if (mode === "daftar" && typeof window !== "undefined") {
-          sessionStorage.setItem("key-assistant.register-role", role)
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("key-assistant.register-role", "choose")
         }
         const result = await startGoogleOAuth(nextPath)
         if (result.ok) {
@@ -118,7 +111,7 @@ export function GoogleAuthButton({
   async function continueCustomEmail() {
     const email = customEmail.trim().toLowerCase()
     if (!email.includes("@") || !email.includes(".")) {
-      setError("Masukkan alamat Gmail yang valid.")
+      setError("Masukkan alamat email Google yang valid.")
       return
     }
     await pick(choiceFromEmail(email))
@@ -143,11 +136,11 @@ export function GoogleAuthButton({
       {open ? (
         <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
           <div className="border-b px-4 py-3">
-            <p className="text-sm font-medium">Pilih akun</p>
+            <p className="text-sm font-medium">Pilih akun Google</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {googleEnabled
-                ? "Pilih Gmail untuk masuk ke Key Assistant."
-                : "Google OAuth di Supabase belum aktif. Pilih akun contoh, atau masukkan Gmail kamu."}
+                ? "Pilih akun Google untuk masuk ke Key Assistant."
+                : "Google OAuth di Supabase belum aktif. Pilih akun contoh, atau masukkan email Google kamu."}
             </p>
           </div>
 
@@ -170,9 +163,8 @@ export function GoogleAuthButton({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium">{choice.name}</span>
-                  <span className="block truncate text-sm text-muted-foreground">{choice.email}</span>
-                  <span className="block text-xs text-muted-foreground">
-                    {choice.studioName} · {choice.city}
+                  <span className="block truncate text-sm text-muted-foreground">
+                    {choice.email}
                   </span>
                 </span>
               </button>
@@ -181,7 +173,7 @@ export function GoogleAuthButton({
 
           <div className="grid gap-2 border-t px-4 py-3">
             <p className="text-xs font-medium text-muted-foreground">
-              Atau lanjut dengan Gmail kamu
+              Atau masukkan email Google kamu
             </p>
             <div className="flex gap-2">
               <Input
