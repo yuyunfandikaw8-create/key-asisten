@@ -3,6 +3,7 @@ import {
   normalizeOnboardingStep,
   type BusinessFieldId,
   type BusinessService,
+  type CustomBusinessField,
   type OnboardingStep,
 } from "@/lib/onboarding"
 
@@ -93,6 +94,8 @@ export type AuthUser = {
   address?: string
   logoDataUrl?: string
   businessFields?: BusinessFieldId[]
+  /** Bidang diketik manual (di luar daftar bawaan). */
+  customBusinessFields?: CustomBusinessField[]
   services?: BusinessService[]
   paymentSettings?: PaymentSettings
   /** Langganan Key Assistant setelah trial. */

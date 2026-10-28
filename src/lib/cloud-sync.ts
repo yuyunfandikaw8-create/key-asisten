@@ -53,6 +53,7 @@ export function profileToAuthMetadata(
     address: user.address,
     logoDataUrl: user.logoDataUrl,
     businessFields: user.businessFields,
+    customBusinessFields: user.customBusinessFields,
     services: user.services,
     paymentSettings: user.paymentSettings
       ? { ...user.paymentSettings, qrisDataUrl: undefined }
@@ -72,6 +73,7 @@ export function profileToAuthMetadata(
     instagram: slim.instagram,
     address: slim.address,
     business_fields: slim.businessFields,
+    custom_business_fields: slim.customBusinessFields,
     services: slim.services,
     payment_settings: slim.paymentSettings,
     subscription: slim.subscription,
@@ -122,6 +124,9 @@ export function profileFromAuthMetadata(
       typeof metadata.logo_data_url === "string" ? metadata.logo_data_url : undefined,
     businessFields: Array.isArray(metadata.business_fields)
       ? (metadata.business_fields as AuthUser["businessFields"])
+      : undefined,
+    customBusinessFields: Array.isArray(metadata.custom_business_fields)
+      ? (metadata.custom_business_fields as AuthUser["customBusinessFields"])
       : undefined,
     services: Array.isArray(metadata.services)
       ? (metadata.services as AuthUser["services"])
@@ -277,6 +282,7 @@ export async function pushOwnerProfile(user: AuthUser, studio?: StudioState | nu
       address: user.address,
       logoDataUrl: user.logoDataUrl,
       businessFields: user.businessFields,
+      customBusinessFields: user.customBusinessFields,
       services: user.services,
       paymentSettings: user.paymentSettings,
       subscription: user.subscription,
@@ -323,6 +329,7 @@ export async function pushStudioCloud(user: AuthUser, studio: StudioState) {
         trialStartedAt: user.trialStartedAt,
         onboardingStep: user.onboardingStep,
         businessFields: user.businessFields,
+        customBusinessFields: user.customBusinessFields,
         services: user.services,
         paymentSettings: user.paymentSettings,
         subscription: user.subscription,
@@ -394,6 +401,9 @@ export function applyCloudProfile(base: AuthUser, cloud: Partial<AuthUser> | nul
     businessFields: base.businessFields?.length
       ? base.businessFields
       : cloud.businessFields,
+    customBusinessFields: base.customBusinessFields?.length
+      ? base.customBusinessFields
+      : cloud.customBusinessFields,
     services: base.services?.length ? base.services : cloud.services,
     paymentSettings: base.paymentSettings || cloud.paymentSettings,
     subscription: base.subscription || cloud.subscription,

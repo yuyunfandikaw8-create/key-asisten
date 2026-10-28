@@ -89,8 +89,9 @@ export default function NewBookingPage() {
       value: label,
       label,
     }))
+    const customFields = user?.customBusinessFields
     const fromFields = (user?.businessFields ?? [])
-      .map((id) => fieldById(id))
+      .map((id) => fieldById(id, customFields))
       .filter(Boolean)
       .map((field) => ({
         value: field!.label,
@@ -99,7 +100,7 @@ export default function NewBookingPage() {
     const fromServices = ownerServices.map((service) => ({
       value: service.name,
       label: service.name,
-      hint: fieldById(service.fieldId)?.short,
+      hint: fieldById(service.fieldId, customFields)?.short,
     }))
     const merged = [...fromEvents, ...fromFields, ...fromServices]
     const seen = new Set<string>()
@@ -109,7 +110,7 @@ export default function NewBookingPage() {
       seen.add(key)
       return true
     })
-  }, [ownerServices, user?.businessFields])
+  }, [ownerServices, user?.businessFields, user?.customBusinessFields])
 
   // Paket & harga hanya dari layanan step 5 owner. Data contoh tetap pakai katalog.
   const paketOptions = useMemo<SuggestOption[]>(() => {
@@ -119,7 +120,7 @@ export default function NewBookingPage() {
         label: service.name,
         hint: `${rupiah(service.price)}${
           service.durationHours > 0 ? ` · ${service.durationHours} jam` : ""
-        } · ${fieldById(service.fieldId)?.short ?? service.fieldId}`,
+        } · ${fieldById(service.fieldId, user?.customBusinessFields)?.short ?? service.fieldId}`,
       }))
     }
     return packages.map((item) => ({
@@ -127,7 +128,7 @@ export default function NewBookingPage() {
       label: item.name,
       hint: rupiah(item.price),
     }))
-  }, [demoMode, ownerServices])
+  }, [demoMode, ownerServices, user?.customBusinessFields])
 
   const hargaOptions = useMemo<SuggestOption[]>(() => {
     const amounts = new Set<number>()

@@ -163,6 +163,10 @@ function mergeRemoteWithLocal(remote: AuthUser, local: AuthUser | null): AuthUse
     logoDataUrl: local.logoDataUrl || remote.logoDataUrl,
     businessFields:
       (local.businessFields as BusinessFieldId[] | undefined) || remote.businessFields,
+    customBusinessFields:
+      local.customBusinessFields?.length
+        ? local.customBusinessFields
+        : remote.customBusinessFields,
     services: (local.services as BusinessService[] | undefined) || remote.services,
     paymentSettings: local.paymentSettings || remote.paymentSettings,
     subscription: local.subscription || remote.subscription,
@@ -210,6 +214,7 @@ function userFromMetadata(
     address: fromCloud.address,
     logoDataUrl: fromCloud.logoDataUrl,
     businessFields: fromCloud.businessFields as BusinessFieldId[] | undefined,
+    customBusinessFields: fromCloud.customBusinessFields,
     services: fromCloud.services as BusinessService[] | undefined,
     paymentSettings: fromCloud.paymentSettings
       ? normalizePaymentSettings(fromCloud.paymentSettings as PaymentSettings)
@@ -814,6 +819,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 instagram: nextUser.instagram,
                 address: nextUser.address,
                 business_fields: nextUser.businessFields,
+                custom_business_fields: nextUser.customBusinessFields,
                 services: nextUser.services,
                 payment_settings: nextUser.paymentSettings
                   ? {

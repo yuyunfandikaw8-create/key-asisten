@@ -14,14 +14,18 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   BUSINESS_FIELDS,
+  createCustomBusinessField,
   fieldById,
   filterServicePresets,
   formatFieldsSummary,
+  isCustomFieldId,
   markOnboardingDone,
   needsOnboarding,
   presetsForField,
   type BusinessFieldId,
+  type BusinessFieldMeta,
   type BusinessService,
+  type CustomBusinessField,
   type OnboardingStep,
   type ServicePreset,
 } from "@/lib/onboarding"
@@ -43,6 +47,8 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState("")
   const [city, setCityField] = useState("")
   const [fields, setFields] = useState<BusinessFieldId[]>([])
+  const [customFields, setCustomFields] = useState<CustomBusinessField[]>([])
+  const [draftBidang, setDraftBidang] = useState("")
   const [businessEmail, setBusinessEmail] = useState("")
   const [instagram, setInstagram] = useState("")
   const [address, setAddress] = useState("")
@@ -59,6 +65,7 @@ export default function OnboardingPage() {
     setPhone(user.phone || "")
     setCityField(user.city || "")
     setFields(user.businessFields || [])
+    setCustomFields(user.customBusinessFields || [])
     setBusinessEmail(user.businessEmail || user.email || "")
     setInstagram(user.instagram || "")
     setAddress(user.address || "")
@@ -74,10 +81,14 @@ export default function OnboardingPage() {
   }, [ready, router, user])
 
   const step = stepNumber(user?.onboardingStep)
-  const selectedFields = useMemo(
-    () => BUSINESS_FIELDS.filter((field) => fields.includes(field.id)),
-    [fields]
-  )
+  const selectedFields = useMemo(() => {
+    const resolved: BusinessFieldMeta[] = []
+    for (const id of fields) {
+      const field = fieldById(id, customFields)
+      if (field) resolved.push(field)
+    }
+    return resolved
+  }, [customFields, fields])
   const filteredPresets = useMemo(() => {
     if (!draftField) return []
     return filterServicePresets(draftField, draftName)
@@ -116,9 +127,37 @@ export default function OnboardingPage() {
   }
 
   function toggleField(id: BusinessFieldId) {
-    setFields((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    setFields((current) => {
+      const next = current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+      if (current.includes(id) && !next.includes(id) && isCustomFieldId(id)) {
+        setCustomFields((list) => list.filter((field) => field.id !== id))
+        setServices((list) => list.filter((service) => service.fieldId !== id))
+      }
+      return next
+    })
+  }
+
+  function addCustomBidang() {
+    const label = draftBidang.trim()
+    if (!label) {
+      setError("Isi nama bidang dulu.")
+      return
+    }
+    const duplicate = [...BUSINESS_FIELDS, ...customFields].some(
+      (field) => field.label.toLowerCase() === label.toLowerCase()
     )
+    if (duplicate) {
+      setError("Bidang dengan nama itu sudah ada.")
+      return
+    }
+    const created = createCustomBusinessField(label)
+    setError("")
+    setCustomFields((current) => [...current, created])
+    setFields((current) => [...current, created.id])
+    setDraftField(created.id)
+    setDraftBidang("")
   }
 
   async function onLogoChange(file: File | null) {
@@ -362,6 +401,60 @@ export default function OnboardingPage() {
                 </label>
               )
             })}
+            {customFields.map((field) => {
+              const checked = fields.includes(field.id)
+              return (
+                <label
+                  key={field.id}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
+                    checked
+                      ? "bg-primary/8 ring-primary"
+                      : "bg-background ring-foreground/10 hover:bg-muted/50"
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleField(field.id)}
+                    className="size-4 accent-primary"
+                  />
+                  <span className="text-lg" aria-hidden>
+                    {field.emoji}
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm font-medium">{field.label}</span>
+                  <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                    Manual
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+          <div className="grid gap-2 rounded-xl bg-muted/40 p-3">
+            <Label htmlFor="onboarding-bidang-manual">Isi bidang manual</Label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                id="onboarding-bidang-manual"
+                value={draftBidang}
+                onChange={(event) => setDraftBidang(event.target.value)}
+                placeholder="Contoh: Nail Art / Sound System"
+                className="h-11 flex-1 bg-background"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    addCustomBidang()
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className={cn(buttonVariants({ variant: "outline" }), "h-11 shrink-0")}
+                onClick={addCustomBidang}
+              >
+                <Plus className="size-4" />
+                Daftarkan
+              </button>
+            </div>
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <button
@@ -373,7 +466,12 @@ export default function OnboardingPage() {
                 setError("Pilih minimal satu bidang bisnis.")
                 return
               }
-              void goTo(4, { businessFields: fields })
+              void goTo(4, {
+                businessFields: fields,
+                customBusinessFields: customFields.filter((field) =>
+                  fields.includes(field.id)
+                ),
+              })
             }}
           >
             {pending ? "Menyimpan…" : "Lanjutkan"}
@@ -642,7 +740,7 @@ export default function OnboardingPage() {
                   </thead>
                   <tbody>
                     {services.map((service) => {
-                      const field = fieldById(service.fieldId)
+                      const field = fieldById(service.fieldId, customFields)
                       return (
                         <tr
                           key={service.id}
@@ -724,7 +822,13 @@ export default function OnboardingPage() {
                   setError("Isi harga untuk semua layanan di tabel, atau hapus yang kosong.")
                   return
                 }
-                void goTo(6, { services })
+                void goTo(6, {
+                  services,
+                  businessFields: fields,
+                  customBusinessFields: customFields.filter((field) =>
+                    fields.includes(field.id)
+                  ),
+                })
               }}
             >
               {pending ? "Menyimpan…" : "Lanjutkan"}
@@ -733,7 +837,15 @@ export default function OnboardingPage() {
               type="button"
               className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
               disabled={pending}
-              onClick={() => void goTo(6, { services })}
+              onClick={() =>
+                void goTo(6, {
+                  services,
+                  businessFields: fields,
+                  customBusinessFields: customFields.filter((field) =>
+                    fields.includes(field.id)
+                  ),
+                })
+              }
             >
               Lewati untuk Sekarang
             </button>
@@ -754,14 +866,14 @@ export default function OnboardingPage() {
               Layanan kamu
             </p>
             <p className="mt-2 text-sm leading-relaxed">
-              {formatFieldsSummary(user.businessFields)}
+              {formatFieldsSummary(user.businessFields, user.customBusinessFields)}
             </p>
           </div>
           <p className="text-sm text-muted-foreground">
             Trial gratis 14 hari. Kamu bisa mulai mengelola bisnis sekarang.
           </p>
           {user.businessFields?.map((id) => {
-            const field = fieldById(id)
+            const field = fieldById(id, user.customBusinessFields)
             const count = (user.services || []).filter((item) => item.fieldId === id).length
             if (!field || !count) return null
             return (

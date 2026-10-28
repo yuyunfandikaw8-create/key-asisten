@@ -376,7 +376,9 @@ export default function MenuPage() {
                 ? `${user.services.length} paket / layanan`
                 : "Belum ada — tambah di Layanan & harga"}
             </dd>
-            <dd>{formatFieldsSummary(user?.businessFields)}</dd>
+            <dd>
+              {formatFieldsSummary(user?.businessFields, user?.customBusinessFields)}
+            </dd>
           </div>
         </dl>
       </section>

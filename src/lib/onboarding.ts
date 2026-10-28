@@ -1,4 +1,4 @@
-export type BusinessFieldId =
+export type BuiltInBusinessFieldId =
   | "makeup"
   | "hair"
   | "dekor"
@@ -7,6 +7,19 @@ export type BusinessFieldId =
   | "video"
   | "content"
   | "other"
+
+/** Built-in id atau id kustom `custom-…` dari isian manual owner. */
+export type BusinessFieldId = BuiltInBusinessFieldId | string
+
+export type BusinessFieldMeta = {
+  id: string
+  label: string
+  emoji: string
+  short: string
+}
+
+/** Bidang yang diketik manual owner — ikut tersimpan di akun. */
+export type CustomBusinessField = BusinessFieldMeta
 
 export type BusinessService = {
   id: string
@@ -21,12 +34,7 @@ export type BusinessService = {
 /** Numeric steps after account creation; `"done"` means onboarding finished. */
 export type OnboardingStep = 2 | 3 | 4 | 5 | 6 | "done"
 
-export const BUSINESS_FIELDS: {
-  id: BusinessFieldId
-  label: string
-  emoji: string
-  short: string
-}[] = [
+export const BUSINESS_FIELDS: BusinessFieldMeta[] = [
   { id: "makeup", label: "Make Up Artist", emoji: "💄", short: "MUA" },
   { id: "hair", label: "Hijab & Hair Stylist", emoji: "🧕", short: "Hijab & Hair" },
   { id: "dekor", label: "Decoration", emoji: "🌸", short: "Decoration" },
@@ -42,8 +50,39 @@ export const BUSINESS_FIELDS: {
   { id: "other", label: "Lainnya", emoji: "✨", short: "Lainnya" },
 ]
 
-export function fieldById(id: BusinessFieldId) {
-  return BUSINESS_FIELDS.find((field) => field.id === id)
+export function isCustomFieldId(id: string) {
+  return id.startsWith("custom-")
+}
+
+export function createCustomBusinessField(label: string): CustomBusinessField {
+  const trimmed = label.trim().replace(/\s+/g, " ")
+  const slug =
+    trimmed
+      .toLowerCase()
+      .replace(/[^a-z0-9\u00c0-\u024f]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "bidang"
+  const short = trimmed.length > 24 ? `${trimmed.slice(0, 22)}…` : trimmed
+  return {
+    id: `custom-${slug}-${Math.random().toString(36).slice(2, 7)}`,
+    label: trimmed,
+    emoji: "✨",
+    short,
+  }
+}
+
+export function fieldById(
+  id: string | undefined | null,
+  custom: CustomBusinessField[] | undefined | null = []
+): BusinessFieldMeta | undefined {
+  if (!id) return undefined
+  return (
+    BUSINESS_FIELDS.find((field) => field.id === id) ||
+    custom?.find((field) => field.id === id) ||
+    (isCustomFieldId(id)
+      ? { id, label: id.replace(/^custom-/, ""), emoji: "✨", short: id }
+      : undefined)
+  )
 }
 
 /** Flag kecil terpisah — tidak ikut gagal karena kuota logo di auth storage. */
@@ -112,11 +151,14 @@ export function preferOnboardingStep(
   return max > 0 ? (max as OnboardingStep) : undefined
 }
 
-export function formatFieldsSummary(fieldIds: BusinessFieldId[] | undefined) {
+export function formatFieldsSummary(
+  fieldIds: BusinessFieldId[] | undefined,
+  custom?: CustomBusinessField[] | undefined
+) {
   if (!fieldIds?.length) return "Belum dipilih"
   return fieldIds
     .map((id) => {
-      const field = fieldById(id)
+      const field = fieldById(id, custom)
       return field ? `${field.emoji} ${field.short}` : id
     })
     .join(" · ")
@@ -127,7 +169,7 @@ export type ServicePreset = {
 }
 
 /** Pilihan nama layanan siap pakai — harga & waktu diisi manual owner. */
-export const SERVICE_PRESETS: Record<BusinessFieldId, ServicePreset[]> = {
+export const SERVICE_PRESETS: Record<BuiltInBusinessFieldId, ServicePreset[]> = {
   makeup: [
     { name: "Wedding Makeup (Akad + Resepsi)" },
     { name: "Wedding Makeup Akad" },
@@ -242,7 +284,8 @@ export const SERVICE_PRESETS: Record<BusinessFieldId, ServicePreset[]> = {
 }
 
 export function presetsForField(fieldId: BusinessFieldId) {
-  return SERVICE_PRESETS[fieldId] ?? []
+  if (isCustomFieldId(fieldId)) return []
+  return SERVICE_PRESETS[fieldId as BuiltInBusinessFieldId] ?? []
 }
 
 export function filterServicePresets(fieldId: BusinessFieldId, query: string) {
