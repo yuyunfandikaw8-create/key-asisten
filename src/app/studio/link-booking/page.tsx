@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, Check, Copy, ExternalLink, Share2 } from "lucide-react"
+import { ArrowLeft, Bell, Check, Copy, ExternalLink, Share2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
@@ -10,6 +10,10 @@ import { useStudio } from "@/components/studio-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  ownerNotificationsEnabled,
+  requestOwnerNotifications,
+} from "@/lib/booking-alerts"
 import { waLink } from "@/lib/format"
 import { DEMO_BOOKING_SERVICES, publishFromOwner } from "@/lib/public-booking-profile"
 import { studioBrand } from "@/lib/studio-brand"
@@ -22,17 +26,48 @@ export default function LinkBookingPage() {
   const [origin, setOrigin] = useState("")
   const [copied, setCopied] = useState(false)
   const [shareNotice, setShareNotice] = useState("")
+  const [notifStatus, setNotifStatus] = useState<"unknown" | "on" | "off" | "unsupported">(
+    "unknown"
+  )
+  const [notifBusy, setNotifBusy] = useState(false)
   const serviceCount =
     viewMode === "demo" ? DEMO_BOOKING_SERVICES.length : (user?.services?.length ?? 0)
 
   useEffect(() => {
     setOrigin(window.location.origin)
+    if (typeof Notification === "undefined") {
+      setNotifStatus("unsupported")
+      return
+    }
+    setNotifStatus(
+      Notification.permission === "granted" || ownerNotificationsEnabled() ? "on" : "off"
+    )
+    void navigator.serviceWorker?.register("/sw.js").catch(() => undefined)
   }, [])
 
   useEffect(() => {
     if (!authReady || !ready) return
     publishFromOwner(user, { demo: viewMode === "demo" })
   }, [authReady, ready, user, viewMode])
+
+  async function enableNotifications() {
+    setNotifBusy(true)
+    setShareNotice("")
+    const result = await requestOwnerNotifications()
+    setNotifBusy(false)
+    if (result === "unsupported") {
+      setNotifStatus("unsupported")
+      setShareNotice("Perangkat ini tidak mendukung notifikasi browser.")
+      return
+    }
+    if (result === "granted") {
+      setNotifStatus("on")
+      setShareNotice("Notifikasi pengajuan aktif. Kamu akan mendapat pemberitahuan di perangkat ini.")
+      return
+    }
+    setNotifStatus("off")
+    setShareNotice("Izin notifikasi ditolak. Aktifkan di pengaturan browser jika ingin diingatkan.")
+  }
 
   const publicPath = `/p/${brand.slug}`
   const shareUrl = useMemo(
@@ -148,6 +183,36 @@ export default function LinkBookingPage() {
           <p className="text-xs text-muted-foreground">
             Cocok untuk bio Instagram, broadcast WhatsApp, atau dikirim langsung ke calon klien.
           </p>
+        )}
+      </section>
+
+      <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <div>
+          <p className="font-medium">Notifikasi pengajuan</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Saat klien mengajukan booking, perangkat ini menampilkan notifikasi dan pengajuan
+            masuk ke Jadwal. Aktifkan izin notifikasi di HP/laptop yang kamu pakai.
+          </p>
+        </div>
+        {notifStatus === "unsupported" ? (
+          <p className="text-sm text-muted-foreground">
+            Browser ini tidak mendukung notifikasi sistem.
+          </p>
+        ) : notifStatus === "on" ? (
+          <p className="rounded-xl bg-primary/10 px-3 py-2 text-sm text-primary">
+            Notifikasi aktif di perangkat ini.
+          </p>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 w-fit"
+            disabled={notifBusy}
+            onClick={() => void enableNotifications()}
+          >
+            <Bell className="size-4" />
+            {notifBusy ? "Mengaktifkan…" : "Aktifkan notifikasi di perangkat ini"}
+          </Button>
         )}
       </section>
     </div>

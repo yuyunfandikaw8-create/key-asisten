@@ -10,6 +10,7 @@ import { useStudio } from "@/components/studio-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { enqueuePublicBooking } from "@/lib/booking-alerts"
 import { studio } from "@/lib/catalog"
 import { dpFor, formatDate, formatTime, rupiah, waLink } from "@/lib/format"
 import type { BusinessFieldId } from "@/lib/onboarding"
@@ -196,7 +197,7 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
       setStep(1)
       return
     }
-    addBooking({
+    const booking = addBooking({
       clientName: name.trim(),
       phone: phone.trim(),
       eventType: eventTypeForField(selected.fieldId),
@@ -214,6 +215,20 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
       attireReturned: false,
       approvalStatus: "diajukan",
     })
+    enqueuePublicBooking(slug, booking)
+    // Kabari owner lewat WhatsApp agar notifikasi langsung muncul di HP owner.
+    const ownerNotify = waLink(
+      studioPhone,
+      [
+        `Halo ${studioName}, ada pengajuan booking baru.`,
+        `Nama: ${name.trim()}`,
+        `WA klien: ${phone.trim()}`,
+        `Layanan: ${selected.name}`,
+        `Jadwal: ${formatDate(date)} · ${formatTime(time)}`,
+        `Harga: ${rupiah(selected.price)}`,
+      ].join("\n")
+    )
+    window.open(ownerNotify, "_blank", "noopener,noreferrer")
     setSubmitted(true)
     setError("")
   }

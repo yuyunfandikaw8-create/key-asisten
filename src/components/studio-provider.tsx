@@ -11,7 +11,12 @@ import {
 } from "react"
 
 import { useAuth } from "@/components/auth-provider"
-import { createEmptyStudio, createSeed } from "@/lib/catalog"
+import {
+  consumePublicBookings,
+  showBookingNotification,
+  subscribeBookingAlerts,
+} from "@/lib/booking-alerts"
+import { createEmptyStudio, createSeed, studio } from "@/lib/catalog"
 import {
   canCloudSync,
   pullOwnerCloud,
@@ -287,6 +292,51 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       skipPersist.current = false
     }, 0)
   }, [ready, viewMode, state, storageKey])
+
+  // Tarik pengajuan dari link booking publik ke Data saya + notifikasi.
+  useEffect(() => {
+    if (!ready || viewMode !== "real" || !user) return
+
+    function mergeBookings(incoming: Booking[]) {
+      if (!incoming.length) return
+      setState((current) => {
+        const base = current ?? createEmptyStudio(userCity)
+        const existing = new Set(base.bookings.map((item) => item.id))
+        const fresh = incoming.filter((item) => !existing.has(item.id))
+        if (!fresh.length) return base
+        const next = { ...base, bookings: [...fresh, ...base.bookings] }
+        stateRef.current = next
+        const newest = fresh[0]
+        if (newest?.approvalStatus === "diajukan" || newest?.approvalStatus === "menunggu_konfirmasi") {
+          setNotice(
+            `Pengajuan baru dari ${newest.clientName}. Buka Jadwal → Pengajuan untuk konfirmasi.`
+          )
+          void showBookingNotification(newest)
+        }
+        return next
+      })
+    }
+
+    mergeBookings(consumePublicBookings(studio.slug))
+
+    const unsubscribe = subscribeBookingAlerts((payload) => {
+      if (payload.slug !== studio.slug) return
+      const fromQueue = consumePublicBookings(studio.slug)
+      mergeBookings(fromQueue.length ? fromQueue : [payload.booking])
+    })
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        mergeBookings(consumePublicBookings(studio.slug))
+      }
+    }
+    document.addEventListener("visibilitychange", onVisible)
+
+    return () => {
+      unsubscribe()
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, [ready, user, userCity, viewMode])
 
   // Data contoh: pastikan inbox/partner sesuai kota (seed lama sering hanya Bandung).
   useEffect(() => {

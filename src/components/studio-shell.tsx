@@ -54,9 +54,14 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 
 function SideNav() {
   const pathname = usePathname()
-  const { messages, city } = useStudio()
+  const { messages, city, bookings } = useStudio()
   const unread = messages.filter(
     (message) => message.city === city && message.sender === "partner" && !message.read
+  ).length
+  const pengajuan = bookings.filter(
+    (booking) =>
+      booking.approvalStatus === "diajukan" ||
+      booking.approvalStatus === "menunggu_konfirmasi"
   ).length
 
   return (
@@ -64,6 +69,12 @@ function SideNav() {
       {links.map((link) => {
         const Icon = link.icon
         const active = isActive(pathname, link.href, link.exact)
+        const badge =
+          link.href === "/studio/inbox"
+            ? unread
+            : link.href === "/studio/jadwal"
+              ? pengajuan
+              : 0
         return (
           <Link
             key={link.href}
@@ -75,14 +86,14 @@ function SideNav() {
           >
             <Icon className="size-4" />
             <span className="flex-1">{link.label}</span>
-            {link.href === "/studio/inbox" && unread > 0 ? (
+            {badge > 0 ? (
               <span
                 className={cn(
                   "rounded-full px-1.5 text-[10px] leading-5",
                   active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground"
                 )}
               >
-                {unread}
+                {badge}
               </span>
             ) : null}
           </Link>
@@ -94,9 +105,14 @@ function SideNav() {
 
 function MobileNav() {
   const pathname = usePathname()
-  const { messages, city } = useStudio()
+  const { messages, city, bookings } = useStudio()
   const unread = messages.filter(
     (message) => message.city === city && message.sender === "partner" && !message.read
+  ).length
+  const pengajuan = bookings.filter(
+    (booking) =>
+      booking.approvalStatus === "diajukan" ||
+      booking.approvalStatus === "menunggu_konfirmasi"
   ).length
 
   return (
@@ -105,6 +121,12 @@ function MobileNav() {
         {links.map((link) => {
           const Icon = link.icon
           const active = isActive(pathname, link.href, link.exact)
+          const badge =
+            link.href === "/studio/inbox"
+              ? unread
+              : link.href === "/studio/jadwal"
+                ? pengajuan
+                : 0
           return (
             <Link
               key={link.href}
@@ -116,7 +138,7 @@ function MobileNav() {
             >
               <Icon className="size-4" />
               {link.label}
-              {link.href === "/studio/inbox" && unread > 0 ? (
+              {badge > 0 ? (
                 <span className="absolute top-1 right-2 size-1.5 rounded-full bg-primary" />
               ) : null}
             </Link>
@@ -316,6 +338,13 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
   const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
   const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
   const trialUrgent = trialDaysLeft > 0 && trialDaysLeft <= 3
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return
+    void navigator.serviceWorker.register("/sw.js").catch(() => {
+      // Notifikasi tetap jalan lewat Notification API halaman.
+    })
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
