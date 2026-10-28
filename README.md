@@ -77,13 +77,26 @@ Tabel yang dibuat:
 
 Setelah skema aktif, login email/Google non-demo menyimpan data ke cloud (bukan hanya `localStorage`).
 
+### Auth URL (wajib agar Google / konfirmasi email jalan di Vercel)
+
+Di Supabase → Authentication → URL Configuration:
+
+- Site URL: `https://key-asisten.vercel.app`
+- Redirect URLs (tambahkan semua):
+  - `https://key-asisten.vercel.app/masuk`
+  - `https://key-asisten.vercel.app/daftar`
+  - `http://127.0.0.1:43123/masuk`
+  - `http://127.0.0.1:43123/daftar`
+
+Google provider: Authentication → Providers → Google → Enable (Client ID + Secret dari Google Cloud).
+
 ### Deploy Vercel
 
 1. Create repo GitHub dari chat Cursor (proyek ini masih Origin sementara).
 2. Import repo di Vercel.
 3. Set env Production/Preview: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (sama seperti lokal).
 4. Deploy branch `main`.
-5. Di Supabase Auth → URL Configuration, tambahkan `https://<domain-vercel>/masuk` ke Redirect URLs.
+5. Pastikan Redirect URLs di atas sudah diisi.
 
 ## Yang bisa dicoba
 

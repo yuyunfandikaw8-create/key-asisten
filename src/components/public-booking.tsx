@@ -11,6 +11,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { enqueuePublicBooking } from "@/lib/booking-alerts"
+import { pushBookingRequestCloud } from "@/lib/cloud-sync"
 import { studio } from "@/lib/catalog"
 import { dpFor, formatDate, formatTime, rupiah, waLink } from "@/lib/format"
 import type { BusinessFieldId } from "@/lib/onboarding"
@@ -226,6 +227,24 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
       approvalStatus: "diajukan",
     })
     enqueuePublicBooking(slug, booking)
+    void pushBookingRequestCloud({
+      slug,
+      payload: {
+        bookingId: booking.id,
+        clientName: booking.clientName,
+        phone: booking.phone,
+        date: booking.date,
+        time: booking.time,
+        packageId: booking.packageId,
+        packageName: booking.packageName,
+        price: booking.price,
+        location: booking.location,
+        notes: booking.notes,
+        source: booking.source,
+        approvalStatus: booking.approvalStatus,
+        createdAt: booking.createdAt,
+      },
+    })
     // Kabari owner lewat WhatsApp agar notifikasi langsung muncul di HP owner.
     const ownerNotify = waLink(
       studioPhone,

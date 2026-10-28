@@ -19,12 +19,15 @@ import {
 import { createEmptyStudio, createSeed, studio } from "@/lib/catalog"
 import {
   canCloudSync,
+  markBookingRequestStatusCloud,
+  pullBookingRequestsCloud,
   pullOwnerCloud,
   pushStudioCloud,
   studioHasRows,
 } from "@/lib/cloud-sync"
 import { normalizeEmail } from "@/lib/auth"
 import { partnerById, partnersInCity } from "@/lib/partners"
+import { studioBrand } from "@/lib/studio-brand"
 import type {
   Booking,
   Combo,
@@ -296,6 +299,8 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   // Tarik pengajuan dari link booking publik ke Data saya + notifikasi.
   useEffect(() => {
     if (!ready || viewMode !== "real" || !user) return
+    const brandSlug = studioBrand(user).slug
+    const watchedSlugs = new Set([studio.slug, brandSlug].filter(Boolean))
 
     function mergeBookings(incoming: Booking[]) {
       if (!incoming.length) return
@@ -317,17 +322,55 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       })
     }
 
-    mergeBookings(consumePublicBookings(studio.slug))
+    for (const slug of watchedSlugs) {
+      mergeBookings(consumePublicBookings(slug))
+    }
+
+    // Lintasan perangkat: tarik booking_requests dari Supabase.
+    if (canCloudSync(user.email) && user.id) {
+      void pullBookingRequestsCloud(user.id).then((rows) => {
+        if (!rows.length) return
+        const fromCloud: Booking[] = rows.map((row) => {
+          const p = row.payload
+          return {
+            id: String(p.bookingId || row.id),
+            clientName: String(p.clientName || "Klien"),
+            phone: String(p.phone || ""),
+            eventType: "pengantin",
+            date: String(p.date || ""),
+            time: String(p.time || "08:00"),
+            location: String(p.location || "Lokasi menyusul"),
+            packageId: String(p.packageId || ""),
+            packageName: typeof p.packageName === "string" ? p.packageName : undefined,
+            attireId: null,
+            price: Number(p.price) || 0,
+            dp: Math.round((Number(p.price) || 0) * 0.3),
+            paid: 0,
+            notes: String(p.notes || "Pengajuan dari link booking (cloud)"),
+            source: "pricelist",
+            attireReturned: false,
+            createdAt: String(p.createdAt || row.created_at || new Date().toISOString()),
+            approvalStatus: "diajukan",
+          }
+        })
+        mergeBookings(fromCloud)
+        for (const row of rows) {
+          void markBookingRequestStatusCloud(row.id, "menunggu_konfirmasi")
+        }
+      })
+    }
 
     const unsubscribe = subscribeBookingAlerts((payload) => {
-      if (payload.slug !== studio.slug) return
-      const fromQueue = consumePublicBookings(studio.slug)
+      if (!watchedSlugs.has(payload.slug)) return
+      const fromQueue = consumePublicBookings(payload.slug)
       mergeBookings(fromQueue.length ? fromQueue : [payload.booking])
     })
 
     const onVisible = () => {
       if (document.visibilityState === "visible") {
-        mergeBookings(consumePublicBookings(studio.slug))
+        for (const slug of watchedSlugs) {
+          mergeBookings(consumePublicBookings(slug))
+        }
       }
     }
     document.addEventListener("visibilitychange", onVisible)

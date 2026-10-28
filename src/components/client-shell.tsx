@@ -21,6 +21,7 @@ import {
 
 import { useAuth } from "@/components/auth-provider"
 import { useClientWorkspace } from "@/components/client-provider"
+import { canCloudSync } from "@/lib/cloud-sync"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -148,9 +149,11 @@ function DataModeSwitcher() {
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, logout, supabaseReady } = useAuth()
   const { workspace, activeEvent, notice, dismissNotice, viewMode } = useClientWorkspace()
   const shortlistCount = workspace.shortlist.length
+  const cloudOn =
+    supabaseReady && user && canCloudSync(user.email) && viewMode === "real"
 
   return (
     <div className="min-h-screen bg-background">
@@ -237,6 +240,12 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
                 Tutup
               </button>
             </div>
+          ) : null}
+          {cloudOn ? (
+            <p className="mb-4 text-xs text-muted-foreground">
+              Data acara kamu ikut tersimpan ke cloud (Supabase) agar bisa dibuka di HP lain
+              dengan email yang sama.
+            </p>
           ) : null}
           {children}
         </main>

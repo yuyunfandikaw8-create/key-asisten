@@ -361,20 +361,84 @@ export async function pushPublicBookingProfileCloud(
   }
 }
 
+export async function resolveOwnerIdBySlug(slug: string): Promise<string | null> {
+  if (!supabase) return null
+  const key = slug.trim().toLowerCase()
+  if (!key) return null
+  try {
+    const { data, error } = await supabase
+      .from("public_booking_profiles")
+      .select("owner_id")
+      .eq("slug", key)
+      .maybeSingle()
+    if (error || !data?.owner_id) return null
+    return String(data.owner_id)
+  } catch {
+    return null
+  }
+}
+
 export async function pushBookingRequestCloud(input: {
-  ownerId: string
+  ownerId?: string
   slug: string
   payload: Record<string, unknown>
 }) {
   if (!supabase) return false
   try {
+    const ownerId =
+      input.ownerId || (await resolveOwnerIdBySlug(input.slug)) || null
+    if (!ownerId) return false
     const { error } = await supabase.from("booking_requests").insert({
-      owner_id: input.ownerId,
-      slug: input.slug,
+      owner_id: ownerId,
+      slug: input.slug.trim().toLowerCase(),
       payload: input.payload,
       status: "diajukan",
     })
     if (error && !isMissingTableError(error.message)) return false
+    return !error
+  } catch {
+    return false
+  }
+}
+
+export async function pullBookingRequestsCloud(
+  ownerId: string
+): Promise<Array<{ id: string; slug: string; payload: Record<string, unknown>; status: string; created_at: string }>> {
+  if (!supabase) return []
+  try {
+    const { data, error } = await supabase
+      .from("booking_requests")
+      .select("id, slug, payload, status, created_at")
+      .eq("owner_id", ownerId)
+      .eq("status", "diajukan")
+      .order("created_at", { ascending: false })
+      .limit(50)
+    if (error || !data) return []
+    return data.map((row) => ({
+      id: String(row.id),
+      slug: String(row.slug || ""),
+      payload:
+        row.payload && typeof row.payload === "object"
+          ? (row.payload as Record<string, unknown>)
+          : {},
+      status: String(row.status || "diajukan"),
+      created_at: String(row.created_at || ""),
+    }))
+  } catch {
+    return []
+  }
+}
+
+export async function markBookingRequestStatusCloud(
+  requestId: string,
+  status: "menunggu_konfirmasi" | "diterima" | "ditolak"
+) {
+  if (!supabase) return false
+  try {
+    const { error } = await supabase
+      .from("booking_requests")
+      .update({ status })
+      .eq("id", requestId)
     return !error
   } catch {
     return false

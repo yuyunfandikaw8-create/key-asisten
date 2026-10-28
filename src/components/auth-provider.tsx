@@ -40,8 +40,11 @@ import {
   profileLooksComplete,
   profileToAuthMetadata,
   pullOwnerCloud,
+  pushClientCloud,
   pushOwnerProfile,
+  upsertProfileRow,
 } from "@/lib/cloud-sync"
+import { emptyClientWorkspace } from "@/lib/client-workspace"
 import { supabase, supabaseConfigured } from "@/lib/supabase"
 import { nowIso } from "@/lib/trial"
 
@@ -805,7 +808,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .catch(() => {
               // Sinkron cloud opsional.
             })
-          void pushOwnerProfile(nextUser)
+          void upsertProfileRow(nextUser)
+          if (isClient) {
+            void pushClientCloud(nextUser, emptyClientWorkspace())
+          } else {
+            void pushOwnerProfile(nextUser)
+          }
         }
 
         return { ok: true, user: nextUser }
