@@ -11,6 +11,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { waLink } from "@/lib/format"
+import { publishFromOwner } from "@/lib/public-booking-profile"
 import { studioBrand } from "@/lib/studio-brand"
 import { cn } from "@/lib/utils"
 
@@ -21,10 +22,16 @@ export default function LinkBookingPage() {
   const [origin, setOrigin] = useState("")
   const [copied, setCopied] = useState(false)
   const [shareNotice, setShareNotice] = useState("")
+  const serviceCount = viewMode === "demo" ? 0 : (user?.services?.length ?? 0)
 
   useEffect(() => {
     setOrigin(window.location.origin)
   }, [])
+
+  useEffect(() => {
+    if (!authReady || !ready) return
+    publishFromOwner(user, { demo: viewMode === "demo" })
+  }, [authReady, ready, user, viewMode])
 
   const publicPath = `/p/${brand.slug}`
   const shareUrl = useMemo(
@@ -86,6 +93,11 @@ export default function LinkBookingPage() {
         <h1 className="text-4xl">Link booking mandiri</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Salin dan bagikan link ke calon klien. Pengajuan muncul di Jadwal.
+          {viewMode === "demo"
+            ? " Mode contoh menampilkan form tanpa layanan katalog."
+            : serviceCount > 0
+              ? ` Halaman klien menampilkan ${serviceCount} layanan yang kamu siapkan.`
+              : " Tambah layanan + harga di menu Layanan agar muncul di halaman klien."}
         </p>
       </div>
 

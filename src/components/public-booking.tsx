@@ -1,15 +1,23 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, Check } from "lucide-react"
 
+import { useAuth } from "@/components/auth-provider"
 import { useStudio } from "@/components/studio-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { packageById, packages, studio } from "@/lib/catalog"
+import { studio } from "@/lib/catalog"
 import { dpFor, formatDate, formatTime, rupiah, waLink } from "@/lib/format"
+import type { BusinessFieldId } from "@/lib/onboarding"
+import { fieldById } from "@/lib/onboarding"
+import {
+  publishFromOwner,
+  readPublicBookingProfile,
+  type PublicBookingService,
+} from "@/lib/public-booking-profile"
 import type { EventType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -26,29 +34,87 @@ const TIME_OPTIONS = [
   "16:00",
 ]
 
-function eventTypeForPackage(packageId: string): EventType {
-  if (packageId === "wisuda") return "wisuda"
-  if (packageId === "perak") return "engagement"
+function eventTypeForField(fieldId: BusinessFieldId | undefined): EventType {
+  if (fieldId === "photo" || fieldId === "video" || fieldId === "content") return "prewedding"
+  if (fieldId === "dekor") return "pesta"
   return "pengantin"
+}
+
+function serviceBlurb(service: PublicBookingService) {
+  const field = fieldById(service.fieldId)?.short
+  const hours =
+    service.durationHours > 0 ? `${service.durationHours} jam` : null
+  return [field, hours].filter(Boolean).join(" · ")
 }
 
 /** Halaman klien untuk link booking mandiri — alur pendek, tanpa flyer pricelist lama. */
 export function PublicBookingFlow({ slug }: { slug: string }) {
   const { ready, addBooking } = useStudio()
+  const { ready: authReady, user } = useAuth()
   const [step, setStep] = useState<Step>(1)
-  const [packageId, setPackageId] = useState(packages[0]?.id ?? "")
+  const [serviceId, setServiceId] = useState("")
   const [date, setDate] = useState("")
   const [time, setTime] = useState("08:00")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [error, setError] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [studioName, setStudioName] = useState(studio.name)
+  const [studioPhone, setStudioPhone] = useState(studio.phone)
+  const [services, setServices] = useState<PublicBookingService[]>([])
+  const [profileReady, setProfileReady] = useState(false)
 
-  const selected = packageById(packageId) ?? packages[0]
   const stepsLabel = useMemo(
     () => ["Layanan", "Jadwal", "Kontak", "Ringkasan", "Ajukan"] as const,
     []
   )
+
+  useEffect(() => {
+    if (!authReady) return
+
+    // Owner di perangkat yang sama: pastikan snapshot layanan terbaru ikut tersimpan.
+    if (user?.services?.length) {
+      publishFromOwner(user)
+    }
+
+    const published = readPublicBookingProfile(slug)
+    if (published) {
+      setStudioName(published.name || studio.name)
+      setStudioPhone(published.phone || studio.phone)
+      setServices(published.services)
+      setServiceId((current) =>
+        published.services.some((item) => item.id === current)
+          ? current
+          : (published.services[0]?.id ?? "")
+      )
+      setProfileReady(true)
+      return
+    }
+
+    if (user?.services?.length && slug === studio.slug) {
+      const ownerServices = (user.services ?? [])
+        .filter((service) => service.name.trim() && service.price > 0)
+        .map((service) => ({
+          id: service.id,
+          name: service.name.trim(),
+          price: service.price,
+          durationHours: service.durationHours || 0,
+          fieldId: service.fieldId,
+        }))
+      setStudioName(user.studioName?.trim() || user.name?.trim() || studio.name)
+      setStudioPhone(user.phone?.trim() || studio.phone)
+      setServices(ownerServices)
+      setServiceId(ownerServices[0]?.id ?? "")
+      setProfileReady(true)
+      return
+    }
+
+    setServices([])
+    setServiceId("")
+    setProfileReady(true)
+  }, [authReady, slug, user])
+
+  const selected = services.find((item) => item.id === serviceId) ?? services[0]
 
   if (slug !== studio.slug) {
     return (
@@ -96,11 +162,12 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
     addBooking({
       clientName: name.trim(),
       phone: phone.trim(),
-      eventType: eventTypeForPackage(selected.id),
+      eventType: eventTypeForField(selected.fieldId),
       date,
       time,
       location: "Lokasi menyusul (dikunci owner)",
       packageId: selected.id,
+      packageName: selected.name,
       attireId: null,
       price: selected.price,
       dp: dpFor(selected.price),
@@ -120,7 +187,7 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
         <div className="mx-auto flex h-14 max-w-lg items-center px-4">
           <span className="text-sm text-muted-foreground">Key Assistant</span>
           <a
-            href={waLink(studio.phone, `Halo ${studio.name}, saya ingin tanya jadwal.`)}
+            href={waLink(studioPhone, `Halo ${studioName}, saya ingin tanya jadwal.`)}
             className="ml-auto text-sm font-medium text-primary"
           >
             Chat WA
@@ -131,20 +198,19 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
       <main className="mx-auto grid max-w-lg gap-5 px-4 py-7">
         <div>
           <p className="text-sm font-medium tracking-wide text-primary uppercase">
-            Ajukan booking · {studio.city}
+            Ajukan booking
           </p>
-          <h1 className="mt-2 text-4xl">{studio.name}</h1>
+          <h1 className="mt-2 text-4xl">{studioName}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Cukup 5 langkah. Tombol akhir adalah <strong>Ajukan Booking</strong> — bukan booking
-            langsung. {studio.name} akan konfirmasi lewat WhatsApp.
+            Cukup 5 langkah. {studioName} akan konfirmasi lewat WhatsApp.
           </p>
         </div>
 
-        {submitted ? (
+        {submitted && selected ? (
           <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
             <p className="font-display text-2xl">Booking berhasil diajukan 🎉</p>
             <p className="text-sm text-muted-foreground">
-              Permintaan booking kamu sudah diterima. {studio.name} akan menghubungimu melalui
+              Permintaan booking kamu sudah diterima. {studioName} akan menghubungimu melalui
               WhatsApp untuk konfirmasi jadwal dan pembayaran.
             </p>
             <div className="rounded-xl bg-muted/40 px-4 py-3 text-sm">
@@ -158,12 +224,12 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
             </div>
             <a
               href={waLink(
-                studio.phone,
-                `Halo ${studio.name}, saya baru mengajukan booking ${selected.name} untuk ${formatDate(date)} jam ${formatTime(time)}.`
+                studioPhone,
+                `Halo ${studioName}, saya baru mengajukan booking ${selected.name} untuk ${formatDate(date)} jam ${formatTime(time)}.`
               )}
               className={cn(buttonVariants(), "h-11")}
             >
-              Chat WhatsApp {studio.name}
+              Chat WhatsApp {studioName}
             </a>
           </section>
         ) : (
@@ -201,35 +267,47 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
                       Pilih satu. Detail lain dikonfirmasi owner nanti.
                     </p>
                   </div>
-                  <div className="grid gap-2">
-                    {packages.map((item) => {
-                      const active = item.id === selected.id
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setPackageId(item.id)}
-                          className={cn(
-                            "rounded-xl px-4 py-3 text-left ring-1 transition",
-                            active
-                              ? "bg-primary/8 ring-primary"
-                              : "bg-background ring-foreground/10 hover:bg-muted/50"
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="mt-0.5 text-sm text-muted-foreground">{item.blurb}</p>
+                  {!profileReady ? (
+                    <p className="text-sm text-muted-foreground">Memuat layanan…</p>
+                  ) : services.length === 0 ? (
+                    <div className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                      Belum ada layanan yang disiapkan owner. Hubungi studio lewat WhatsApp, atau
+                      minta owner menambah layanan di menu Layanan.
+                    </div>
+                  ) : (
+                    <div className="grid gap-2">
+                      {services.map((item) => {
+                        const active = item.id === selected?.id
+                        const blurb = serviceBlurb(item)
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setServiceId(item.id)}
+                            className={cn(
+                              "rounded-xl px-4 py-3 text-left ring-1 transition",
+                              active
+                                ? "bg-primary/8 ring-primary"
+                                : "bg-background ring-foreground/10 hover:bg-muted/50"
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="font-medium">{item.name}</p>
+                                {blurb ? (
+                                  <p className="mt-0.5 text-sm text-muted-foreground">{blurb}</p>
+                                ) : null}
+                              </div>
+                              <div className="flex shrink-0 items-center gap-2">
+                                <p className="text-sm font-medium">{rupiah(item.price)}</p>
+                                {active ? <Check className="size-4 text-primary" /> : null}
+                              </div>
                             </div>
-                            <div className="flex shrink-0 items-center gap-2">
-                              <p className="text-sm font-medium">{rupiah(item.price)}</p>
-                              {active ? <Check className="size-4 text-primary" /> : null}
-                            </div>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               ) : null}
 
@@ -319,11 +397,13 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
                   <dl className="grid gap-2 rounded-xl bg-muted/40 px-4 py-3 text-sm">
                     <div className="flex justify-between gap-3">
                       <dt className="text-muted-foreground">Layanan</dt>
-                      <dd className="text-right font-medium">{selected.name}</dd>
+                      <dd className="text-right font-medium">{selected?.name ?? "—"}</dd>
                     </div>
                     <div className="flex justify-between gap-3">
                       <dt className="text-muted-foreground">Harga</dt>
-                      <dd className="font-medium">{rupiah(selected.price)}</dd>
+                      <dd className="font-medium">
+                        {selected ? rupiah(selected.price) : "—"}
+                      </dd>
                     </div>
                     <div className="flex justify-between gap-3">
                       <dt className="text-muted-foreground">Jadwal</dt>
@@ -361,14 +441,19 @@ export function PublicBookingFlow({ slug }: { slug: string }) {
                   </Button>
                 ) : null}
                 {step < 5 ? (
-                  <Button type="button" className="h-11 flex-1" onClick={goNext}>
+                  <Button
+                    type="button"
+                    className="h-11 flex-1"
+                    disabled={step === 1 && !selected}
+                    onClick={goNext}
+                  >
                     Lanjut
                   </Button>
                 ) : (
                   <Button
                     type="button"
                     className="h-11 flex-1"
-                    disabled={!ready}
+                    disabled={!ready || !selected}
                     onClick={submitBooking}
                   >
                     {ready ? "Ajukan Booking" : "Memuat…"}

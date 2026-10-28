@@ -15,6 +15,7 @@ import {
   type BusinessService,
   type ServicePreset,
 } from "@/lib/onboarding"
+import { publishFromOwner } from "@/lib/public-booking-profile"
 import { cn } from "@/lib/utils"
 
 type Props = {
@@ -165,6 +166,7 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
       setError("Gagal menyimpan. Coba lagi.")
       return
     }
+    publishFromOwner(updated)
     setSaved(true)
     onSaved?.()
   }
