@@ -14,6 +14,8 @@ export type BusinessService = {
   name: string
   price: number
   durationHours: number
+  /** Rincian singkat paket — tampil di link booking klien. */
+  details?: string
 }
 
 /** Numeric steps after account creation; `"done"` means onboarding finished. */

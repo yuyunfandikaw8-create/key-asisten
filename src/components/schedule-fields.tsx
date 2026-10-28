@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CalendarDays, Clock3 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -25,8 +25,19 @@ type ScheduleFieldsProps = {
   inputClassName?: string
 }
 
-const fieldClass =
-  "h-10 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm [&::-webkit-calendar-picker-indicator]:mr-0.5 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-70"
+function openNativePicker(el: HTMLInputElement | null) {
+  if (!el) return
+  try {
+    if (typeof el.showPicker === "function") {
+      void el.showPicker()
+      return
+    }
+  } catch {
+    // NotAllowedError / unsupported — fall through
+  }
+  el.focus()
+  el.click()
+}
 
 export function ScheduleFields({
   date,
@@ -38,6 +49,8 @@ export function ScheduleFields({
   className,
   inputClassName,
 }: ScheduleFieldsProps) {
+  const datePickerRef = useRef<HTMLInputElement>(null)
+  const timePickerRef = useRef<HTMLInputElement>(null)
   const [dateText, setDateText] = useState(() => formatDateInput(date))
   const [timeText, setTimeText] = useState(() => formatTime(time))
   const [dateError, setDateError] = useState("")
@@ -92,24 +105,9 @@ export function ScheduleFields({
   return (
     <div className={cn("grid gap-3 sm:grid-cols-2", className)}>
       <div className="grid gap-1.5">
-        <Label htmlFor={dateId}>Tanggal jadwal</Label>
+        <Label htmlFor={`${dateId}-text`}>Tanggal jadwal</Label>
 
-        {/* HP: date native saja — jangan tambah ikon kustom (browser sudah punya, bisa menimpa teks). */}
-        <input
-          id={dateId}
-          type="date"
-          value={date}
-          onChange={(event) => {
-            const next = event.target.value
-            setDateError("")
-            setDateText(next ? formatDateInput(next) : "")
-            onDateChange(next)
-          }}
-          className={cn(fieldClass, "sm:hidden", inputClassName)}
-        />
-
-        {/* Desktop: ketik + ikon kalender (input date menumpuk di ikon) */}
-        <div className="relative hidden gap-2 sm:flex">
+        <div className="flex gap-2">
           <Input
             id={`${dateId}-text`}
             type="text"
@@ -132,23 +130,23 @@ export function ScheduleFields({
                 commitDate((event.target as HTMLInputElement).value)
               }
             }}
-            className={cn("h-10 min-w-0 flex-1", inputClassName)}
+            className={cn("h-11 min-w-0 flex-1 bg-background", inputClassName)}
             aria-invalid={Boolean(dateError)}
           />
-          <div className="relative h-10 w-10 shrink-0">
+          <div className="relative h-11 w-11 shrink-0">
             <span
-              className={cn(
-                "pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-border bg-background",
-                inputClassName
-              )}
+              className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-input bg-background"
               aria-hidden
             >
               <CalendarDays className="size-4" />
             </span>
             <input
+              ref={datePickerRef}
+              id={dateId}
               type="date"
-              value={date}
+              value={date || ""}
               aria-label="Pilih tanggal dari kalender"
+              onClick={(event) => openNativePicker(event.currentTarget)}
               onChange={(event) => {
                 const next = event.target.value
                 if (!next) return
@@ -156,7 +154,7 @@ export function ScheduleFields({
                 setDateText(formatDateInput(next))
                 onDateChange(next)
               }}
-              className="absolute inset-0 z-10 cursor-pointer opacity-0"
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
             />
           </div>
         </div>
@@ -165,22 +163,9 @@ export function ScheduleFields({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor={timeId}>Jam</Label>
+        <Label htmlFor={`${timeId}-text`}>Jam</Label>
 
-        <input
-          id={timeId}
-          type="time"
-          value={time}
-          onChange={(event) => {
-            const next = event.target.value
-            setTimeError("")
-            setTimeText(next ? formatTime(next) : "")
-            onTimeChange(next)
-          }}
-          className={cn(fieldClass, "sm:hidden", inputClassName)}
-        />
-
-        <div className="relative hidden gap-2 sm:flex">
+        <div className="flex gap-2">
           <Input
             id={`${timeId}-text`}
             type="text"
@@ -200,23 +185,23 @@ export function ScheduleFields({
                 commitTime((event.target as HTMLInputElement).value)
               }
             }}
-            className={cn("h-10 min-w-0 flex-1", inputClassName)}
+            className={cn("h-11 min-w-0 flex-1 bg-background", inputClassName)}
             aria-invalid={Boolean(timeError)}
           />
-          <div className="relative h-10 w-10 shrink-0">
+          <div className="relative h-11 w-11 shrink-0">
             <span
-              className={cn(
-                "pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-border bg-background",
-                inputClassName
-              )}
+              className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center rounded-lg border border-input bg-background"
               aria-hidden
             >
               <Clock3 className="size-4" />
             </span>
             <input
+              ref={timePickerRef}
+              id={timeId}
               type="time"
-              value={time}
+              value={time || ""}
               aria-label="Pilih jam dari picker"
+              onClick={(event) => openNativePicker(event.currentTarget)}
               onChange={(event) => {
                 const next = event.target.value
                 if (!next) return
@@ -224,7 +209,7 @@ export function ScheduleFields({
                 setTimeText(formatTime(next))
                 onTimeChange(next)
               }}
-              className="absolute inset-0 z-10 cursor-pointer opacity-0"
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
             />
           </div>
         </div>

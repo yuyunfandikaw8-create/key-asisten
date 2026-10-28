@@ -6,6 +6,8 @@ import { Plus, Trash2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   BUSINESS_FIELDS,
   fieldById,
@@ -32,8 +34,10 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
   const [fields, setFields] = useState<BusinessFieldId[]>([])
   const [services, setServices] = useState<BusinessService[]>([])
   const [draftName, setDraftName] = useState("")
+  const [draftDetails, setDraftDetails] = useState("")
+  const [draftPrice, setDraftPrice] = useState("")
+  const [draftDuration, setDraftDuration] = useState("")
   const [draftField, setDraftField] = useState<BusinessFieldId | "">("")
-  const [showCustomForm, setShowCustomForm] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -67,7 +71,6 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
       if (!next.includes(draftField as BusinessFieldId)) {
         setDraftField(next[0] ?? "")
       }
-      // Drop services for unchecked fields so catalog stays consistent.
       if (current.includes(id) && !next.includes(id)) {
         setServices((list) => list.filter((service) => service.fieldId !== id))
       }
@@ -103,6 +106,7 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
           name: preset.name,
           price: 0,
           durationHours: 0,
+          details: "",
         },
       ]
     })
@@ -110,7 +114,7 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
 
   function updateService(
     id: string,
-    patch: Partial<Pick<BusinessService, "price" | "durationHours" | "name">>
+    patch: Partial<Pick<BusinessService, "price" | "durationHours" | "name" | "details">>
   ) {
     setSaved(false)
     setServices((current) =>
@@ -118,13 +122,25 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
     )
   }
 
+  function clearDraft() {
+    setDraftName("")
+    setDraftDetails("")
+    setDraftPrice("")
+    setDraftDuration("")
+  }
+
   function addService() {
     if (!draftField || !draftName.trim()) {
-      setError("Pilih bidang dan isi nama layanan.")
+      setError("Pilih bidang dan isi nama paket.")
       return
     }
     if (hasService(draftField, draftName)) {
-      setError("Layanan ini sudah ditambahkan.")
+      setError("Paket ini sudah ditambahkan.")
+      return
+    }
+    const price = Number(draftPrice.replace(/\D/g, "")) || 0
+    if (!price) {
+      setError("Isi harga paket.")
       return
     }
     setError("")
@@ -135,11 +151,12 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
         id: crypto.randomUUID(),
         fieldId: draftField,
         name: draftName.trim(),
-        price: 0,
-        durationHours: 0,
+        price,
+        durationHours: Number(draftDuration.replace(",", ".")) || 0,
+        details: draftDetails.trim(),
       },
     ])
-    setDraftName("")
+    clearDraft()
   }
 
   async function save() {
@@ -149,17 +166,27 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
       setSaved(false)
       return
     }
-    if (services.some((service) => !service.price)) {
-      setError("Isi harga untuk semua layanan di tabel, atau hapus yang kosong.")
+    if (!services.length) {
+      setError("Tambah minimal satu paket layanan.")
+      setSaved(false)
+      return
+    }
+    if (services.some((service) => !service.name.trim() || !service.price)) {
+      setError("Isi nama dan harga untuk semua paket, atau hapus yang kosong.")
       setSaved(false)
       return
     }
     setPending(true)
     setError("")
     setSaved(false)
+    const cleaned = services.map((service) => ({
+      ...service,
+      name: service.name.trim(),
+      details: service.details?.trim() || "",
+    }))
     const updated = await updateProfile({
       businessFields: fields,
-      services,
+      services: cleaned,
     })
     setPending(false)
     if (!updated) {
@@ -244,163 +271,220 @@ export function BusinessServicesEditor({ className, onSaved }: Props) {
         )
       })}
 
-      <div className="grid gap-2 rounded-xl bg-muted/40 p-3">
-        <button
-          type="button"
-          className="flex items-center justify-between text-left text-sm font-medium"
-          onClick={() => setShowCustomForm((open) => !open)}
-        >
-          <span>Tidak ada di daftar? Tulis layanan sendiri</span>
-          <Plus
-            className={cn("size-4 transition", showCustomForm ? "rotate-45" : "rotate-0")}
+      <div className="grid gap-3 rounded-xl bg-muted/40 p-4 ring-1 ring-foreground/10">
+        <div>
+          <p className="font-medium">Isi paket manual</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tulis nama paket, rincian, harga, dan waktu. Paket ini muncul di link booking
+            klien.
+          </p>
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="paket-bidang">Bidang</Label>
+          <select
+            id="paket-bidang"
+            value={draftField}
+            onChange={(event) => {
+              setDraftField(event.target.value as BusinessFieldId)
+              setDraftName("")
+            }}
+            className="h-11 rounded-lg border bg-background px-3 text-sm"
+          >
+            <option value="">Pilih bidang</option>
+            {selectedFields.map((field) => (
+              <option key={field.id} value={field.id}>
+                {field.emoji} {field.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="paket-nama">Nama paket</Label>
+          <Input
+            id="paket-nama"
+            value={draftName}
+            onChange={(event) => setDraftName(event.target.value)}
+            placeholder="Contoh: Paket Emas / Wedding Makeup"
+            className="h-11 bg-background"
+            disabled={!draftField}
           />
-        </button>
-        {showCustomForm ? (
-          <>
-            <select
-              value={draftField}
-              onChange={(event) => {
-                setDraftField(event.target.value as BusinessFieldId)
-                setDraftName("")
-              }}
-              className="h-10 rounded-lg border bg-background px-3 text-sm"
-            >
-              <option value="">Pilih bidang</option>
-              {selectedFields.map((field) => (
-                <option key={field.id} value={field.id}>
-                  {field.emoji} {field.label}
-                </option>
+          {draftField && draftName.trim() ? (
+            <div className="max-h-36 overflow-y-auto rounded-lg border bg-background">
+              {filteredPresets.slice(0, 8).map((preset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
+                  onClick={() => setDraftName(preset.name)}
+                >
+                  {preset.name}
+                </button>
               ))}
-            </select>
-            <div className="grid gap-1.5">
-              <Input
-                value={draftName}
-                onChange={(event) => setDraftName(event.target.value)}
-                placeholder="Cari atau ketik nama layanan"
-                className="h-10 bg-background"
-                disabled={!draftField}
-              />
-              {draftField && draftName.trim() ? (
-                <div className="max-h-36 overflow-y-auto rounded-lg border bg-background">
-                  {filteredPresets.slice(0, 8).map((preset) => (
-                    <button
-                      key={preset.name}
-                      type="button"
-                      className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
-                      onClick={() => setDraftName(preset.name)}
-                    >
-                      {preset.name}
-                    </button>
-                  ))}
-                  {!exactPresetMatch ? (
-                    <p className="border-t px-3 py-2 text-xs text-muted-foreground">
-                      Pakai nama kustom: “{draftName.trim()}”
-                    </p>
-                  ) : null}
-                </div>
+              {!exactPresetMatch ? (
+                <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+                  Pakai nama kustom: “{draftName.trim()}”
+                </p>
               ) : null}
             </div>
-            <button
-              type="button"
-              className={cn(buttonVariants({ variant: "outline" }), "h-10")}
-              onClick={addService}
-            >
-              <Plus className="size-4" />
-              Tambahkan ke tabel
-            </button>
-          </>
-        ) : null}
+          ) : null}
+        </div>
+
+        <div className="grid gap-1.5">
+          <Label htmlFor="paket-rincian">Rincian paket</Label>
+          <Textarea
+            id="paket-rincian"
+            value={draftDetails}
+            onChange={(event) => setDraftDetails(event.target.value)}
+            placeholder="Contoh: Rias pengantin akad dan resepsi, termasuk keluarga inti."
+            className="min-h-20 bg-background"
+            disabled={!draftField}
+          />
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-1.5">
+            <Label htmlFor="paket-harga">Harga (Rp)</Label>
+            <Input
+              id="paket-harga"
+              value={draftPrice}
+              onChange={(event) =>
+                setDraftPrice(event.target.value.replace(/\D/g, ""))
+              }
+              inputMode="numeric"
+              placeholder="6500000"
+              className="h-11 bg-background"
+              disabled={!draftField}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="paket-waktu">Waktu / durasi (jam)</Label>
+            <Input
+              id="paket-waktu"
+              value={draftDuration}
+              onChange={(event) => setDraftDuration(event.target.value)}
+              inputMode="decimal"
+              placeholder="8"
+              className="h-11 bg-background"
+              disabled={!draftField}
+            />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className={cn(buttonVariants({ variant: "outline" }), "h-11")}
+          onClick={addService}
+          disabled={!selectedFields.length}
+        >
+          <Plus className="size-4" />
+          Tambah paket ke daftar
+        </button>
       </div>
 
       <div className="grid gap-2">
         <div>
-          <p className="font-medium">Harga & waktu layanan</p>
+          <p className="font-medium">Daftar paket</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Isi harga (Rp) dan waktu/durasi (jam) untuk setiap layanan. Pilihan ini dipakai
-            saat buat booking.
+            Edit nama, rincian, harga, dan waktu sebelum menyimpan.
           </p>
         </div>
         {services.length ? (
-          <div className="overflow-x-auto rounded-xl ring-1 ring-foreground/10">
-            <table className="w-full min-w-[28rem] border-collapse text-sm">
-              <thead className="bg-muted/50 text-left">
-                <tr>
-                  <th className="px-3 py-2.5 font-medium">Layanan</th>
-                  <th className="w-32 px-3 py-2.5 font-medium">Harga (Rp)</th>
-                  <th className="w-28 px-3 py-2.5 font-medium">Waktu (jam)</th>
-                  <th className="w-12 px-2 py-2.5" />
-                </tr>
-              </thead>
-              <tbody>
-                {services.map((service) => {
-                  const field = fieldById(service.fieldId)
-                  return (
-                    <tr
-                      key={service.id}
-                      className="border-t border-foreground/10 bg-background"
+          <div className="grid gap-3">
+            {services.map((service) => {
+              const field = fieldById(service.fieldId)
+              return (
+                <div
+                  key={service.id}
+                  className="grid gap-3 rounded-xl bg-background p-4 ring-1 ring-foreground/10"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {field ? `${field.emoji} ${field.short}` : service.fieldId}
+                    </p>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => {
+                        setSaved(false)
+                        setServices((current) =>
+                          current.filter((item) => item.id !== service.id)
+                        )
+                      }}
+                      aria-label={`Hapus ${service.name}`}
                     >
-                      <td className="px-3 py-2 align-top">
-                        <p className="font-medium">{service.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {field ? `${field.emoji} ${field.short}` : service.fieldId}
-                        </p>
-                      </td>
-                      <td className="px-3 py-2 align-top">
-                        <Input
-                          value={service.price ? String(service.price) : ""}
-                          onChange={(event) =>
-                            updateService(service.id, {
-                              price: Number(event.target.value.replace(/\D/g, "")) || 0,
-                            })
-                          }
-                          inputMode="numeric"
-                          placeholder="0"
-                          className="h-9 bg-background"
-                          aria-label={`Harga ${service.name}`}
-                        />
-                      </td>
-                      <td className="px-3 py-2 align-top">
-                        <Input
-                          value={
-                            service.durationHours ? String(service.durationHours) : ""
-                          }
-                          onChange={(event) =>
-                            updateService(service.id, {
-                              durationHours:
-                                Number(event.target.value.replace(",", ".")) || 0,
-                            })
-                          }
-                          inputMode="decimal"
-                          placeholder="0"
-                          className="h-9 bg-background"
-                          aria-label={`Waktu ${service.name}`}
-                        />
-                      </td>
-                      <td className="px-2 py-2 align-top">
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            setSaved(false)
-                            setServices((current) =>
-                              current.filter((item) => item.id !== service.id)
-                            )
-                          }}
-                          aria-label={`Hapus ${service.name}`}
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <Label htmlFor={`name-${service.id}`}>Nama paket</Label>
+                    <Input
+                      id={`name-${service.id}`}
+                      value={service.name}
+                      onChange={(event) =>
+                        updateService(service.id, { name: event.target.value })
+                      }
+                      className="h-11 bg-background"
+                    />
+                  </div>
+
+                  <div className="grid gap-1.5">
+                    <Label htmlFor={`details-${service.id}`}>Rincian</Label>
+                    <Textarea
+                      id={`details-${service.id}`}
+                      value={service.details || ""}
+                      onChange={(event) =>
+                        updateService(service.id, { details: event.target.value })
+                      }
+                      placeholder="Detail isi paket…"
+                      className="min-h-20 bg-background"
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={`price-${service.id}`}>Harga (Rp)</Label>
+                      <Input
+                        id={`price-${service.id}`}
+                        value={service.price ? String(service.price) : ""}
+                        onChange={(event) =>
+                          updateService(service.id, {
+                            price: Number(event.target.value.replace(/\D/g, "")) || 0,
+                          })
+                        }
+                        inputMode="numeric"
+                        placeholder="0"
+                        className="h-11 bg-background"
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor={`duration-${service.id}`}>Waktu (jam)</Label>
+                      <Input
+                        id={`duration-${service.id}`}
+                        value={
+                          service.durationHours ? String(service.durationHours) : ""
+                        }
+                        onChange={(event) =>
+                          updateService(service.id, {
+                            durationHours:
+                              Number(event.target.value.replace(",", ".")) || 0,
+                          })
+                        }
+                        inputMode="decimal"
+                        placeholder="0"
+                        className="h-11 bg-background"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <p className="rounded-xl bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
-            Belum ada layanan. Centang dari daftar di atas, lalu isi harga dan waktu di
-            sini.
+            Belum ada paket. Centang dari daftar di atas, atau isi form paket manual.
           </p>
         )}
       </div>

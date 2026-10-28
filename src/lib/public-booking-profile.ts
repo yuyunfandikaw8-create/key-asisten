@@ -22,6 +22,7 @@ export const DEMO_BOOKING_SERVICES: BusinessService[] = packages.map((item) => (
   price: item.price,
   durationHours:
     item.id === "wisuda" ? 3 : item.id === "perak" ? 4 : item.id === "adat" ? 10 : 8,
+  details: item.blurb,
 }))
 
 const DEMO_BLURBS: Record<string, string> = Object.fromEntries(
@@ -43,7 +44,8 @@ function normalizeService(service: BusinessService): PublicBookingService | null
   const name = service.name?.trim()
   const price = Number(service.price)
   if (!name || !Number.isFinite(price) || price <= 0) return null
-  const blurb = DEMO_BLURBS[service.id]
+  const blurb =
+    service.details?.trim() || DEMO_BLURBS[service.id] || undefined
   return {
     id: service.id,
     name,
@@ -92,6 +94,7 @@ export function readPublicBookingProfile(slug: string): PublicBookingProfile | n
           price: service.price,
           durationHours: service.durationHours ?? 0,
           fieldId: service.fieldId,
+          details: service.blurb,
         })
       )
       .filter((service): service is PublicBookingService => Boolean(service)),

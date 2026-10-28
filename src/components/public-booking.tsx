@@ -40,18 +40,29 @@ function serviceBlurb(service: PublicBookingService) {
 }
 
 function toPublicServices(
-  items: { id: string; name: string; price: number; durationHours: number; fieldId: BusinessFieldId; blurb?: string }[]
+  items: {
+    id: string
+    name: string
+    price: number
+    durationHours: number
+    fieldId: BusinessFieldId
+    blurb?: string
+    details?: string
+  }[]
 ): PublicBookingService[] {
   return items
     .filter((service) => service.name.trim() && service.price > 0)
-    .map((service) => ({
-      id: service.id,
-      name: service.name.trim(),
-      price: service.price,
-      durationHours: service.durationHours || 0,
-      fieldId: service.fieldId,
-      ...(service.blurb ? { blurb: service.blurb } : {}),
-    }))
+    .map((service) => {
+      const blurb = service.details?.trim() || service.blurb?.trim()
+      return {
+        id: service.id,
+        name: service.name.trim(),
+        price: service.price,
+        durationHours: service.durationHours || 0,
+        fieldId: service.fieldId,
+        ...(blurb ? { blurb } : {}),
+      }
+    })
 }
 
 /** Halaman klien untuk link booking mandiri — alur pendek, tanpa flyer pricelist lama. */
