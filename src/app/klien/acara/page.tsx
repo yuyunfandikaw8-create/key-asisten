@@ -4,6 +4,7 @@ import { useState } from "react"
 
 import { useAuth } from "@/components/auth-provider"
 import { useClientWorkspace } from "@/components/client-provider"
+import { CitySearchPicker } from "@/components/city-search-picker"
 import { DateField } from "@/components/schedule-fields"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
@@ -34,6 +35,7 @@ export default function ClientEventsPage() {
   } = useClientWorkspace()
   const [title, setTitle] = useState("")
   const [date, setDate] = useState("")
+  const [city, setCity] = useState(user?.city || "")
   const [location, setLocation] = useState("")
   const [error, setError] = useState("")
 
@@ -44,14 +46,20 @@ export default function ClientEventsPage() {
       setError("Isi nama acara.")
       return
     }
+    const selectedCity = city.trim() || user!.city || ""
+    if (!selectedCity) {
+      setError("Pilih atau ketik kota lokasi acara.")
+      return
+    }
     addEvent({
       title: title.trim(),
       date,
-      location: location.trim() || user!.city || "Lokasi menyusul",
-      city: user!.city || "Bandung",
+      location: location.trim() || selectedCity,
+      city: selectedCity,
     })
     setTitle("")
     setDate("")
+    setCity(user!.city || "")
     setLocation("")
     setError("")
   }
@@ -85,15 +93,26 @@ export default function ClientEventsPage() {
             onDateChange={setDate}
           />
           <div className="grid gap-1.5">
-            <Label htmlFor="event-location">Lokasi</Label>
-            <Input
-              id="event-location"
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="Surabaya"
-              className="h-11 bg-background"
+            <Label htmlFor="event-city">Kota</Label>
+            <CitySearchPicker
+              id="event-city"
+              value={city}
+              onChange={setCity}
+              placeholder="Ketik atau pilih kota"
+              aria-label="Kota lokasi acara"
+              className="[&_button]:h-11 [&_button]:bg-background"
             />
           </div>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="event-location">Lokasi / tempat</Label>
+          <Input
+            id="event-location"
+            value={location}
+            onChange={(event) => setLocation(event.target.value)}
+            placeholder="Contoh: Hotel Bumi, Gedung Merdeka"
+            className="h-11 bg-background"
+          />
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <button

@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { useAuth } from "@/components/auth-provider"
+import { CitySearchPicker } from "@/components/city-search-picker"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -103,12 +104,13 @@ export default function ClientProfilePage() {
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="client-city">Kota Domisili</Label>
-          <Input
+          <CitySearchPicker
             id="client-city"
             value={city}
-            onChange={(event) => setCity(event.target.value)}
-            placeholder="Surabaya"
-            className="h-11 bg-background"
+            onChange={setCity}
+            placeholder="Ketik atau pilih kota"
+            aria-label="Kota Domisili"
+            className="[&_button]:h-11 [&_button]:bg-background"
           />
         </div>
       </section>

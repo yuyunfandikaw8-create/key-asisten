@@ -220,7 +220,7 @@ export function demoPortfolioItems(): PortfolioItem[] {
       id: "demo-pf-soft-glam",
       title: "Makeup Pengantin — Soft Glam",
       category: "makeup",
-      description: "Pernikahan Yogi & Dina · Surabaya",
+      description: "Pernikahan · Surabaya",
       date: "2025-08",
       visible: true,
       createdAt: "2025-08-12T10:00:00.000Z",

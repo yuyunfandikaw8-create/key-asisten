@@ -339,7 +339,7 @@ export function PortfolioEditor({
               onChange={(event) =>
                 setDraft({ ...draft, description: event.target.value })
               }
-              placeholder="Pernikahan Yogi & Dina · Surabaya"
+              placeholder="Pernikahan · Surabaya"
               className="h-10"
             />
           </div>

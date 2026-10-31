@@ -41,6 +41,12 @@ function CityResults({
   results: string[]
   onPick: (city: string) => void
 }) {
+  const typed = query.trim()
+  const exactMatch = results.some(
+    (city) => city.toLowerCase() === typed.toLowerCase()
+  )
+  const showCustom = Boolean(typed) && !exactMatch
+
   return (
     <>
       <ul
@@ -49,9 +55,25 @@ function CityResults({
         aria-label="Hasil pencarian wilayah"
         className="max-h-64 overflow-y-auto p-1"
       >
-        {results.length === 0 ? (
+        {showCustom ? (
+          <li>
+            <button
+              type="button"
+              role="option"
+              aria-selected={false}
+              onClick={() => onPick(typed)}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition hover:bg-accent"
+            >
+              <span className="min-w-0 flex-1 truncate">
+                Gunakan “{typed}”
+              </span>
+            </button>
+          </li>
+        ) : null}
+        {results.length === 0 && !showCustom ? (
           <li className="px-3 py-6 text-center text-sm text-muted-foreground">
-            Wilayah tidak ditemukan. Coba kata lain.
+            Ketik nama kota, lalu pilih dari daftar atau gunakan teks yang Anda
+            ketik.
           </li>
         ) : (
           results.map((city) => {
@@ -76,7 +98,7 @@ function CityResults({
           })
         )}
       </ul>
-      {query.trim() && results.length > 0 ? (
+      {typed && results.length > 0 ? (
         <p className="border-t px-3 py-1.5 text-[11px] text-muted-foreground">
           {results.length} wilayah cocok
         </p>
@@ -174,6 +196,12 @@ function CompactCitySearchPicker({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && query.trim()) {
+                  event.preventDefault()
+                  pick(query.trim())
+                }
+              }}
               placeholder="Ketik nama kota / kabupaten…"
               className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
               autoComplete="off"
@@ -286,6 +314,12 @@ function InlineCitySearchPicker({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && query.trim()) {
+                  event.preventDefault()
+                  pick(query.trim())
+                }
+              }}
               placeholder="Ketik nama kota / kabupaten…"
               className="h-8 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
               autoComplete="off"

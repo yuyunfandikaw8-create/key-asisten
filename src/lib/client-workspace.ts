@@ -88,7 +88,7 @@ export function workspaceIsEmpty(workspace: ClientWorkspace) {
 export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
   const inSurabaya = city.trim().toLowerCase() === "surabaya"
   if (inSurabaya) {
-    const eventId = "demo-event-lamaran-yogi"
+    const eventId = "demo-event-lamaran"
     return {
       shortlist: [
         "makeup-laras",
@@ -100,7 +100,7 @@ export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
       events: [
         {
           id: eventId,
-          title: "Lamaran Yogi & Dina",
+          title: "Lamaran",
           date: "2026-11-08",
           location: "Hotel Bumi, Surabaya",
           city: "Surabaya",
@@ -120,7 +120,7 @@ export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
     }
   }
 
-  const eventId = "demo-event-pernikahan-yogi-dina"
+  const eventId = "demo-event-pernikahan"
   return {
     shortlist: [
       "makeup-sentuh",
@@ -134,7 +134,7 @@ export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
     events: [
       {
         id: eventId,
-        title: "Pernikahan Yogi & Dina",
+        title: "Pernikahan",
         date: "2026-12-12",
         location: "Gedung Merdeka, Bandung",
         city: "Bandung",
