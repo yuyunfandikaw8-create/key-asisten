@@ -305,14 +305,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(raw) as AuthUser
         if (parsed?.email && parsed?.id) {
           const markedDone = isOnboardingMarkedDone(parsed.email)
+          // Migrasi sesi lama akun uji klien yang masih terisi data contoh.
+          const clearedDemoClient =
+            normalizeEmail(parsed.email) === "klien@riasaja.id" &&
+            (parsed.name === "Klien Uji" ||
+              parsed.phone === "081233334444" ||
+              parsed.city === "Surabaya")
+              ? { ...parsed, name: "", phone: "", city: "" }
+              : parsed
           const next = withTrial({
-            ...parsed,
-            provider: parsed.provider ?? "password",
-            role: normalizeRole(parsed.role),
-            roleChosen: parsed.roleChosen,
+            ...clearedDemoClient,
+            provider: clearedDemoClient.provider ?? "password",
+            role: normalizeRole(clearedDemoClient.role),
+            roleChosen: clearedDemoClient.roleChosen,
             onboardingStep: markedDone
               ? "done"
-              : normalizeOnboardingStep(parsed.onboardingStep),
+              : normalizeOnboardingStep(clearedDemoClient.onboardingStep),
           })
           setUser(next)
           persistAccountTrial(next.email, next.trialStartedAt!)

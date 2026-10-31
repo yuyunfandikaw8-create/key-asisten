@@ -59,6 +59,7 @@ export default function ClientProfilePage() {
             id="client-name"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            placeholder="Masukkan nama lengkap Anda"
             className="h-11 bg-background"
           />
         </div>
@@ -66,8 +67,9 @@ export default function ClientProfilePage() {
           <Label htmlFor="client-email">Alamat Email</Label>
           <Input
             id="client-email"
-            value={user.email}
+            value={user.email.endsWith("@riasaja.id") ? "" : user.email}
             readOnly
+            placeholder="Alamat email akun Anda"
             className="h-11 bg-muted/40"
           />
         </div>
