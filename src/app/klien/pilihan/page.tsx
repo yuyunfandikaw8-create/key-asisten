@@ -190,14 +190,16 @@ export default function ClientShortlistPage() {
       <div>
         <h1 className="text-4xl">Favorit</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Simpan vendor (termasuk yang sudah unggah portofolio di app), bandingkan, lalu booking.
+          Simpan vendor pilihan Anda, bandingkan layanan dan portofolionya, lalu
+          lakukan pemesanan sesuai kebutuhan acara.
         </p>
       </div>
 
       {!items.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <p className="text-sm text-muted-foreground">
-            Belum ada vendor tersimpan. Cari vendor lalu ketuk Simpan / ❤️ Favorit.
+            Anda belum memiliki vendor favorit. Silakan jelajahi pilihan vendor
+            dan simpan vendor yang Anda minati di halaman ini.
           </p>
           <Link href="/klien/cari" className={cn(buttonVariants(), "h-10 w-fit")}>
             Cari vendor
