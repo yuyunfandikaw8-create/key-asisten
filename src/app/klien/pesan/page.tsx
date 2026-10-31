@@ -23,14 +23,15 @@ export default function ClientMessagesPage() {
       <div>
         <h1 className="text-4xl">Pesan</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Percakapan dengan vendor yang sudah dihubungi atau dimasukkan ke acara.
+          Lihat dan kelola percakapan Anda dengan vendor terkait kebutuhan acara.
         </p>
       </div>
 
       {!contacted.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <p className="text-sm text-muted-foreground">
-            Belum ada percakapan. Masukkan vendor ke acara dulu, lalu hubungi mereka.
+            Belum ada percakapan dengan vendor. Silakan pilih vendor terlebih
+            dahulu dan tambahkan ke acara Anda untuk mulai berkomunikasi.
           </p>
           <Link href="/klien/cari" className={cn(buttonVariants(), "h-10 w-fit")}>
             Cari vendor
