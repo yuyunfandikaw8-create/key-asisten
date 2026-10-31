@@ -15,9 +15,11 @@ import {
   createClientEvent,
   emptyClientWorkspace,
   previewFlagKeyFor,
+  readClientViewMode,
   readClientWorkspace,
   sampleClientWorkspace,
   workspaceIsEmpty,
+  writeClientViewMode,
   writeClientWorkspace,
   type ClientBookingStatus,
   type ClientEvent,
@@ -107,19 +109,18 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       }
 
       if (cancelled) return
-      const previewDone = localStorage.getItem(previewFlagKeyFor(user.email)) === "1"
       const city = user.city || "Bandung"
+      // Jangan ganti mode otomatis — hanya ikut pilihan terakhir pengguna.
+      const savedMode = readClientViewMode(user.email)
 
       skipPersist.current = true
-      if (workspaceIsEmpty(stored) && !previewDone) {
+      if (savedMode === "demo") {
         const demo = sampleClientWorkspace(city)
         setViewMode("demo")
         viewModeRef.current = "demo"
         setWorkspace(demo)
         workspaceRef.current = demo
-        setNotice(
-          "Ini tampilan data contoh agar kamu melihat acara yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
-        )
+        setNotice(null)
       } else {
         setViewMode("real")
         viewModeRef.current = "real"
@@ -170,11 +171,12 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       const demo = sampleClientWorkspace(user.city || "Bandung")
       skipPersist.current = true
       viewModeRef.current = "demo"
+      writeClientViewMode(user.email, "demo")
       setViewMode("demo")
       setWorkspace(demo)
       workspaceRef.current = demo
       setNotice(
-        "Menampilkan data contoh. Data real kamu tetap aman — mode hanya berubah jika kamu memilihnya."
+        "Menampilkan data contoh. Data real Anda tetap aman — mode hanya berubah jika Anda memilihnya."
       )
       window.setTimeout(() => {
         skipPersist.current = false
@@ -186,13 +188,14 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       const stored = readClientWorkspace(user.email)
       skipPersist.current = true
       viewModeRef.current = "real"
+      writeClientViewMode(user.email, "real")
       setViewMode("real")
       setWorkspace(stored)
       workspaceRef.current = stored
       localStorage.setItem(previewFlagKeyFor(user.email), "1")
       setNotice(
         workspaceIsEmpty(stored)
-          ? "Ini Data saya — masih kosong. Buat acara atau cari vendor untuk mulai."
+          ? "Ini Data Saya — masih kosong. Buat acara atau cari vendor untuk mulai."
           : null
       )
       window.setTimeout(() => {

@@ -162,6 +162,31 @@ export function previewFlagKeyFor(email: string) {
   return `${CLIENT_WORKSPACE_KEY}:preview:${normalizeEmail(email)}`
 }
 
+export function viewModeKeyFor(email: string) {
+  return `${CLIENT_WORKSPACE_KEY}:view:${normalizeEmail(email)}`
+}
+
+export function readClientViewMode(email: string | undefined | null): ClientViewMode {
+  if (!email || typeof window === "undefined") return "real"
+  try {
+    return localStorage.getItem(viewModeKeyFor(email)) === "demo" ? "demo" : "real"
+  } catch {
+    return "real"
+  }
+}
+
+export function writeClientViewMode(
+  email: string | undefined | null,
+  mode: ClientViewMode
+) {
+  if (!email || typeof window === "undefined") return
+  try {
+    localStorage.setItem(viewModeKeyFor(email), mode)
+  } catch {
+    // ignore
+  }
+}
+
 export function readClientWorkspace(email: string | undefined | null): ClientWorkspace {
   if (!email || typeof window === "undefined") return emptyClientWorkspace()
   try {

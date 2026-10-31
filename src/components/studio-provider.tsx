@@ -104,6 +104,28 @@ function previewFlagKey(storageKey: string) {
   return `${storageKey}:preview-done`
 }
 
+function viewModeFlagKey(storageKey: string) {
+  return `${storageKey}:view-mode`
+}
+
+function readStudioViewMode(storageKey: string): StudioViewMode {
+  try {
+    return localStorage.getItem(viewModeFlagKey(storageKey)) === "demo"
+      ? "demo"
+      : "real"
+  } catch {
+    return "real"
+  }
+}
+
+function writeStudioViewMode(storageKey: string, mode: StudioViewMode) {
+  try {
+    localStorage.setItem(viewModeFlagKey(storageKey), mode)
+  } catch {
+    // ignore
+  }
+}
+
 function purgeLegacyStudioKeys(userId: string | null, email?: string | null) {
   const suffixes = [userId ?? "guest"]
   if (email) suffixes.push(`email:${normalizeEmail(email)}`)
@@ -240,20 +262,22 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       skipPersist.current = true
       setStorageKey(key)
 
-      const hasPreview = localStorage.getItem(previewFlagKey(key)) === "1" || previewDone
-      if (!stored && !hasPreview) {
+      // Jangan ganti mode otomatis — hanya ikut pilihan terakhir pengguna.
+      const savedMode = readStudioViewMode(key)
+      if (savedMode === "demo") {
         setViewMode("demo")
         viewModeRef.current = "demo"
         setState(sampleState(city))
-        setNotice(
-          "Ini tampilan data contoh agar kamu melihat studio yang sudah terisi. Klik “Data saya” untuk mulai dengan data real (kosong)."
-        )
+        setNotice(null)
       } else {
         const real = stored ?? createEmptyStudio(city)
         setViewMode("real")
         viewModeRef.current = "real"
         setState(real)
         localStorage.setItem(key, JSON.stringify(real))
+        if (!previewDone) {
+          localStorage.setItem(previewFlagKey(key), "1")
+        }
       }
 
       setReady(true)
@@ -417,10 +441,13 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       const demo = sampleState(city)
       skipPersist.current = true
       viewModeRef.current = "demo"
+      if (storageKeyRef.current) writeStudioViewMode(storageKeyRef.current, "demo")
       setViewMode("demo")
       setState(demo)
       stateRef.current = demo
-      setNotice("Menampilkan data contoh. Data real kamu tetap aman — mode hanya berubah jika kamu memilihnya.")
+      setNotice(
+        "Menampilkan data contoh. Data real Anda tetap aman — mode hanya berubah jika Anda memilihnya."
+      )
       window.setTimeout(() => {
         skipPersist.current = false
       }, 0)
@@ -575,6 +602,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         const real = stored ?? createEmptyStudio(userCity)
         skipPersist.current = true
         viewModeRef.current = "real"
+        if (key) writeStudioViewMode(key, "real")
         setViewMode("real")
         setState(real)
         stateRef.current = real
@@ -597,6 +625,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
         const empty = createEmptyStudio(city)
         skipPersist.current = true
         viewModeRef.current = "real"
+        if (storageKeyRef.current) writeStudioViewMode(storageKeyRef.current, "real")
         setViewMode("real")
         setState(empty)
         stateRef.current = empty
