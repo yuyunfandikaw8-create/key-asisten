@@ -298,6 +298,26 @@ export function emptyPublicBookingProfile(slug: string): PublicBookingProfile {
   }
 }
 
+const SEED_PUBLIC_BIO =
+  "Makeup untuk wedding, engagement, wisuda, dan acara spesial."
+
+/** Buang isi contoh bawaan dari Data Saya (bukan Data contoh). */
+export function stripSeededOwnerPublicContent(
+  profile: PublicBookingProfile
+): PublicBookingProfile {
+  return {
+    ...profile,
+    bio:
+      profile.bio?.trim() === SEED_PUBLIC_BIO ? undefined : profile.bio?.trim() || undefined,
+    services: (profile.services || []).filter(
+      (service) => !String(service.id || "").startsWith("owner-svc-")
+    ),
+    portfolio: visiblePortfolio(
+      withoutSeededDemoPortfolio(normalizePortfolioList(profile.portfolio))
+    ),
+  }
+}
+
 export function startingPrice(services: PublicBookingService[] | undefined | null) {
   if (!services?.length) return null
   return Math.min(...services.map((service) => service.price))

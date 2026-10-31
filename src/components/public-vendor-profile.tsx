@@ -21,9 +21,11 @@ import {
   loadPublicBookingProfile,
   publishFromOwner,
   startingPrice,
+  stripSeededOwnerPublicContent,
   type PublicBookingProfile,
   type PublicBookingService,
 } from "@/lib/public-booking-profile"
+import { studioBrand } from "@/lib/studio-brand"
 import { rupiah, waLink } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -47,7 +49,7 @@ function PortfolioGallery({ items }: { items: PortfolioItem[] }) {
   if (!items.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        Owner belum menampilkan portofolio publik.
+        Menunggu owner mengisi portofolio. Belum ada foto atau video yang ditampilkan.
       </p>
     )
   }
@@ -192,6 +194,7 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
 
     async function boot() {
       setLoading(true)
+      // Data contoh: isi portofolio + layanan contoh.
       if (viewMode === "demo") {
         const published = publishFromOwner(user, { demo: true })
         if (!cancelled) {
@@ -200,17 +203,26 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
         }
         return
       }
-      if (user?.role === "owner" && (user.services?.length || user.portfolio?.length)) {
-        publishFromOwner(user)
+
+      const key = slug.trim().toLowerCase()
+      // Data Saya: profil milik Owner yang sedang login → publish apa adanya (boleh kosong).
+      if (user?.role === "owner") {
+        const brand = studioBrand(user)
+        if (brand.slug === key) {
+          const published = publishFromOwner(user)
+          if (!cancelled) {
+            setProfile(stripSeededOwnerPublicContent(published))
+            setLoading(false)
+          }
+          return
+        }
       }
+
       const published = await loadPublicBookingProfile(slug)
       if (cancelled) return
       if (published) {
-        setProfile(published)
-      } else if (user?.role === "owner") {
-        setProfile(publishFromOwner(user))
-      } else if (slug.trim().toLowerCase() === studio.slug) {
-        // Tanpa publish Owner: tampilkan kerangka kosong (bukan portofolio contoh).
+        setProfile(stripSeededOwnerPublicContent(published))
+      } else if (key === studio.slug) {
         setProfile(emptyPublicBookingProfile(slug))
       } else {
         setProfile(null)

@@ -65,11 +65,25 @@ export function PortfolioEditor({ className }: { className?: string }) {
   useEffect(() => {
     if (!user) return
     const cleaned = withoutSeededDemoPortfolio(user.portfolio)
+    const seedBio = "Makeup untuk wedding, engagement, wisuda, dan acara spesial."
+    const nextBio = user.bio?.trim() === seedBio ? "" : user.bio || ""
     setItems(cleaned)
-    setBio(user.bio || "")
-    // Hapus item contoh bawaan dari sesi lama agar Owner mulai kosong.
-    if ((user.portfolio?.length ?? 0) > cleaned.length) {
-      void updateProfile({ portfolio: cleaned }).then((updated) => {
+    setBio(nextBio)
+    const seedServices = (user.services || []).filter((service) =>
+      String(service.id || "").startsWith("owner-svc-")
+    )
+    const needsClean =
+      (user.portfolio?.length ?? 0) > cleaned.length ||
+      user.bio?.trim() === seedBio ||
+      seedServices.length > 0
+    if (needsClean) {
+      void updateProfile({
+        portfolio: cleaned,
+        bio: nextBio,
+        services: (user.services || []).filter(
+          (service) => !String(service.id || "").startsWith("owner-svc-")
+        ),
+      }).then((updated) => {
         if (updated) publishFromOwner(updated)
       })
     }

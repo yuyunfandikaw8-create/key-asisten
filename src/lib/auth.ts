@@ -167,37 +167,12 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     roleChosen: true,
     onboardingStep: "done",
     businessFields: ["makeup", "hair"],
-    bio: "Makeup untuk wedding, engagement, wisuda, dan acara spesial.",
+    /** Kosong di Data Saya — terisi setelah Owner mengisi. Data contoh punya konten sendiri. */
+    bio: "",
     rating: 4.9,
     publicSlug: "laras",
-    /** Kosong sampai Owner mengunggah sendiri. */
     portfolio: [],
-    services: [
-      {
-        id: "owner-svc-pengantin",
-        fieldId: "makeup",
-        name: "Makeup Pengantin",
-        price: 2_500_000,
-        durationHours: 8,
-        details: "Soft glam untuk akad & resepsi",
-      },
-      {
-        id: "owner-svc-akad",
-        fieldId: "makeup",
-        name: "Makeup Akad",
-        price: 1_500_000,
-        durationHours: 4,
-        details: "Look natural untuk akad",
-      },
-      {
-        id: "owner-svc-wisuda",
-        fieldId: "makeup",
-        name: "Makeup Wisuda",
-        price: 500_000,
-        durationHours: 2,
-        details: "Natural untuk wisuda & foto",
-      },
-    ],
+    services: [],
   },
   {
     id: "user-klien",

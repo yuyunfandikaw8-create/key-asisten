@@ -81,7 +81,8 @@ export function studioBrand(
       fallback: studio.slug,
     }),
     address: user?.address?.trim() || studio.address,
-    bio: user?.bio?.trim() || studio.bio,
+    // Data Saya: jangan isi bio katalog — kosong sampai Owner mengisi.
+    bio: user?.bio?.trim() || "",
     rating,
     portfolio,
     businessFields: user?.businessFields || [],
