@@ -32,7 +32,7 @@ export default function ClientHomePage() {
         <h1 className="mt-2 text-4xl">Halo, {user.name}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Atur kebutuhan acara dan pilih beberapa vendor sekaligus — MUA, dekor,
-          fotografer, dan lainnya dalam satu tempat.
+          fotografer, dan lainnya dalam 1 tempat.
         </p>
       </div>
 
