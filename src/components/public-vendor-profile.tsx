@@ -295,11 +295,8 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+        <div className="mx-auto flex h-14 max-w-lg items-center px-4">
           <span className="text-sm text-muted-foreground">Key Assistant</span>
-          <Link href="/klien/cari" className="text-sm text-primary">
-            Cari vendor
-          </Link>
         </div>
       </header>
 
