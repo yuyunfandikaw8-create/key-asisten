@@ -46,7 +46,7 @@ function CompareTable({
       <div>
         <h2 className="text-lg font-medium">Bandingkan</h2>
         <p className="text-sm text-muted-foreground">
-          Bandingkan vendor di Pilihan Saya sebelum memutuskan.
+          Bandingkan vendor di Favorit sebelum memutuskan.
         </p>
       </div>
       <table className="w-full min-w-[480px] border-collapse text-sm">
@@ -188,7 +188,7 @@ export default function ClientShortlistPage() {
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="text-4xl">Pilihan Saya</h1>
+        <h1 className="text-4xl">Favorit</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Simpan vendor (termasuk yang sudah unggah portofolio di app), bandingkan, lalu booking.
         </p>
@@ -197,7 +197,7 @@ export default function ClientShortlistPage() {
       {!items.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <p className="text-sm text-muted-foreground">
-            Belum ada vendor tersimpan. Cari vendor lalu ketuk Simpan / ❤️ Pilihan Saya.
+            Belum ada vendor tersimpan. Cari vendor lalu ketuk Simpan / ❤️ Favorit.
           </p>
           <Link href="/klien/cari" className={cn(buttonVariants(), "h-10 w-fit")}>
             Cari vendor

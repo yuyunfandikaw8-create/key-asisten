@@ -91,7 +91,7 @@ export default function ClientVendorDetailPage() {
             )}
           >
             <Heart className={cn("size-4", liked && "fill-current")} />
-            {liked ? "Di Pilihan Saya" : "Pilihan Saya"}
+            {liked ? "Di Favorit" : "Favorit"}
           </button>
         </div>
       </div>

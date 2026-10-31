@@ -20,7 +20,7 @@ Akun uji (tersimpan di browser; pintasan di `/masuk`):
 | Peran | Email | Kata sandi | Untuk |
 | --- | --- | --- | --- |
 | **Owner** | `owner@riasaja.id` | `owner123` | Portofolio (nav), profil publik `/p/laras`, layanan, booking |
-| **Klien** | `klien@riasaja.id` | `klien123` | Cari vendor, lihat portofolio Owner, Pilihan Saya |
+| **Klien** | `klien@riasaja.id` | `klien123` | Cari vendor, lihat portofolio Owner, Favorit |
 
 Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh** — sama seperti Owner. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
 
@@ -79,7 +79,7 @@ Klien melihat portofolio Owner yang sudah diunggah di:
 
 - `Klien → Cari Vendor` → bagian **Vendor di Key Assistant** (bukan hanya direktori contoh)
 - Profil publik: `/p/[slug]` (contoh `/p/laras`)
-- `Klien → Pilihan Saya` — bandingkan portofolio, rating, harga mulai, lokasi, status
+- `Klien → Favorit` — bandingkan portofolio, rating, harga mulai, lokasi, status
 
 Setelah menambah kolom portofolio, jalankan ulang bagian ALTER di `supabase/schema.sql` (aman diulang).
 

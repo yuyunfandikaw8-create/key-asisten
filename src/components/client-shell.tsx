@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/klien", label: "Beranda", icon: Home, exact: true },
   { href: "/klien/cari", label: "Cari Vendor", icon: Search },
-  { href: "/klien/pilihan", label: "Pilihan Saya", icon: Heart },
+  { href: "/klien/pilihan", label: "Favorit", icon: Heart },
   { href: "/klien/acara", label: "Acara Saya", icon: CalendarHeart },
   { href: "/klien/pesan", label: "Pesan", icon: MessageCircle },
   { href: "/klien/booking", label: "Booking Saya", icon: ClipboardList },

@@ -289,7 +289,7 @@ export default function ClientSearchPage() {
         <div>
           <h2 className="text-lg font-medium">Direktori contoh</h2>
           <p className="text-sm text-muted-foreground">
-            Vendor contoh untuk mencoba alur Pilihan Saya & bandingkan.
+            Vendor contoh untuk mencoba alur Favorit & bandingkan.
           </p>
         </div>
         {!listings.length ? (

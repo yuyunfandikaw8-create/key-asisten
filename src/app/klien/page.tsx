@@ -91,7 +91,7 @@ export default function ClientHomePage() {
               </div>
             ) : (
               <p className="rounded-xl bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-                Belum ada vendor di acara ini. Cari vendor lalu masukkan ke Pilihan Saya
+                Belum ada vendor di acara ini. Cari vendor lalu masukkan ke Favorit
                 atau langsung ke Acara.
               </p>
             )}
@@ -132,7 +132,7 @@ export default function ClientHomePage() {
           className="grid gap-2 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition hover:bg-muted/30"
         >
           <Heart className="size-5 text-primary" />
-          <p className="font-medium">Pilihan Saya</p>
+          <p className="font-medium">Favorit</p>
           <p className="text-sm text-muted-foreground">
             {workspace.shortlist.length
               ? `${workspace.shortlist.length} vendor tersimpan untuk dibandingkan.`
