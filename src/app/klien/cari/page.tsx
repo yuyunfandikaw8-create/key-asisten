@@ -287,9 +287,11 @@ export default function ClientSearchPage() {
 
       <section className="grid gap-3">
         <div>
-          <h2 className="text-lg font-medium">Direktori contoh</h2>
+          <h2 className="text-lg font-medium">Temukan Vendor</h2>
           <p className="text-sm text-muted-foreground">
-            Vendor contoh untuk mencoba alur Favorit & bandingkan.
+            Temukan vendor terbaik untuk kebutuhan acara Anda. Lihat layanan,
+            telusuri portofolio, dan bandingkan pilihan sebelum melakukan
+            pemesanan.
           </p>
         </div>
         {!listings.length ? (
