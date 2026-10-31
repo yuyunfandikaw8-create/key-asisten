@@ -32,7 +32,7 @@ const links = [
   { href: "/klien/pesan", label: "Pesan", icon: MessageCircle },
   { href: "/klien/booking", label: "Booking Saya", icon: ClipboardList },
   { href: "/klien/tagihan", label: "Tagihan", icon: Receipt },
-  { href: "/klien/profil", label: "Profil", icon: UserRound },
+  { href: "/klien/profil", label: "Profil Saya", icon: UserRound },
 ]
 
 function isActive(pathname: string, href: string, exact?: boolean) {

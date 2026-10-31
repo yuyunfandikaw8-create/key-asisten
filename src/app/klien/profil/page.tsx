@@ -31,7 +31,7 @@ export default function ClientProfilePage() {
     })
     setPending(false)
     if (!updated) {
-      setError("Gagal menyimpan.")
+      setError("Perubahan gagal disimpan. Silakan coba lagi.")
       return
     }
     setSaved(true)
@@ -40,15 +40,21 @@ export default function ClientProfilePage() {
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="text-4xl">Profil</h1>
+        <h1 className="text-4xl">Profil Saya</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Data klien dan pengaturan akun.
+          Kelola informasi pribadi dan pengaturan akun Anda.
         </p>
       </div>
 
       <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <div>
+          <h2 className="font-medium">Informasi Pribadi</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Nama dan alamat email yang terhubung dengan akun Anda.
+          </p>
+        </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="client-name">Nama</Label>
+          <Label htmlFor="client-name">Nama Lengkap</Label>
           <Input
             id="client-name"
             value={name}
@@ -57,7 +63,7 @@ export default function ClientProfilePage() {
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="client-email">Email</Label>
+          <Label htmlFor="client-email">Alamat Email</Label>
           <Input
             id="client-email"
             value={user.email}
@@ -65,8 +71,17 @@ export default function ClientProfilePage() {
             className="h-11 bg-muted/40"
           />
         </div>
+      </section>
+
+      <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <div>
+          <h2 className="font-medium">Informasi Kontak</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Nomor yang dapat dihubungi Vendor terkait pemesanan Anda.
+          </p>
+        </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="client-phone">WhatsApp</Label>
+          <Label htmlFor="client-phone">Nomor WhatsApp</Label>
           <Input
             id="client-phone"
             value={phone}
@@ -75,8 +90,17 @@ export default function ClientProfilePage() {
             className="h-11 bg-background"
           />
         </div>
+      </section>
+
+      <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <div>
+          <h2 className="font-medium">Informasi Domisili</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Kota tempat tinggal Anda untuk membantu pencarian Vendor.
+          </p>
+        </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="client-city">Kota acara</Label>
+          <Label htmlFor="client-city">Kota Domisili</Label>
           <Input
             id="client-city"
             value={city}
@@ -85,17 +109,22 @@ export default function ClientProfilePage() {
             className="h-11 bg-background"
           />
         </div>
+      </section>
+
+      <div className="grid gap-3">
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {saved ? <p className="text-sm text-primary">Profil tersimpan.</p> : null}
+        {saved ? (
+          <p className="text-sm text-primary">Perubahan berhasil disimpan.</p>
+        ) : null}
         <button
           type="button"
           className={cn(buttonVariants(), "h-11 w-fit")}
           disabled={pending}
           onClick={() => void save()}
         >
-          {pending ? "Menyimpan…" : "Simpan profil"}
+          {pending ? "Menyimpan…" : "Simpan Perubahan"}
         </button>
-      </section>
+      </div>
     </div>
   )
 }
