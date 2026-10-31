@@ -207,7 +207,7 @@ export function PortfolioEditor({ className }: { className?: string }) {
   return (
     <section className={cn("grid gap-5", className)}>
       <div className="grid gap-1.5">
-        <Label htmlFor="bio-public">Tentang bisnis (profil publik)</Label>
+        <Label htmlFor="bio-public">Tentang bisnis</Label>
         <Textarea
           id="bio-public"
           value={bio}
@@ -221,15 +221,16 @@ export function PortfolioEditor({ className }: { className?: string }) {
           disabled={pending}
           onClick={() => void saveBio()}
         >
-          Simpan tentang
+          Simpan perubahan
         </button>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-base font-medium">Portofolio</h3>
+          <h3 className="text-base font-medium">Hasil pekerjaan</h3>
           <p className="text-sm text-muted-foreground">
-            Unggah hasil pekerjaan. Atur tampil atau sembunyikan per item.
+            Tampilkan foto atau video terbaik. Kamu bisa mengatur mana yang ingin ditampilkan
+            kepada klien.
           </p>
         </div>
         <button
@@ -238,7 +239,7 @@ export function PortfolioEditor({ className }: { className?: string }) {
           onClick={openNew}
         >
           <Plus className="size-4" />
-          Tambah
+          Tambah portofolio
         </button>
       </div>
 
