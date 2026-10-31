@@ -4,7 +4,12 @@ import {
   type AuthUser,
   type PaymentSettings,
 } from "@/lib/auth"
-import { demoBio, demoPortfolioItems, normalizePortfolioList } from "@/lib/portfolio"
+import {
+  demoBio,
+  demoPortfolioItems,
+  normalizePortfolioList,
+  withoutSeededDemoPortfolio,
+} from "@/lib/portfolio"
 import { resolvePublicSlug } from "@/lib/public-slug"
 
 /** Nama bisnis / owner dari akun login, fallback ke data demo katalog. */
@@ -50,7 +55,9 @@ export function studioBrand(
   const bank = payment.bankName || studio.bank
   const accountName = payment.accountHolder || owner
   const accountNumber = payment.accountNumber || studio.accountNumber
-  const portfolio = normalizePortfolioList(user?.portfolio)
+  const portfolio = withoutSeededDemoPortfolio(
+    normalizePortfolioList(user?.portfolio)
+  )
   const rating =
     typeof user?.rating === "number" && Number.isFinite(user.rating)
       ? user.rating

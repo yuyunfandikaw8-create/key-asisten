@@ -17,6 +17,7 @@ import {
   type PortfolioItem,
 } from "@/lib/portfolio"
 import {
+  emptyPublicBookingProfile,
   loadPublicBookingProfile,
   publishFromOwner,
   startingPrice,
@@ -209,8 +210,8 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
       } else if (user?.role === "owner") {
         setProfile(publishFromOwner(user))
       } else if (slug.trim().toLowerCase() === studio.slug) {
-        // Contoh profil publik Key Partner — selalu tersedia untuk demo.
-        setProfile(publishFromOwner(null, { demo: true }))
+        // Tanpa publish Owner: tampilkan kerangka kosong (bukan portofolio contoh).
+        setProfile(emptyPublicBookingProfile(slug))
       } else {
         setProfile(null)
       }

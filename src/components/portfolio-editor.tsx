@@ -15,6 +15,7 @@ import {
   createPortfolioId,
   formatPortfolioDate,
   portfolioCategoryLabel,
+  withoutSeededDemoPortfolio,
   type PortfolioItem,
   type PortfolioMedia,
 } from "@/lib/portfolio"
@@ -63,8 +64,17 @@ export function PortfolioEditor({ className }: { className?: string }) {
 
   useEffect(() => {
     if (!user) return
-    setItems(user.portfolio ?? [])
+    const cleaned = withoutSeededDemoPortfolio(user.portfolio)
+    setItems(cleaned)
     setBio(user.bio || "")
+    // Hapus item contoh bawaan dari sesi lama agar Owner mulai kosong.
+    if ((user.portfolio?.length ?? 0) > cleaned.length) {
+      void updateProfile({ portfolio: cleaned }).then((updated) => {
+        if (updated) publishFromOwner(updated)
+      })
+    }
+    // updateProfile stabil dari auth context; sengaja tidak masuk deps agar tidak loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   async function onMediaPick(files: FileList | null) {

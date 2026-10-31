@@ -6,7 +6,7 @@ import {
   type CustomBusinessField,
   type OnboardingStep,
 } from "@/lib/onboarding"
-import { demoPortfolioItems, type PortfolioItem } from "@/lib/portfolio"
+import type { PortfolioItem } from "@/lib/portfolio"
 
 export type AuthProviderKind = "password" | "google"
 
@@ -170,7 +170,8 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     bio: "Makeup untuk wedding, engagement, wisuda, dan acara spesial.",
     rating: 4.9,
     publicSlug: "laras",
-    portfolio: demoPortfolioItems(),
+    /** Kosong sampai Owner mengunggah sendiri. */
+    portfolio: [],
     services: [
       {
         id: "owner-svc-pengantin",

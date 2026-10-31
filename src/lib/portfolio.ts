@@ -111,6 +111,21 @@ export function visiblePortfolio(items: PortfolioItem[] | undefined | null) {
   return (items ?? []).filter((item) => item.visible && item.media.length > 0)
 }
 
+/** Item contoh bawaan (demo-pf-…) — dibuang agar Owner mulai dari portofolio kosong. */
+export function isSeededDemoPortfolioItem(item: PortfolioItem) {
+  return (
+    item.id.startsWith("demo-pf-") ||
+    item.id.startsWith("nadya-demo-") ||
+    item.id.startsWith("nadya-")
+  )
+}
+
+export function withoutSeededDemoPortfolio(
+  items: PortfolioItem[] | undefined | null
+): PortfolioItem[] {
+  return (items ?? []).filter((item) => !isSeededDemoPortfolioItem(item))
+}
+
 export function portfolioPhotoCount(items: PortfolioItem[] | undefined | null) {
   return visiblePortfolio(items).reduce((sum, item) => sum + item.media.length, 0)
 }

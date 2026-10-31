@@ -12,6 +12,7 @@ import {
   demoPortfolioItems,
   normalizePortfolioList,
   visiblePortfolio,
+  withoutSeededDemoPortfolio,
   type PortfolioItem,
 } from "@/lib/portfolio"
 import { studioBrand } from "@/lib/studio-brand"
@@ -142,7 +143,9 @@ function normalizeProfile(profile: PublicBookingProfile, slug: string): PublicBo
         })
       )
       .filter((service): service is PublicBookingService => Boolean(service)),
-    portfolio: visiblePortfolio(normalizePortfolioList(profile.portfolio)),
+    portfolio: visiblePortfolio(
+      withoutSeededDemoPortfolio(normalizePortfolioList(profile.portfolio))
+    ),
     businessFields: Array.isArray(profile.businessFields)
       ? profile.businessFields
       : undefined,
@@ -235,7 +238,9 @@ export function publishPublicBookingProfile(input: {
     instagram: input.instagram?.trim() || undefined,
     logoDataUrl: input.logoDataUrl,
     businessFields: input.businessFields,
-    portfolio: visiblePortfolio(normalizePortfolioList(input.portfolio)),
+    portfolio: visiblePortfolio(
+      withoutSeededDemoPortfolio(normalizePortfolioList(input.portfolio))
+    ),
   }
 
   const map = readMap()
@@ -273,8 +278,24 @@ export function publishFromOwner(
     instagram: brand.instagram,
     logoDataUrl: brand.logoDataUrl,
     businessFields: [...brand.businessFields],
+    // Mode Data contoh boleh isi contoh; Data Saya hanya portofolio yang Owner unggah.
     portfolio: options?.demo ? demoPortfolioItems() : brand.portfolio,
   })
+}
+
+/** Profil publik tanpa portofolio contoh — dipakai bila belum ada publish Owner. */
+export function emptyPublicBookingProfile(slug: string): PublicBookingProfile {
+  const key = slug.trim().toLowerCase() || "laras"
+  return {
+    slug: key,
+    name: key === "laras" ? "Laras Makeup" : "Studio",
+    phone: "",
+    city: "",
+    services: [],
+    updatedAt: new Date().toISOString(),
+    portfolio: [],
+    bio: undefined,
+  }
 }
 
 export function startingPrice(services: PublicBookingService[] | undefined | null) {
