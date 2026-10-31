@@ -124,8 +124,7 @@ export default function ClientSearchPage() {
       <div>
         <h1 className="text-4xl">Cari Vendor</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Vendor yang sudah mengunggah portofolio di aplikasi tampil di sini. Simpan ke Pilihan
-          Saya untuk dibandingkan.
+          Temukan vendor untuk acara kamu berdasarkan layanan, lokasi, dan portofolio.
         </p>
       </div>
 
