@@ -11,16 +11,20 @@ export type ClientBookingStatus =
   | "menunggu_konfirmasi"
   | "menunggu_dp"
   | "sudah_dp"
+  | "menunggu_pelunasan"
   | "lunas"
   | "selesai"
+  | "dibatalkan"
 
 export const CLIENT_BOOKING_STATUS_LABEL: Record<ClientBookingStatus, string> = {
   belum_booking: "Belum booking",
-  menunggu_konfirmasi: "Menunggu konfirmasi",
-  menunggu_dp: "Menunggu DP",
-  sudah_dp: "Sudah DP",
-  lunas: "Lunas",
-  selesai: "Selesai",
+  menunggu_konfirmasi: "Menunggu Konfirmasi",
+  menunggu_dp: "Menunggu Pembayaran Uang Muka",
+  sudah_dp: "DP Dibayarkan",
+  menunggu_pelunasan: "Menunggu Pelunasan",
+  lunas: "Pembayaran Lunas",
+  selesai: "Pemesanan Selesai",
+  dibatalkan: "Pemesanan Dibatalkan",
 }
 
 export type ClientNeedId =
@@ -106,9 +110,9 @@ export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
             { needId: "hair", partnerId: "hair-pakuwon", status: "menunggu_konfirmasi" },
             { needId: "dekor", partnerId: "dekor-kalimas", status: "sudah_dp" },
             { needId: "baju", partnerId: null, status: "belum_booking" },
-            { needId: "photo", partnerId: "foto-frame-suro", status: "lunas" },
+            { needId: "photo", partnerId: "foto-frame-suro", status: "menunggu_pelunasan" },
             { needId: "video", partnerId: null, status: "belum_booking" },
-            { needId: "content", partnerId: "content-cerita-suro", status: "belum_booking" },
+            { needId: "content", partnerId: "content-cerita-suro", status: "lunas" },
           ],
         },
       ],
@@ -140,9 +144,9 @@ export function sampleClientWorkspace(city = "Bandung"): ClientWorkspace {
           { needId: "hair", partnerId: "hair-sanggul-dago", status: "menunggu_konfirmasi" },
           { needId: "dekor", partnerId: "dekor-rumah-bunga", status: "menunggu_dp" },
           { needId: "baju", partnerId: "baju-lemari", status: "belum_booking" },
-          { needId: "photo", partnerId: "foto-lensa-dago", status: "lunas" },
+          { needId: "photo", partnerId: "foto-lensa-dago", status: "menunggu_pelunasan" },
           { needId: "video", partnerId: null, status: "belum_booking" },
-          { needId: "content", partnerId: "content-reel-bandung", status: "menunggu_konfirmasi" },
+          { needId: "content", partnerId: "content-reel-bandung", status: "lunas" },
         ],
       },
     ],

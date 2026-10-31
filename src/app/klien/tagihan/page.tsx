@@ -24,6 +24,7 @@ export default function ClientInvoicesPage() {
           slot.partnerId &&
           (slot.status === "menunggu_dp" ||
             slot.status === "sudah_dp" ||
+            slot.status === "menunggu_pelunasan" ||
             slot.status === "lunas" ||
             slot.status === "selesai")
       )
@@ -44,15 +45,16 @@ export default function ClientInvoicesPage() {
       <div>
         <h1 className="text-4xl">Tagihan</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Invoice dari masing-masing vendor di acara kamu.
+          Lihat dan kelola seluruh tagihan dari penyedia jasa yang terlibat dalam
+          acara Anda.
         </p>
       </div>
 
       {!invoices.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <p className="text-sm text-muted-foreground">
-            Belum ada tagihan. Setelah vendor masuk tahap DP atau lunas, tagihan muncul di
-            sini.
+            Belum ada tagihan untuk saat ini. Tagihan akan ditampilkan setelah
+            penyedia jasa menerbitkan tagihan untuk pemesanan Anda.
           </p>
           <Link href="/klien/booking" className={cn(buttonVariants(), "h-10 w-fit")}>
             Lihat booking
