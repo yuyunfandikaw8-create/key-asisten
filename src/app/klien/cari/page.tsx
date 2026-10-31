@@ -168,21 +168,14 @@ export default function ClientSearchPage() {
         />
       </div>
 
-      <section className="grid gap-3">
-        <div>
-          <h2 className="text-lg font-medium">Vendor di Key Assistant</h2>
-          <p className="text-sm text-muted-foreground">
-            Portofolio dari Owner yang sudah mengunggah lewat Menu → Portofolio.
-          </p>
-        </div>
-        {!liveReady ? (
-          <p className="text-sm text-muted-foreground">Memuat vendor…</p>
-        ) : !liveListings.length ? (
-          <p className="rounded-2xl bg-card px-4 py-6 text-sm text-muted-foreground ring-1 ring-foreground/10">
-            Belum ada vendor dengan portofolio/layanan publik. Setelah Owner mengunggah di Menu →
-            Portofolio, profilnya muncul di sini dan di link `/p/…`.
-          </p>
-        ) : (
+      {liveReady && liveListings.length > 0 ? (
+        <section className="grid gap-3">
+          <div>
+            <h2 className="text-lg font-medium">Vendor di Key Assistant</h2>
+            <p className="text-sm text-muted-foreground">
+              Portofolio dari Owner yang sudah mengunggah lewat Menu → Portofolio.
+            </p>
+          </div>
           <div className="grid gap-3">
             {liveListings.map((profile) => {
               const shortId = publicVendorShortlistId(profile.slug)
@@ -289,8 +282,8 @@ export default function ClientSearchPage() {
               )
             })}
           </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section className="grid gap-3">
         <div>
