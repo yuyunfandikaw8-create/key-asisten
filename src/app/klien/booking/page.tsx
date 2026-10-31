@@ -32,17 +32,19 @@ export default function ClientBookingsPage() {
       <div>
         <h1 className="text-4xl">Booking Saya</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Status booking per vendor: menunggu konfirmasi, DP, lunas, hingga selesai.
+          Pantau status pemesanan setiap penyedia jasa, mulai dari menunggu
+          konfirmasi, pembayaran uang muka, pelunasan, hingga pesanan selesai.
         </p>
       </div>
 
       {!rows.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <p className="text-sm text-muted-foreground">
-            Belum ada booking. Isi vendor di Acara Saya untuk mulai melacak status.
+            Belum ada pemesanan. Tambahkan penyedia jasa ke acara Anda untuk
+            mulai melakukan pemesanan dan memantau statusnya.
           </p>
           <Link href="/klien/acara" className={cn(buttonVariants(), "h-10 w-fit")}>
-            Buka Acara Saya
+            Lihat Acara Saya
           </Link>
         </div>
       ) : (
