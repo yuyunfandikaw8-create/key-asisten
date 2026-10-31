@@ -63,7 +63,8 @@ export default function StudioPortofolioPage() {
               Tampilkan hasil terbaik dari pekerjaanmu.
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Foto dan video yang kamu tampilkan akan terlihat di profil publik.
+              Unggah foto atau video hasil pekerjaan yang ingin kamu tampilkan di profil publik.
+              Klien dapat melihatnya sebelum memilih layananmu.
             </p>
           </div>
         </div>
