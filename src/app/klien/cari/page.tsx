@@ -34,12 +34,19 @@ import { cn } from "@/lib/utils"
 
 export default function ClientSearchPage() {
   const { ready: authReady, user } = useAuth()
-  const { ready, toggleShortlist, isShortlisted, activeEvent, assignVendor } =
-    useClientWorkspace()
+  const {
+    ready,
+    viewMode,
+    toggleShortlist,
+    isShortlisted,
+    activeEvent,
+    assignVendor,
+  } = useClientWorkspace()
   const [needId, setNeedId] = useState<ClientNeedId | "all">("all")
   const [query, setQuery] = useState("")
   const [liveVendors, setLiveVendors] = useState<PublicBookingProfile[]>([])
   const [liveReady, setLiveReady] = useState(false)
+  const isDemo = viewMode === "demo"
 
   useEffect(() => {
     let cancelled = false
@@ -158,24 +165,27 @@ export default function ClientSearchPage() {
         ))}
       </div>
 
-      <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Cari nama, area, atau jenis jasa…"
-          className="h-11 bg-card pl-10"
-        />
-      </div>
+      <section className="grid gap-3">
+        <div>
+          <h2 className="text-lg font-medium">Temukan Vendor</h2>
+          <p className="text-sm text-muted-foreground">
+            Temukan vendor terbaik untuk kebutuhan acara Anda. Lihat layanan,
+            telusuri portofolio, dan bandingkan pilihan sebelum melakukan
+            pemesanan.
+          </p>
+        </div>
 
-      {liveReady && liveListings.length > 0 ? (
-        <section className="grid gap-3">
-          <div>
-            <h2 className="text-lg font-medium">Vendor di Key Assistant</h2>
-            <p className="text-sm text-muted-foreground">
-              Portofolio dari Owner yang sudah mengunggah lewat Menu → Portofolio.
-            </p>
-          </div>
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Cari nama, area, atau jenis jasa…"
+            className="h-11 bg-card pl-10"
+          />
+        </div>
+
+        {!isDemo && liveReady && liveListings.length > 0 ? (
           <div className="grid gap-3">
             {liveListings.map((profile) => {
               const shortId = publicVendorShortlistId(profile.slug)
@@ -282,105 +292,97 @@ export default function ClientSearchPage() {
               )
             })}
           </div>
-        </section>
-      ) : null}
+        ) : null}
 
-      <section className="grid gap-3">
-        <div>
-          <h2 className="text-lg font-medium">Temukan Vendor</h2>
-          <p className="text-sm text-muted-foreground">
-            Temukan vendor terbaik untuk kebutuhan acara Anda. Lihat layanan,
-            telusuri portofolio, dan bandingkan pilihan sebelum melakukan
-            pemesanan.
-          </p>
-        </div>
-        {!listings.length ? (
-          <p className="rounded-2xl bg-card px-4 py-8 text-sm text-muted-foreground ring-1 ring-foreground/10">
-            Belum ada vendor contoh yang cocok. Coba kategori atau kata kunci lain.
-          </p>
-        ) : (
-          <div className="grid gap-3">
-            {listings.map(({ partner, needId: nid }) => {
-              const liked = isShortlisted(partner.id)
-              const category = categoryById(nid)
-              const rating = partnerRating(partner)
-              const photos = partnerPortfolioCount(partner)
-              const available = partnerAvailable(partner)
-              return (
-                <article
-                  key={`${partner.id}-${nid}`}
-                  className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        {category?.emoji} {category?.label}
-                      </p>
-                      <Link
-                        href={`/klien/vendor/${partner.id}`}
-                        className="font-medium hover:text-primary"
-                      >
-                        {partner.name}
-                      </Link>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-                        <span className="inline-flex items-center gap-1 text-foreground">
-                          <Star className="size-3.5 fill-current text-primary" />
-                          {rating.toFixed(1)}
-                        </span>
-                        <span>
-                          {partner.area}, {partner.city}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-sm">
-                        mulai {rupiah(partner.share)} · {photos} foto ·{" "}
-                        {available ? "Tersedia" : "Padat"}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleShortlist(partner.id)}
-                      className={cn(
-                        buttonVariants({
-                          variant: liked ? "default" : "outline",
-                          size: "sm",
-                        }),
-                        "h-9"
-                      )}
-                    >
-                      <Heart className={cn("size-4", liked && "fill-current")} />
-                      {liked ? "Tersimpan" : "Simpan"}
-                    </button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{partner.blurb}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={`/klien/vendor/${partner.id}`}
-                      className={cn(buttonVariants({ variant: "outline" }), "h-10")}
-                    >
-                      Lihat profil & portofolio
-                    </Link>
-                    {activeEvent ? (
+        {isDemo ? (
+          !listings.length ? (
+            <p className="rounded-2xl bg-card px-4 py-8 text-sm text-muted-foreground ring-1 ring-foreground/10">
+              Belum ada vendor contoh yang cocok. Coba kategori atau kata kunci lain.
+            </p>
+          ) : (
+            <div className="grid gap-3">
+              {listings.map(({ partner, needId: nid }) => {
+                const liked = isShortlisted(partner.id)
+                const category = categoryById(nid)
+                const rating = partnerRating(partner)
+                const photos = partnerPortfolioCount(partner)
+                const available = partnerAvailable(partner)
+                return (
+                  <article
+                    key={`${partner.id}-${nid}`}
+                    className="grid gap-3 rounded-2xl bg-card p-4 ring-1 ring-foreground/10"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {category?.emoji} {category?.label}
+                        </p>
+                        <Link
+                          href={`/klien/vendor/${partner.id}`}
+                          className="font-medium hover:text-primary"
+                        >
+                          {partner.name}
+                        </Link>
+                        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                          <span className="inline-flex items-center gap-1 text-foreground">
+                            <Star className="size-3.5 fill-current text-primary" />
+                            {rating.toFixed(1)}
+                          </span>
+                          <span>
+                            {partner.area}, {partner.city}
+                          </span>
+                        </p>
+                        <p className="mt-1 text-sm">
+                          mulai {rupiah(partner.share)} · {photos} foto ·{" "}
+                          {available ? "Tersedia" : "Padat"}
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        className={cn(buttonVariants({ variant: "outline" }), "h-10")}
-                        onClick={() =>
-                          assignVendor(
-                            activeEvent.id,
-                            nid,
-                            partner.id,
-                            "menunggu_konfirmasi"
-                          )
-                        }
+                        onClick={() => toggleShortlist(partner.id)}
+                        className={cn(
+                          buttonVariants({
+                            variant: liked ? "default" : "outline",
+                            size: "sm",
+                          }),
+                          "h-9"
+                        )}
                       >
-                        Masukkan ke {activeEvent.title}
+                        <Heart className={cn("size-4", liked && "fill-current")} />
+                        {liked ? "Tersimpan" : "Simpan"}
                       </button>
-                    ) : null}
-                  </div>
-                </article>
-              )
-            })}
-          </div>
-        )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{partner.blurb}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/klien/vendor/${partner.id}`}
+                        className={cn(buttonVariants({ variant: "outline" }), "h-10")}
+                      >
+                        Lihat profil & portofolio
+                      </Link>
+                      {activeEvent ? (
+                        <button
+                          type="button"
+                          className={cn(buttonVariants({ variant: "outline" }), "h-10")}
+                          onClick={() =>
+                            assignVendor(
+                              activeEvent.id,
+                              nid,
+                              partner.id,
+                              "menunggu_konfirmasi"
+                            )
+                          }
+                        >
+                          Masukkan ke {activeEvent.title}
+                        </button>
+                      ) : null}
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )
+        ) : null}
       </section>
     </div>
   )
