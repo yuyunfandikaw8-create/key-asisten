@@ -60,7 +60,10 @@ export default function StudioPortofolioPage() {
           <div>
             <h1 className="text-4xl">Portofolio</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Unggah hasil pekerjaan di sini. Klien hanya melihat item yang kamu tampilkan.
+              Tampilkan hasil terbaik dari pekerjaanmu.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Foto dan video yang kamu tampilkan akan terlihat di profil publik.
             </p>
           </div>
         </div>
@@ -69,11 +72,11 @@ export default function StudioPortofolioPage() {
       <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-medium">Ditampilkan ke klien</h2>
+            <h2 className="text-lg font-medium">Tampil di profil publik</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {visiblePhotos > 0
-                ? `${visiblePhotos} foto/video tampil di profil publik.`
-                : "Belum ada portofolio. Setelah kamu menambah & menampilkan item, klien bisa melihatnya."}
+                ? `${visiblePhotos} foto/video saat ini tampil di profil publik.`
+                : "Belum ada foto/video yang tampil. Tambah portofolio untuk menampilkannya di profil publik."}
             </p>
             <p className="mt-2 break-all font-mono text-xs text-muted-foreground">{publicUrl}</p>
           </div>
