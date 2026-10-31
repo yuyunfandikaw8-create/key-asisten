@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { MapPin, MessageCircle, Star } from "lucide-react"
 
 import { PublicBookingFlow } from "@/components/public-booking"
@@ -184,6 +185,9 @@ function ServiceList({
 export function PublicVendorProfile({ slug }: { slug: string }) {
   const { ready: authReady, user } = useAuth()
   const { ready, viewMode } = useStudio()
+  const searchParams = useSearchParams()
+  const contohPreview = searchParams.get("contoh") === "1"
+  const showDemoExamples = viewMode === "demo" || contohPreview
   const [tab, setTab] = useState<Tab>("profil")
   const [profile, setProfile] = useState<PublicBookingProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -194,8 +198,8 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
 
     async function boot() {
       setLoading(true)
-      // Data contoh: isi portofolio + layanan contoh.
-      if (viewMode === "demo") {
+      // Data contoh / ?contoh=1: isi portofolio + layanan contoh.
+      if (showDemoExamples) {
         const published = publishFromOwner(user, { demo: true })
         if (!cancelled) {
           setProfile(published)
@@ -234,7 +238,7 @@ export function PublicVendorProfile({ slug }: { slug: string }) {
     return () => {
       cancelled = true
     }
-  }, [authReady, ready, slug, user, viewMode])
+  }, [authReady, ready, showDemoExamples, slug, user])
 
   const photoCount = useMemo(
     () => portfolioPhotoCount(profile?.portfolio),

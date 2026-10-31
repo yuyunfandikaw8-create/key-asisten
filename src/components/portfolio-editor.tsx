@@ -13,6 +13,8 @@ import {
   compressImageFile,
   createMediaId,
   createPortfolioId,
+  demoBio,
+  demoPortfolioItems,
   formatPortfolioDate,
   portfolioCategoryLabel,
   withoutSeededDemoPortfolio,
@@ -43,7 +45,14 @@ function blankDraft(category: BusinessFieldId): Draft {
   }
 }
 
-export function PortfolioEditor({ className }: { className?: string }) {
+export function PortfolioEditor({
+  className,
+  demoMode = false,
+}: {
+  className?: string
+  /** Data contoh: tampilkan portofolio contoh (bukan Data Saya). */
+  demoMode?: boolean
+}) {
   const { user, updateProfile } = useAuth()
   const [items, setItems] = useState<PortfolioItem[]>([])
   const [bio, setBio] = useState("")
@@ -64,6 +73,14 @@ export function PortfolioEditor({ className }: { className?: string }) {
 
   useEffect(() => {
     if (!user) return
+    if (demoMode) {
+      setItems(demoPortfolioItems())
+      setBio(demoBio())
+      setDraft(null)
+      setError("")
+      setSaved(false)
+      return
+    }
     const cleaned = withoutSeededDemoPortfolio(user.portfolio)
     const seedBio = "Makeup untuk wedding, engagement, wisuda, dan acara spesial."
     const nextBio = user.bio?.trim() === seedBio ? "" : user.bio || ""
@@ -89,7 +106,7 @@ export function PortfolioEditor({ className }: { className?: string }) {
     }
     // updateProfile stabil dari auth context; sengaja tidak masuk deps agar tidak loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user, demoMode])
 
   async function onMediaPick(files: FileList | null) {
     if (!files?.length || !draft) return
@@ -154,6 +171,10 @@ export function PortfolioEditor({ className }: { className?: string }) {
 
   async function persist(nextItems: PortfolioItem[], nextBio = bio) {
     if (!user) return false
+    if (demoMode) {
+      setError("Mode Data contoh hanya pratinjau. Buka Data Saya untuk mengunggah portofolio nyata.")
+      return false
+    }
     setPending(true)
     setError("")
     setSaved(false)
@@ -167,7 +188,7 @@ export function PortfolioEditor({ className }: { className?: string }) {
       return false
     }
     publishFromOwner(updated)
-    setItems(updated.portfolio ?? nextItems)
+    setItems(withoutSeededDemoPortfolio(updated.portfolio) ?? nextItems)
     setSaved(true)
     return true
   }
@@ -220,6 +241,11 @@ export function PortfolioEditor({ className }: { className?: string }) {
 
   return (
     <section className={cn("grid gap-5", className)}>
+      {demoMode ? (
+        <p className="rounded-xl bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          Ini pratinjau Data contoh. Portofolio di bawah hanya contoh — unggah nyata di Data Saya.
+        </p>
+      ) : null}
       <div className="grid gap-1.5">
         <Label htmlFor="bio-public">Tentang bisnis</Label>
         <Textarea
@@ -228,11 +254,12 @@ export function PortfolioEditor({ className }: { className?: string }) {
           onChange={(event) => setBio(event.target.value)}
           placeholder="Contoh: Makeup untuk wedding, engagement, wisuda, dan acara spesial."
           className="min-h-20"
+          disabled={demoMode}
         />
         <button
           type="button"
           className={cn(buttonVariants({ variant: "outline" }), "h-9 w-fit")}
-          disabled={pending}
+          disabled={pending || demoMode}
           onClick={() => void saveBio()}
         >
           Simpan perubahan
@@ -251,6 +278,7 @@ export function PortfolioEditor({ className }: { className?: string }) {
           type="button"
           className={cn(buttonVariants(), "h-9")}
           onClick={openNew}
+          disabled={demoMode}
         >
           <Plus className="size-4" />
           Tambah portofolio
@@ -432,37 +460,39 @@ export function PortfolioEditor({ className }: { className?: string }) {
                     {item.visible ? "Ditampilkan di publik" : "Disembunyikan"}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8")}
-                    onClick={() => openEdit(item)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8")}
-                    onClick={() => void toggleVisible(item)}
-                  >
-                    {item.visible ? (
-                      <>
-                        <EyeOff className="size-3.5" /> Sembunyikan
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="size-3.5" /> Tampilkan
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8")}
-                    onClick={() => void removeItem(item)}
-                  >
-                    <Trash2 className="size-3.5" /> Hapus
-                  </button>
-                </div>
+                {!demoMode ? (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8")}
+                      onClick={() => openEdit(item)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8")}
+                      onClick={() => void toggleVisible(item)}
+                    >
+                      {item.visible ? (
+                        <>
+                          <EyeOff className="size-3.5" /> Sembunyikan
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="size-3.5" /> Tampilkan
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "h-8")}
+                      onClick={() => void removeItem(item)}
+                    >
+                      <Trash2 className="size-3.5" /> Hapus
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </li>
           ))}

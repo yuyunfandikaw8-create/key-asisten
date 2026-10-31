@@ -34,13 +34,13 @@ export default function StudioPortofolioPage() {
 
   if (!ready || !authReady) return <StudioLoading />
 
-  const brand = studioBrand(user, { demo: viewMode === "demo" })
-  const publicPath = `/p/${brand.slug}`
+  const isDemo = viewMode === "demo"
+  const brand = studioBrand(user, { demo: isDemo })
+  const publicPath = isDemo ? `/p/${brand.slug}?contoh=1` : `/p/${brand.slug}`
   const publicUrl = origin ? `${origin}${publicPath}` : publicPath
-  const ownerPortfolio =
-    viewMode === "demo"
-      ? brand.portfolio
-      : withoutSeededDemoPortfolio(user?.portfolio)
+  const ownerPortfolio = isDemo
+    ? brand.portfolio
+    : withoutSeededDemoPortfolio(user?.portfolio)
   const visiblePhotos = portfolioPhotoCount(ownerPortfolio)
 
   return (
@@ -93,7 +93,7 @@ export default function StudioPortofolioPage() {
       </div>
 
       <div className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <PortfolioEditor />
+        <PortfolioEditor demoMode={isDemo} />
       </div>
     </div>
   )
