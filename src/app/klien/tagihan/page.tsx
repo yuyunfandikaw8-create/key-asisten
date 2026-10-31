@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Download, Eye } from "lucide-react"
 
+import { useAuth } from "@/components/auth-provider"
 import { useClientWorkspace } from "@/components/client-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
@@ -24,10 +25,12 @@ function paymentTone(status: ClientInvoicePaymentStatus) {
 }
 
 export default function ClientInvoicesPage() {
+  const { ready: authReady, user } = useAuth()
   const { ready, workspace } = useClientWorkspace()
-  if (!ready) return <StudioLoading />
+  if (!authReady || !ready || !user) return <StudioLoading />
 
-  const invoices = listClientInvoices(workspace.events)
+  const client = { name: user.name, phone: user.phone, city: user.city }
+  const invoices = listClientInvoices(workspace.events, client)
 
   return (
     <div className="grid gap-5">

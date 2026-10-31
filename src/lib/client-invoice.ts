@@ -1,5 +1,4 @@
-import { jsPDF } from "jspdf"
-
+import { studio } from "@/lib/catalog"
 import {
   categoryById,
   partnerById,
@@ -10,12 +9,18 @@ import {
 } from "@/lib/client-workspace"
 import {
   addDays,
-  formatShortDate,
+  dpFor,
   invoiceNo,
-  rupiah,
   todayISO,
 } from "@/lib/format"
-import { downloadPdfBlob } from "@/lib/invoice-pdf"
+import {
+  buildInvoicePdf,
+  downloadPdfBlob,
+  invoicePdfFilename,
+  type InvoicePdfBrand,
+} from "@/lib/invoice-pdf"
+import { TRADE_LABEL, type Partner } from "@/lib/partners"
+import type { Booking } from "@/lib/types"
 
 export type ClientInvoicePaymentStatus =
   | "belum_dibayar"
@@ -33,6 +38,12 @@ export const CLIENT_INVOICE_PAYMENT_LABEL: Record<
   terlambat: "Terlambat",
 }
 
+export type ClientProfileInput = {
+  name?: string
+  phone?: string
+  city?: string
+}
+
 export type ClientInvoice = {
   id: string
   eventId: string
@@ -43,10 +54,14 @@ export type ClientInvoice = {
   issuedAt: string
   dueAt: string
   total: number
+  paid: number
   paymentStatus: ClientInvoicePaymentStatus
   bookingStatus: ClientBookingStatus
   categoryLabel: string
   categoryEmoji: string
+  partner: Partner
+  event: ClientEvent
+  client: ClientProfileInput
 }
 
 const BILLABLE: ClientBookingStatus[] = [
@@ -91,9 +106,16 @@ export function clientInvoicePaymentStatus(
   return "belum_dibayar"
 }
 
+function paidForStatus(status: ClientBookingStatus, price: number, dp: number) {
+  if (status === "lunas" || status === "selesai") return price
+  if (status === "sudah_dp" || status === "menunggu_pelunasan") return dp
+  return 0
+}
+
 export function buildClientInvoice(
   event: ClientEvent,
-  slot: ClientEventSlot
+  slot: ClientEventSlot,
+  client: ClientProfileInput = {}
 ): ClientInvoice | null {
   if (!slot.partnerId || !BILLABLE.includes(slot.status)) return null
   const partner = partnerById(slot.partnerId)
@@ -102,80 +124,120 @@ export function buildClientInvoice(
   const issuedAt = issuedDateFor(event)
   const dueAt = dueDateFor(event, issuedAt)
   const seed = `${event.id}-${slot.needId}`
+  const total = partner.share
+  const dp = dpFor(total)
   return {
     id: clientInvoiceId(event.id, slot.needId),
     eventId: event.id,
     needId: slot.needId,
     vendorName: partner.name,
     eventTitle: event.title,
-    number: invoiceNo(issuedAt, seed),
+    number: invoiceNo(event.date || issuedAt, seed),
     issuedAt,
     dueAt,
-    total: partner.share,
+    total,
+    paid: paidForStatus(slot.status, total, dp),
     paymentStatus: clientInvoicePaymentStatus(slot.status, dueAt),
     bookingStatus: slot.status,
     categoryLabel: category?.label || slot.needId,
     categoryEmoji: category?.emoji || "",
+    partner,
+    event,
+    client,
   }
 }
 
-export function listClientInvoices(events: ClientEvent[]) {
+export function listClientInvoices(
+  events: ClientEvent[],
+  client: ClientProfileInput = {}
+) {
   return events.flatMap((event) =>
     event.slots
-      .map((slot) => buildClientInvoice(event, slot))
+      .map((slot) => buildClientInvoice(event, slot, client))
       .filter((invoice): invoice is ClientInvoice => Boolean(invoice))
   )
 }
 
-export function findClientInvoice(events: ClientEvent[], id: string) {
+export function findClientInvoice(
+  events: ClientEvent[],
+  id: string,
+  client: ClientProfileInput = {}
+) {
   const parsed = parseClientInvoiceId(id)
   if (!parsed) return null
   const event = events.find((item) => item.id === parsed.eventId)
   if (!event) return null
   const slot = event.slots.find((item) => item.needId === parsed.needId)
   if (!slot) return null
-  return buildClientInvoice(event, slot)
+  return buildClientInvoice(event, slot, client)
 }
 
+/** Susun booking + brand seperti invoice owner, lalu unduh PDF yang sama. */
 export function downloadClientInvoicePdf(invoice: ClientInvoice) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" })
-  const margin = 16
-  let y = 22
-  const maroon: [number, number, number] = [120, 45, 52]
-  const muted: [number, number, number] = [110, 95, 95]
+  const partner = invoice.partner
+  const event = invoice.event
+  const price = invoice.total
+  const dp = dpFor(price)
+  const paid = invoice.paid
+  const due = Math.max(price - paid, 0)
+  const bookingDate = event.date || invoice.issuedAt
+  const bookingId = `${event.id}-${invoice.needId}`
+  const packageLabel = `${invoice.categoryLabel} — ${
+    partner.offer || TRADE_LABEL[partner.trade] || partner.name
+  }`
 
-  doc.setTextColor(...maroon)
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(20)
-  doc.text("TAGIHAN", margin, y)
-
-  y += 12
-  doc.setFontSize(11)
-  doc.setTextColor(40)
-  doc.text(invoice.number, margin, y)
-
-  y += 14
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(10)
-  doc.setTextColor(...muted)
-  const rows: Array<[string, string]> = [
-    ["Vendor", invoice.vendorName],
-    ["Acara", invoice.eventTitle],
-    ["Kategori", `${invoice.categoryEmoji} ${invoice.categoryLabel}`.trim()],
-    ["Tanggal terbit", formatShortDate(invoice.issuedAt)],
-    ["Jatuh tempo", formatShortDate(invoice.dueAt)],
-    ["Total", rupiah(invoice.total)],
-    ["Status pembayaran", CLIENT_INVOICE_PAYMENT_LABEL[invoice.paymentStatus]],
-  ]
-  for (const [label, value] of rows) {
-    doc.setFont("helvetica", "bold")
-    doc.text(label, margin, y)
-    doc.setFont("helvetica", "normal")
-    doc.text(value, margin + 48, y)
-    y += 8
+  const booking: Booking = {
+    id: bookingId,
+    clientName: invoice.client.name?.trim() || "Klien",
+    phone: invoice.client.phone?.trim() || "",
+    eventType: "pengantin",
+    eventLabel: event.title,
+    date: bookingDate,
+    time: "08:00",
+    location: event.location || event.city || partner.city,
+    packageId: "custom",
+    packageName: packageLabel,
+    attireId: null,
+    price,
+    dp,
+    paid,
+    notes: "",
+    source: "pricelist",
+    attireReturned: false,
+    createdAt: event.createdAt || `${invoice.issuedAt}T12:00:00.000Z`,
+    invoicePaymentMethods: ["transfer", "qris"],
   }
 
-  const blob = doc.output("blob")
-  const filename = `Tagihan_${invoice.number.replace(/[^\w.-]+/g, "_")}.pdf`
-  downloadPdfBlob(blob, filename)
+  const brand: InvoicePdfBrand = {
+    name: partner.name,
+    owner: partner.name,
+    phone: partner.phone,
+    city: partner.city,
+    bank: studio.bank,
+    accountName: partner.name,
+    accountNumber: studio.accountNumber,
+    ewalletName: "",
+    ewalletNumber: "",
+    instagram: undefined,
+    paymentMethods: ["transfer", "qris"],
+  }
+
+  const lines = [
+    {
+      label: packageLabel,
+      detail: `${event.title} · ${event.location || event.city || partner.city}`,
+      qty: 1,
+      price,
+    },
+  ]
+
+  const blob = buildInvoicePdf({
+    booking,
+    number: invoice.number,
+    city: invoice.client.city?.trim() || event.city || partner.city,
+    lines,
+    due,
+    brand,
+  })
+  downloadPdfBlob(blob, invoicePdfFilename(invoice.number, booking.clientName))
 }

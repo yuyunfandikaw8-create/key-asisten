@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ArrowLeft, Download } from "lucide-react"
 
+import { useAuth } from "@/components/auth-provider"
 import { useClientWorkspace } from "@/components/client-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
@@ -27,12 +28,14 @@ function paymentTone(status: ClientInvoicePaymentStatus) {
 
 export default function ClientInvoiceDetailPage() {
   const params = useParams<{ id: string }>()
+  const { ready: authReady, user } = useAuth()
   const { ready, workspace } = useClientWorkspace()
-  if (!ready) return <StudioLoading />
+  if (!authReady || !ready || !user) return <StudioLoading />
 
   const rawId = typeof params.id === "string" ? params.id : ""
   const invoiceId = decodeURIComponent(rawId)
-  const invoice = findClientInvoice(workspace.events, invoiceId)
+  const client = { name: user.name, phone: user.phone, city: user.city }
+  const invoice = findClientInvoice(workspace.events, invoiceId, client)
 
   if (!invoice) {
     return (
