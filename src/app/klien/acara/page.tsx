@@ -61,19 +61,19 @@ export default function ClientEventsPage() {
       <div>
         <h1 className="text-4xl">Acara Saya</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Acara jadi pusat akun klien — satu acara, banyak vendor dari berbagai kategori.
+          Kelola rencana acara Anda dan atur berbagai kebutuhan dalam 1 tempat.
         </p>
       </div>
 
       <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <p className="font-medium">Buat acara baru</p>
+        <p className="font-medium">Tambahkan Acara</p>
         <div className="grid gap-1.5">
           <Label htmlFor="event-title">Nama acara</Label>
           <Input
             id="event-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Pernikahan Yogi & Dina"
+            placeholder="Make up artist, Hijab & Hair Stylist, Decoration, Attire, DLL"
             className="h-11 bg-background"
           />
         </div>
