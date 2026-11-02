@@ -11,16 +11,17 @@ import { buttonVariants } from "@/components/ui/button"
 import { homePathForUser } from "@/lib/auth"
 import { rupiah } from "@/lib/format"
 import {
-  MAIN_PLAN,
-  SUBSCRIPTION_PAY_METHODS,
-  TRIAL_DAYS,
   canUseOperationalFeatures,
   formatDateId,
   formatPlanPrice,
   formatTrialEndsAt,
   getLanggananHeadline,
+  getMainPlan,
   getPlanOptions,
+  getServerNotice,
+  getSubscriptionPayMethods,
   getSubscriptionStatus,
+  getTrialDays,
   getTrialDaysRemaining,
   hasActiveSubscription,
   isPricingPublished,
@@ -57,7 +58,20 @@ export default function LanggananPage() {
     }
   }, [ready, router, user])
 
-  const planOptions = useMemo(() => getPlanOptions(), [])
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    setTick((value) => value + 1)
+  }, [])
+  const mainPlan = useMemo(() => getMainPlan(), [tick])
+  const planOptions = useMemo(() => getPlanOptions(), [tick])
+  const payMethods = useMemo(() => getSubscriptionPayMethods(), [tick])
+  const serverNotice = useMemo(() => getServerNotice(), [tick])
+  const trialDays = useMemo(() => getTrialDays(), [tick])
+  useEffect(() => {
+    if (!payMethods.some((item) => item.id === payMethod) && payMethods[0]) {
+      setPayMethod(payMethods[0].id)
+    }
+  }, [payMethod, payMethods])
   const selectedPlan = useMemo(
     () => planOptions.find((plan) => plan.id === period) ?? planOptions[0],
     [period, planOptions]
@@ -99,7 +113,7 @@ export default function LanggananPage() {
     }
     const updated = await updateProfile({
       subscription: {
-        planId: MAIN_PLAN.id,
+        planId: mainPlan.id,
         planName: selectedPlan.name,
         status: "pending",
         period,
@@ -141,10 +155,10 @@ export default function LanggananPage() {
     const planName =
       planOptions.find((plan) => plan.id === periodValue)?.name ||
       owner.subscription?.planName ||
-      MAIN_PLAN.name
+      mainPlan.name
     const updated = await updateProfile({
       subscription: {
-        planId: MAIN_PLAN.id,
+        planId: mainPlan.id,
         planName,
         status: "active",
         period: periodValue,
@@ -196,6 +210,10 @@ export default function LanggananPage() {
           </p>
         </div>
 
+        {serverNotice ? (
+          <p className="rounded-2xl bg-accent px-4 py-3 text-sm">{serverNotice}</p>
+        ) : null}
+
         <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
@@ -213,14 +231,14 @@ export default function LanggananPage() {
             <div className="flex items-start justify-between gap-3">
               <dt className="text-muted-foreground">Paket</dt>
               <dd className="text-right font-medium">
-                {user.subscription?.planName || MAIN_PLAN.name}
+                {user.subscription?.planName || mainPlan.name}
               </dd>
             </div>
             <div className="flex items-start justify-between gap-3">
               <dt className="text-muted-foreground">Harga</dt>
               <dd className="text-right font-medium">
                 {pricingReady
-                  ? `${formatPlanPrice(MAIN_PLAN.priceMonthly)}/bln · ${formatPlanPrice(MAIN_PLAN.priceYearly)}/thn`
+                  ? `${formatPlanPrice(mainPlan.priceMonthly)}/bln · ${formatPlanPrice(mainPlan.priceYearly)}/thn`
                   : "Belum ditetapkan"}
               </dd>
             </div>
@@ -232,7 +250,7 @@ export default function LanggananPage() {
                   : user.subscription?.period === "monthly"
                     ? "Bulanan"
                     : status === "trial"
-                      ? `Trial ${TRIAL_DAYS} hari`
+                      ? `Trial ${trialDays} hari`
                       : "—"}
               </dd>
             </div>
@@ -338,8 +356,8 @@ export default function LanggananPage() {
               <div>
                 <h2 className="text-2xl">Pilih periode paket</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Satu paket {MAIN_PLAN.name}. Periode bulanan atau tahunan —
-                  harga final belum ditetapkan.
+                  Satu paket {mainPlan.name}. Periode bulanan atau tahunan
+                  {pricingReady ? "" : " — harga final belum ditetapkan"}.
                 </p>
               </div>
               <div className="grid gap-2">
@@ -400,7 +418,7 @@ export default function LanggananPage() {
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  {SUBSCRIPTION_PAY_METHODS.map((method) => {
+                  {payMethods.map((method) => {
                     const checked = payMethod === method.id
                     return (
                       <label
@@ -453,9 +471,9 @@ export default function LanggananPage() {
                   <h2 className="text-2xl">Pembayaran belum dibuka</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Karena harga belum ditetapkan, Owner masih bisa memakai trial
-                    dan melihat status di halaman ini. Saat harga final siap,
-                    isi `priceMonthly` / `priceYearly` di konfigurasi paket —
-                    lalu tombol bayar akan muncul di sini.
+                    dan melihat status di halaman ini. Admin mengisi harga di
+                    menu server (/admin/paket) — lalu tombol bayar muncul di
+                    sini.
                   </p>
                 </div>
                 {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -493,7 +511,7 @@ export default function LanggananPage() {
                   </div>
                   <p className="mt-1 text-muted-foreground">
                     {payment.period === "yearly" ? "Tahunan" : "Bulanan"} ·{" "}
-                    {SUBSCRIPTION_PAY_METHODS.find(
+                    {payMethods.find(
                       (item) => item.id === payment.paymentMethod
                     )?.label || payment.paymentMethod}{" "}
                     · {payment.status}

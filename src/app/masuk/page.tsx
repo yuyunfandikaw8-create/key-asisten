@@ -93,7 +93,7 @@ function LoginForm() {
               Mulai dari step awal. Ketuk untuk mengisi email & sandi, lalu masuk.
             </p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             {QUICK_TEST_LOGINS.map((account) => (
               <button
                 key={account.email}

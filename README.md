@@ -21,6 +21,7 @@ Akun perbaikan di `/masuk` (hanya untuk uji/perbaiki fitur; selalu mulai dari st
 | --- | --- | --- | --- |
 | **Owner** | `owner@riasaja.id` | `owner123` | Onboarding step awal |
 | **Klien** | `klien@riasaja.id` | `klien123` | Isi biodata/profil |
+| **Admin server** | `admin@riasaja.id` | `admin123` | Menu server `/admin` |
 
 Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh**. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
 
@@ -59,10 +60,11 @@ Mengikuti panduan sistem langganan:
 - `active` hanya setelah pembayaran diverifikasi (bukan sekadar redirect sukses).
 - Setelah kedaluwarsa: data lama tetap bisa dilihat; buat/ubah operasional dibatasi.
 - Klien tidak berlangganan Key Assistant. Bayar jasa klien → vendor terpisah.
-- Harga & konfigurasi paket: `src/lib/trial.ts` (`MAIN_PLAN`).
-  Isi `priceMonthly` / `priceYearly` bila sudah final; selama `null`, UI
-  menampilkan “Belum ditetapkan” dan pembayaran ditutup.
-- Halaman hub: `/langganan`.
+- Harga & konfigurasi paket diatur di **menu server** `/admin` (akun
+  `admin@riasaja.id`). Selama harga kosong, UI Owner menampilkan
+  “Belum ditetapkan” dan pembayaran ditutup.
+- Halaman Owner: `/langganan`. Admin: `/admin`, `/admin/paket`,
+  `/admin/pembayaran`, `/admin/akun`.
 
 ### Database Supabase (wajib untuk sinkron semua data)
 

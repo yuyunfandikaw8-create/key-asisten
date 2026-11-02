@@ -1,43 +1,45 @@
 /**
  * Konfigurasi paket & helper langganan Key Assistant.
- * Harga/periode hanya di sini — jangan hardcode di banyak halaman.
+ * Harga/periode diambil dari menu server `/admin` (localStorage).
  *
  * Pembayaran langganan = Owner → Key Assistant (terpisah dari bayar jasa klien → vendor).
  */
 
-export const TRIAL_DAYS = 14
+import {
+  DEFAULT_ADMIN_SETTINGS,
+  getLiveEnabledPayMethods,
+  getLiveMainPlan,
+  getLiveServerNotice,
+} from "@/lib/admin-settings"
+
+/** Fallback default (nilai hidup pakai getMainPlan() / getTrialDays()). */
+export const TRIAL_DAYS = DEFAULT_ADMIN_SETTINGS.plan.trialDays
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-/**
- * Satu paket utama; bulanan/tahunan = pilihan periode pembayaran.
- * Harga `null` = belum ditetapkan (jangan tampilkan angka palsu di UI).
- * Isi angka rupiah di sini saja bila harga sudah final.
- */
-export const MAIN_PLAN = {
-  id: "key-assistant",
-  name: "Key Assistant",
-  trialDays: TRIAL_DAYS,
-  isActive: true,
-  /** null sampai harga bulanan diputuskan. Contoh: 149_000 */
-  priceMonthly: null as number | null,
-  /** null sampai harga tahunan diputuskan. Contoh: 1_490_000 */
-  priceYearly: null as number | null,
-  blurbMonthly: "Fleksibel per bulan untuk mengelola bisnis di Key Assistant.",
-  blurbYearly: "Bayar tahunan — hemat dibanding 12× bulanan.",
-  featureConfig: {
-    readAfterExpiry: true,
-    writeRequiresActiveOrTrial: true,
-  },
+/** Snapshot default — UI runtime harus pakai getMainPlan(). */
+export const MAIN_PLAN = DEFAULT_ADMIN_SETTINGS.plan
+
+export function getMainPlan() {
+  return getLiveMainPlan()
 }
 
-/** True jika harga bulanan & tahunan sudah diisi di MAIN_PLAN. */
+export function getTrialDays() {
+  return getMainPlan().trialDays || TRIAL_DAYS
+}
+
+export function getServerNotice() {
+  return getLiveServerNotice()
+}
+
+/** True jika harga bulanan & tahunan sudah diisi di menu server. */
 export function isPricingPublished() {
+  const plan = getMainPlan()
   return (
-    typeof MAIN_PLAN.priceMonthly === "number" &&
-    MAIN_PLAN.priceMonthly > 0 &&
-    typeof MAIN_PLAN.priceYearly === "number" &&
-    MAIN_PLAN.priceYearly > 0
+    typeof plan.priceMonthly === "number" &&
+    plan.priceMonthly > 0 &&
+    typeof plan.priceYearly === "number" &&
+    plan.priceYearly > 0
   )
 }
 
@@ -85,20 +87,21 @@ export type SubscriptionPlanOption = {
 }
 
 export function getPlanOptions(): SubscriptionPlanOption[] {
+  const plan = getMainPlan()
   return [
     {
       id: "monthly",
-      name: `${MAIN_PLAN.name} Bulanan`,
-      price: MAIN_PLAN.priceMonthly,
+      name: `${plan.name} Bulanan`,
+      price: plan.priceMonthly,
       periodLabel: "/ bulan",
-      blurb: MAIN_PLAN.blurbMonthly,
+      blurb: plan.blurbMonthly,
     },
     {
       id: "yearly",
-      name: `${MAIN_PLAN.name} Tahunan`,
-      price: MAIN_PLAN.priceYearly,
+      name: `${plan.name} Tahunan`,
+      price: plan.priceYearly,
       periodLabel: "/ tahun",
-      blurb: MAIN_PLAN.blurbYearly,
+      blurb: plan.blurbYearly,
     },
   ]
 }
@@ -112,15 +115,27 @@ export const SUBSCRIPTION_PLANS = getPlanOptions().map((option) => ({
   blurb: option.blurb,
 }))
 
-export const SUBSCRIPTION_PAY_METHODS: {
-  id: SubscriptionPayMethod
-  label: string
-}[] = [
+const ALL_PAY_METHOD_LABELS: { id: SubscriptionPayMethod; label: string }[] = [
   { id: "qris", label: "QRIS" },
   { id: "va", label: "Virtual Account" },
   { id: "ewallet", label: "E-Wallet" },
   { id: "transfer", label: "Transfer manual" },
+  { id: "card", label: "Kartu" },
 ]
+
+export function getSubscriptionPayMethods(): {
+  id: SubscriptionPayMethod
+  label: string
+}[] {
+  const enabled = new Set(getLiveEnabledPayMethods())
+  const filtered = ALL_PAY_METHOD_LABELS.filter((item) => enabled.has(item.id))
+  return filtered.length ? filtered : ALL_PAY_METHOD_LABELS.filter((item) => item.id !== "card")
+}
+
+/** @deprecated pakai getSubscriptionPayMethods() */
+export const SUBSCRIPTION_PAY_METHODS = ALL_PAY_METHOD_LABELS.filter(
+  (item) => item.id !== "card"
+)
 
 export type SubscriptionUserSlice = {
   trialStartedAt?: string
@@ -164,13 +179,13 @@ export function getTrialEndsAt(trialStartedAt: string | undefined | null) {
   if (!trialStartedAt) return null
   const started = new Date(trialStartedAt)
   if (Number.isNaN(started.getTime())) return null
-  return new Date(started.getTime() + TRIAL_DAYS * MS_PER_DAY)
+  return new Date(started.getTime() + getTrialDays() * MS_PER_DAY)
 }
 
 /** Whole days remaining, floored. 0 on the last day before expiry; negative if expired. */
 export function getTrialDaysRemaining(trialStartedAt: string | undefined | null) {
   const endsAt = getTrialEndsAt(trialStartedAt)
-  if (!endsAt) return TRIAL_DAYS
+  if (!endsAt) return getTrialDays()
   return Math.ceil((endsAt.getTime() - Date.now()) / MS_PER_DAY)
 }
 
@@ -255,10 +270,11 @@ export function periodEndsAt(
 
 export function currentPlanLabel(user: SubscriptionUserSlice | null | undefined) {
   const status = getSubscriptionStatus(user)
+  const planName = getMainPlan().name
   if (status === "active" || status === "pending") {
-    return user?.subscription?.planName || MAIN_PLAN.name
+    return user?.subscription?.planName || planName
   }
-  return MAIN_PLAN.name
+  return planName
 }
 
 export function formatTrialEndsAt(trialStartedAt: string | undefined | null) {
@@ -268,7 +284,7 @@ export function formatTrialEndsAt(trialStartedAt: string | undefined | null) {
 /** Chip singkat di header studio. */
 export function trialStatusLabel(trialStartedAt: string | undefined | null) {
   const days = getTrialDaysRemaining(trialStartedAt)
-  if (!trialStartedAt) return `Trial ${TRIAL_DAYS} hari`
+  if (!trialStartedAt) return `Trial ${getTrialDays()} hari`
   if (days <= 0) return "Masa trial berakhir"
   if (days === 1) return "Trial berakhir hari ini"
   return `Sisa ${days} hari trial`

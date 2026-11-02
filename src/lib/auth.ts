@@ -10,8 +10,8 @@ import type { PortfolioItem } from "@/lib/portfolio"
 
 export type AuthProviderKind = "password" | "google"
 
-/** Owner mengelola studio; klien mencari vendor / booking. */
-export type AuthRole = "owner" | "client"
+/** Owner mengelola studio; klien mencari vendor; admin mengatur server. */
+export type AuthRole = "owner" | "client" | "admin"
 
 export type PaymentMethodId = "transfer" | "qris" | "ewallet" | "cash"
 
@@ -141,12 +141,15 @@ export type AuthUser = {
 }
 
 export function normalizeRole(role: unknown): AuthRole {
-  return role === "client" ? "client" : "owner"
+  if (role === "client") return "client"
+  if (role === "admin") return "admin"
+  return "owner"
 }
 
 export function homePathForUser(user: AuthUser | null | undefined) {
   // Pilihan peran ditampilkan di /daftar (satu alur, tanpa loncat halaman).
   if (user && user.roleChosen === false) return "/daftar"
+  if (user?.role === "admin") return "/admin"
   if (needsOnboarding(user)) {
     return user?.role === "client" ? "/onboarding/klien" : "/onboarding"
   }
@@ -175,7 +178,7 @@ export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v3"
 
 /**
  * Akun lokal hanya untuk perbaikan fitur.
- * Owner & Klien selalu mulai dari onboarding step awal.
+ * Owner & Klien mulai onboarding; Admin masuk ke menu server.
  */
 export const DEMO_ACCOUNTS: StoredAccount[] = [
   {
@@ -208,6 +211,19 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     roleChosen: true,
     onboardingStep: 2,
   },
+  {
+    id: "user-admin-server",
+    name: "Server Admin",
+    email: "admin@riasaja.id",
+    phone: "",
+    city: "",
+    studioName: "",
+    password: "admin123",
+    provider: "password",
+    role: "admin",
+    roleChosen: true,
+    onboardingStep: "done",
+  },
 ]
 
 /** Pintasan di /masuk — akun perbaikan saja. */
@@ -231,6 +247,13 @@ export const QUICK_TEST_LOGINS: {
     email: "klien@riasaja.id",
     password: "klien123",
     hint: "Mulai dari isi biodata/profil",
+  },
+  {
+    role: "admin",
+    label: "Admin server",
+    email: "admin@riasaja.id",
+    password: "admin123",
+    hint: "Atur harga paket, pembayaran, akun",
   },
 ]
 

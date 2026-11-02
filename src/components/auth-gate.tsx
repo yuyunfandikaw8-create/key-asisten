@@ -14,7 +14,7 @@ export function AuthGate({
   skipOnboardingRedirect = false,
 }: {
   children: React.ReactNode
-  allowRole?: "owner" | "client" | "any"
+  allowRole?: "owner" | "client" | "admin" | "any"
   /** Set true on /onboarding* so incomplete accounts are not bounced in a loop. */
   skipOnboardingRedirect?: boolean
 }) {
