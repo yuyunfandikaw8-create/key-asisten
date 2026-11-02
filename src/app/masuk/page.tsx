@@ -86,9 +86,9 @@ function LoginForm() {
       {QUICK_TEST_LOGINS.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <div>
-            <p className="text-sm font-medium">Akun uji (ubah & perbaiki fitur)</p>
+            <p className="text-sm font-medium">Akun perbaikan (hanya untuk uji fitur)</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Ketuk untuk mengisi email & sandi, lalu masuk.
+              Mulai dari step awal. Ketuk untuk mengisi email & sandi, lalu masuk.
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">

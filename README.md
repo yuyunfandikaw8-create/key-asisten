@@ -13,11 +13,16 @@ Buka [http://127.0.0.1:43123](http://127.0.0.1:43123) (server listen di `0.0.0.0
 
 ## Login & onboarding
 
-Studio dilindungi login. Daftar di `/daftar` (pilih peran Owner atau Klien), lalu lanjut onboarding bila perlu. Tidak ada akun uji bawaan — buat akun Owner dan Klien sendiri.
+Studio dilindungi login. Daftar di `/daftar` (pilih peran Owner atau Klien), lalu lanjut onboarding bila perlu.
+
+Akun perbaikan di `/masuk` (hanya untuk uji/perbaiki fitur; selalu mulai dari step awal):
+
+| Peran | Email | Kata sandi | Mulai dari |
+| --- | --- | --- | --- |
+| **Owner** | `owner@riasaja.id` | `owner123` | Onboarding step awal |
+| **Klien** | `klien@riasaja.id` | `klien123` | Data Saya kosong |
 
 Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh**. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
-
-Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu masukkan email Google kamu (setelah login pilih Owner atau Klien bila diminta).
 
 Supabase project: `iukerqusjdlkkoyxvgjs` — pakai **anon public JWT** di `.env.local`:
 

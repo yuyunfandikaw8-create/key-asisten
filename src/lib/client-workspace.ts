@@ -2,7 +2,7 @@ import { normalizeEmail } from "@/lib/auth"
 import { partners, TRADE_LABEL, type Partner } from "@/lib/partners"
 import type { Trade } from "@/lib/types"
 
-export const CLIENT_WORKSPACE_KEY = "key-assistant.client-workspace.v1"
+export const CLIENT_WORKSPACE_KEY = "key-assistant.client-workspace.v2"
 
 export type ClientViewMode = "real" | "demo"
 

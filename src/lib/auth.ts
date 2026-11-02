@@ -149,23 +149,72 @@ export type GoogleChoice = {
   tone: string
 }
 
-/** v2: hapus sesi/akun lokal lama agar pengguna daftar Owner & Klien sendiri. */
-export const AUTH_STORAGE_KEY = "riasaja.auth.v2"
-export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v2"
+/** v3: akun perbaikan mulai dari step awal (bukan sesi onboarding lama). */
+export const AUTH_STORAGE_KEY = "riasaja.auth.v3"
+export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v3"
 
-/** Tidak ada akun uji bawaan — daftar lewat /daftar atau Google. */
-export const DEMO_ACCOUNTS: StoredAccount[] = []
+/**
+ * Akun lokal hanya untuk perbaikan fitur.
+ * Owner mulai onboarding step 2; Klien mulai Data Saya kosong.
+ */
+export const DEMO_ACCOUNTS: StoredAccount[] = [
+  {
+    id: "user-owner-fix",
+    name: "",
+    email: "owner@riasaja.id",
+    phone: "",
+    city: "",
+    studioName: "",
+    password: "owner123",
+    provider: "password",
+    role: "owner",
+    roleChosen: true,
+    onboardingStep: 2,
+    businessFields: [],
+    bio: "",
+    portfolio: [],
+    services: [],
+  },
+  {
+    id: "user-klien-fix",
+    name: "",
+    email: "klien@riasaja.id",
+    phone: "",
+    city: "",
+    studioName: "",
+    password: "klien123",
+    provider: "password",
+    role: "client",
+    roleChosen: true,
+    onboardingStep: "done",
+  },
+]
 
-/** Pintasan login uji — kosong sampai dibutuhkan lagi untuk pengembangan. */
+/** Pintasan di /masuk — akun perbaikan saja. */
 export const QUICK_TEST_LOGINS: {
   role: AuthRole
   label: string
   email: string
   password: string
   hint: string
-}[] = []
+}[] = [
+  {
+    role: "owner",
+    label: "Owner (perbaikan)",
+    email: "owner@riasaja.id",
+    password: "owner123",
+    hint: "Mulai dari onboarding step awal",
+  },
+  {
+    role: "client",
+    label: "Klien (perbaikan)",
+    email: "klien@riasaja.id",
+    password: "klien123",
+    hint: "Mulai dari Data Saya kosong",
+  },
+]
 
-/** Pilihan akun demo di picker Google — kosong; pengguna memasukkan email sendiri. */
+/** Pilihan akun demo Google — kosong. */
 export const GOOGLE_CHOICES: GoogleChoice[] = []
 
 export function toPublicUser(account: StoredAccount): AuthUser {

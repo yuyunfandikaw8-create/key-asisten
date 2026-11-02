@@ -324,10 +324,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false
     }
 
-    // Hapus jejak akun lokal lama (v1 + akun uji) agar daftar ulang bersih.
+    // Hapus jejak sesi lokal lama supaya akun perbaikan mulai dari step awal.
     try {
       localStorage.removeItem("riasaja.auth.v1")
       localStorage.removeItem("riasaja.accounts.v1")
+      localStorage.removeItem("riasaja.auth.v2")
+      localStorage.removeItem("riasaja.accounts.v2")
     } catch {
       // ignore
     }
@@ -547,8 +549,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (localAccount.password !== pass) {
             return { ok: false, error: "Kata sandi salah." }
           }
-          const publicUser = withTrial(toPublicUser(localAccount))
-          if (!localAccount.trialStartedAt && publicUser.trialStartedAt) {
+          // Akun perbaikan (@riasaja.id): selalu pakai seed step awal.
+          const fixSeed = DEMO_ACCOUNTS.find((item) => item.email === normalized)
+          const source = fixSeed ?? localAccount
+          if (fixSeed) {
+            clearOnboardingDone(normalized)
+          }
+          const publicUser = withTrial(toPublicUser(source))
+          if (!source.trialStartedAt && publicUser.trialStartedAt) {
             persistAccountTrial(publicUser.email, publicUser.trialStartedAt)
           }
           setUser(publicUser)
