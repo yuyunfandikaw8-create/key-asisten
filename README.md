@@ -13,18 +13,11 @@ Buka [http://127.0.0.1:43123](http://127.0.0.1:43123) (server listen di `0.0.0.0
 
 ## Login & onboarding
 
-Studio dilindungi login. Daftar di `/daftar` (Step 1: akun), lalu lanjut `/onboarding` (workspace → bidang bisnis multi-select → profil → layanan opsional → dashboard). Akun contoh di bawah sudah selesai onboarding.
+Studio dilindungi login. Daftar di `/daftar` (pilih peran Owner atau Klien), lalu lanjut onboarding bila perlu. Tidak ada akun uji bawaan — buat akun Owner dan Klien sendiri.
 
-Akun uji (tersimpan di browser; pintasan di `/masuk`):
+Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh**. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
 
-| Peran | Email | Kata sandi | Untuk |
-| --- | --- | --- | --- |
-| **Owner** | `owner@riasaja.id` | `owner123` | Portofolio (nav), profil publik `/p/laras`, layanan, booking |
-| **Klien** | `klien@riasaja.id` | `klien123` | Cari vendor, lihat portofolio Owner, Favorit |
-
-Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh** — sama seperti Owner. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
-
-Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu pilih salah satu Gmail contoh di dialog (setelah login pilih Owner atau Klien).
+Atau tekan **Lanjutkan dengan Google** / **Daftar dengan Google**, lalu masukkan email Google kamu (setelah login pilih Owner atau Klien bila diminta).
 
 Supabase project: `iukerqusjdlkkoyxvgjs` — pakai **anon public JWT** di `.env.local`:
 
@@ -34,7 +27,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
 ```
 
 - Email/password baru → Auth Supabase (biasanya perlu konfirmasi email).
-- Akun contoh `@riasaja.id` dan pilihan Gmail demo → tetap lokal untuk coba cepat.
 - Google OAuth asli: aktifkan provider Google di Supabase Authentication, lalu tombol Google akan mengalihkan ke Google.
 - **Jangan** taruh `service_role` / `sb_secret_` di frontend atau sebagai `NEXT_PUBLIC_*`.
 - Jalankan `supabase/schema.sql` di SQL Editor agar tabel `studios`, `owner_data`, dan RLS tersedia.
@@ -43,7 +35,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...   # anon public, bukan service_role
 
 Data bisnis ikut **email akun** (Auth Supabase `user_metadata`, plus tabel `owner_data` jika sudah dijalankan). Bukan hanya di browser satu HP.
 
-1. **Daftar** dengan email + kata sandi (bukan `@riasaja.id`).
+1. **Daftar** dengan email + kata sandi.
 2. Supabase project ini memakai **konfirmasi email** — cek inbox/spam, klik link, baru bisa masuk di perangkat lain.
 3. Di perangkat yang sudah terisi data, tekan **Simpan ke cloud** (banner di studio) sekali setelah email terkonfirmasi.
 4. Di HP lain: **Masuk** dengan email & kata sandi yang sama — profil, onboarding, dan studio ditarik dari cloud.

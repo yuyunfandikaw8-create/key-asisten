@@ -136,44 +136,53 @@ export function GoogleAuthButton({
       {open ? (
         <div className="overflow-hidden rounded-xl border bg-background shadow-sm">
           <div className="border-b px-4 py-3">
-            <p className="text-sm font-medium">Pilih akun Google</p>
+            <p className="text-sm font-medium">Masuk dengan Google</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {googleEnabled
-                ? "Pilih akun Google untuk masuk ke Key Assistant."
-                : "Google OAuth di Supabase belum aktif. Pilih akun contoh, atau masukkan email Google kamu."}
+                ? "Lanjutkan ke Google atau masukkan email Google kamu."
+                : "Google OAuth di Supabase belum aktif. Masukkan email Google kamu untuk lanjut."}
             </p>
           </div>
 
-          <div className="grid">
-            {GOOGLE_CHOICES.map((choice) => (
-              <button
-                key={choice.id}
-                type="button"
-                disabled={pending}
-                onClick={() => void pick(choice)}
-                className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/70 disabled:opacity-50"
-              >
-                <span
-                  className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-                    choice.tone
-                  )}
+          {GOOGLE_CHOICES.length ? (
+            <div className="grid">
+              {GOOGLE_CHOICES.map((choice) => (
+                <button
+                  key={choice.id}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => void pick(choice)}
+                  className="flex items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/70 disabled:opacity-50"
                 >
-                  {choice.initial}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium">{choice.name}</span>
-                  <span className="block truncate text-sm text-muted-foreground">
-                    {choice.email}
+                  <span
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+                      choice.tone
+                    )}
+                  >
+                    {choice.initial}
                   </span>
-                </span>
-              </button>
-            ))}
-          </div>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">{choice.name}</span>
+                    <span className="block truncate text-sm text-muted-foreground">
+                      {choice.email}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
 
-          <div className="grid gap-2 border-t px-4 py-3">
+          <div
+            className={cn(
+              "grid gap-2 px-4 py-3",
+              GOOGLE_CHOICES.length ? "border-t" : ""
+            )}
+          >
             <p className="text-xs font-medium text-muted-foreground">
-              Atau masukkan email Google kamu
+              {GOOGLE_CHOICES.length
+                ? "Atau masukkan email Google kamu"
+                : "Masukkan email Google kamu"}
             </p>
             <div className="flex gap-2">
               <Input

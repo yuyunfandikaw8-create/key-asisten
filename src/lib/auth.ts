@@ -149,94 +149,24 @@ export type GoogleChoice = {
   tone: string
 }
 
-export const AUTH_STORAGE_KEY = "riasaja.auth.v1"
-export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v1"
+/** v2: hapus sesi/akun lokal lama agar pengguna daftar Owner & Klien sendiri. */
+export const AUTH_STORAGE_KEY = "riasaja.auth.v2"
+export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v2"
 
-/** Akun uji lokal (@riasaja.id) — untuk ubah/perbaiki fitur di app tanpa Supabase. */
-export const DEMO_ACCOUNTS: StoredAccount[] = [
-  {
-    id: "user-owner",
-    name: "Owner Uji",
-    email: "owner@riasaja.id",
-    phone: "081211112222",
-    city: "Surabaya",
-    studioName: "Laras Makeup",
-    password: "owner123",
-    provider: "password",
-    role: "owner",
-    roleChosen: true,
-    onboardingStep: "done",
-    businessFields: ["makeup", "hair"],
-    /** Kosong di Data Saya — terisi setelah Owner mengisi. Data contoh punya konten sendiri. */
-    bio: "",
-    rating: 4.9,
-    publicSlug: "laras",
-    portfolio: [],
-    services: [],
-  },
-  {
-    id: "user-klien",
-    /** Kosong di Data Saya — terisi setelah Klien mengisi Profil Saya. */
-    name: "",
-    email: "klien@riasaja.id",
-    phone: "",
-    city: "",
-    studioName: "",
-    password: "klien123",
-    provider: "password",
-    role: "client",
-    roleChosen: true,
-    onboardingStep: "done",
-  },
-]
+/** Tidak ada akun uji bawaan — daftar lewat /daftar atau Google. */
+export const DEMO_ACCOUNTS: StoredAccount[] = []
 
-/** Pintasan login di halaman Masuk — Owner & Klien untuk uji fitur. */
+/** Pintasan login uji — kosong sampai dibutuhkan lagi untuk pengembangan. */
 export const QUICK_TEST_LOGINS: {
   role: AuthRole
   label: string
   email: string
   password: string
   hint: string
-}[] = [
-  {
-    role: "owner",
-    label: "Owner",
-    email: "owner@riasaja.id",
-    password: "owner123",
-    hint: "Portofolio, profil publik, booking",
-  },
-  {
-    role: "client",
-    label: "Klien",
-    email: "klien@riasaja.id",
-    password: "klien123",
-    hint: "Cari vendor & lihat portofolio",
-  },
-]
+}[] = []
 
-/** Pilihan akun demo di picker Google — hanya Owner & Klien uji. */
-export const GOOGLE_CHOICES: GoogleChoice[] = [
-  {
-    id: "gmail-owner",
-    name: "Owner Uji",
-    email: "owner@riasaja.id",
-    city: "Surabaya",
-    studioName: "Laras Makeup",
-    phone: "081211112222",
-    initial: "O",
-    tone: "bg-[oklch(0.55_0.14_25)] text-white",
-  },
-  {
-    id: "gmail-klien",
-    name: "",
-    email: "klien@riasaja.id",
-    city: "",
-    studioName: "",
-    phone: "",
-    initial: "K",
-    tone: "bg-[oklch(0.5_0.1_250)] text-white",
-  },
-]
+/** Pilihan akun demo di picker Google — kosong; pengguna memasukkan email sendiri. */
+export const GOOGLE_CHOICES: GoogleChoice[] = []
 
 export function toPublicUser(account: StoredAccount): AuthUser {
   const { password: _password, ...user } = account

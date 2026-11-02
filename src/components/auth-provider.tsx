@@ -324,6 +324,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false
     }
 
+    // Hapus jejak akun lokal lama (v1 + akun uji) agar daftar ulang bersih.
+    try {
+      localStorage.removeItem("riasaja.auth.v1")
+      localStorage.removeItem("riasaja.accounts.v1")
+    } catch {
+      // ignore
+    }
+
     // Sesi lokal dulu supaya tombol Masuk tidak menunggu jaringan Supabase.
     restoreLocalUser()
     setReady(true)

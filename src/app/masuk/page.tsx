@@ -84,34 +84,38 @@ function LoginForm() {
         </p>
       </div>
 
-      <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <div>
-          <p className="text-sm font-medium">Akun uji (ubah & perbaiki fitur)</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Ketuk untuk mengisi email & sandi, lalu masuk.
-          </p>
+      {QUICK_TEST_LOGINS.length ? (
+        <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+          <div>
+            <p className="text-sm font-medium">Akun uji (ubah & perbaiki fitur)</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Ketuk untuk mengisi email & sandi, lalu masuk.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {QUICK_TEST_LOGINS.map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                className="rounded-xl bg-muted/50 px-3 py-3 text-left ring-1 ring-foreground/10 transition hover:bg-muted"
+                onClick={() => {
+                  setEmail(account.email)
+                  setPassword(account.password)
+                  setError("")
+                }}
+              >
+                <span className="block text-sm font-medium">{account.label}</span>
+                <span className="mt-0.5 block font-mono text-xs text-muted-foreground">
+                  {account.email}
+                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  {account.hint}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {QUICK_TEST_LOGINS.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              className="rounded-xl bg-muted/50 px-3 py-3 text-left ring-1 ring-foreground/10 transition hover:bg-muted"
-              onClick={() => {
-                setEmail(account.email)
-                setPassword(account.password)
-                setError("")
-              }}
-            >
-              <span className="block text-sm font-medium">{account.label}</span>
-              <span className="mt-0.5 block font-mono text-xs text-muted-foreground">
-                {account.email}
-              </span>
-              <span className="mt-1 block text-xs text-muted-foreground">{account.hint}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      ) : null}
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <GoogleAuthButton
