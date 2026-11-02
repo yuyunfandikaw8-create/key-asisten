@@ -82,8 +82,9 @@ export default function ClientInvoiceDetailPage() {
         <dl className="grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-muted-foreground">Nama Vendor</dt>
-            <dd className="mt-0.5 font-medium">
-              {invoice.categoryEmoji} {invoice.vendorName}
+            <dd className="mt-0.5 font-medium">{invoice.vendorName}</dd>
+            <dd className="text-sm text-muted-foreground">
+              ({invoice.categoryLabel})
             </dd>
           </div>
           <div>
@@ -93,10 +94,6 @@ export default function ClientInvoiceDetailPage() {
           <div>
             <dt className="text-muted-foreground">Nomor tagihan</dt>
             <dd className="mt-0.5 font-medium">{invoice.number}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Kategori</dt>
-            <dd className="mt-0.5 font-medium">{invoice.categoryLabel}</dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Tanggal penerbitan</dt>

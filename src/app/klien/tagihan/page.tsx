@@ -61,9 +61,10 @@ export default function ClientInvoicesPage() {
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Vendor</p>
-                  <p className="font-medium">
-                    {invoice.categoryEmoji} {invoice.vendorName}
+                  <p className="text-xs text-muted-foreground">Nama Vendor</p>
+                  <p className="font-medium">{invoice.vendorName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    ({invoice.categoryLabel})
                   </p>
                 </div>
                 <span
