@@ -197,12 +197,14 @@ export default function ClientShortlistPage() {
 
       {!items.length ? (
         <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+          <h3 className="font-medium">Belum ada vendor yang disimpan</h3>
           <p className="text-sm text-muted-foreground">
-            Anda belum memiliki vendor favorit. Silakan jelajahi pilihan vendor
-            dan simpan vendor yang Anda minati di halaman ini.
+            Jelajahi berbagai vendor dan simpan yang kamu minati. Vendor
+            pilihanmu akan tersimpan di sini agar mudah ditemukan kembali saat
+            kamu siap memilih.
           </p>
           <Link href="/klien/cari" className={cn(buttonVariants(), "h-10 w-fit")}>
-            Cari vendor
+            Cari Vendor →
           </Link>
         </div>
       ) : (
