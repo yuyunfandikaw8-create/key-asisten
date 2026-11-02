@@ -66,11 +66,16 @@ type AuthContextValue = {
     email: string
     password: string
     role?: AuthRole
+    phone?: string
+    city?: string
   }) => Promise<AuthResult>
   continueWithGoogle: (choice: GoogleChoice, role?: AuthRole) => Promise<AuthResult>
   startGoogleOAuth: (nextPath?: string) => Promise<AuthResult>
   /** Setelah login Google: pilih Owner atau Klien. */
-  chooseRole: (role: AuthRole) => Promise<AuthResult>
+  chooseRole: (
+    role: AuthRole,
+    extras?: { phone?: string; city?: string }
+  ) => Promise<AuthResult>
   /** Owner-only: persist studio wilayah on the account profile. */
   updateOwnerCity: (city: string) => Promise<void>
   /** Merge profile / onboarding fields into the signed-in account. */
@@ -617,6 +622,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       register: async (input) => {
         const email = normalizeEmail(input.email)
+        const phone = (input.phone || "").trim()
+        const city = (input.city || "").trim()
         if (!input.name.trim() || !email || !input.password.trim()) {
           return { ok: false, error: "Nama, email, dan kata sandi wajib diisi." }
         }
@@ -631,6 +638,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const role = normalizeRole(input.role)
         const isClient = role === "client"
+        if (isClient && (!phone || !city)) {
+          return {
+            ok: false,
+            error: "Untuk akun Klien, nomor WhatsApp dan wilayah/daerah wajib diisi.",
+          }
+        }
         const trialStartedAt = nowIso()
         let accountId = crypto.randomUUID()
         let needsEmailConfirm = false
@@ -646,6 +659,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 data: {
                   name: input.name.trim(),
                   role,
+                  phone,
+                  city,
                   onboarding_step: isClient ? "done" : 2,
                   trial_started_at: trialStartedAt,
                 },
@@ -703,8 +718,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: accountId,
           name: input.name.trim(),
           email,
-          phone: "",
-          city: "",
+          phone,
+          city,
           studioName: "",
           password: input.password.trim(),
           provider: "password",
@@ -808,12 +823,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           error: "Mengalihkan ke Google…",
         }
       },
-      chooseRole: async (role) => {
+      chooseRole: async (role, extras) => {
         if (!user) {
           return { ok: false, error: "Belum masuk. Masuk dengan Google dulu." }
         }
         const nextRole = normalizeRole(role)
         const isClient = nextRole === "client"
+        const phone = (extras?.phone || "").trim()
+        const city = (extras?.city || "").trim()
+        if (isClient && (!phone || !city)) {
+          return {
+            ok: false,
+            error: "Untuk akun Klien, nomor WhatsApp dan wilayah/daerah wajib diisi.",
+          }
+        }
         if (isClient) {
           markOnboardingDone(user.email)
         } else if (user.onboardingStep !== "done") {
@@ -823,6 +846,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...user,
           role: nextRole,
           roleChosen: true,
+          phone: isClient ? phone : user.phone,
+          city: isClient ? city : user.city,
           onboardingStep: isClient
             ? "done"
             : user.onboardingStep === "done"
@@ -849,6 +874,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: nextUser.role,
                 role_chosen: true,
                 onboarding_step: nextUser.onboardingStep,
+                phone: nextUser.phone,
+                city: nextUser.city,
               },
             })
             .catch(() => {

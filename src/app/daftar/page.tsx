@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { CitySearchPicker } from "@/components/city-search-picker"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -65,6 +66,8 @@ export default function RegisterPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [phone, setPhone] = useState("")
+  const [city, setCity] = useState("")
   const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
@@ -93,7 +96,19 @@ export default function RegisterPage() {
       setPending(false)
       return
     }
-    const result = await register({ name, email, password, role })
+    if (role === "client" && (!phone.trim() || !city.trim())) {
+      setError("Nomor WhatsApp dan wilayah/daerah wajib diisi untuk akun Klien.")
+      setPending(false)
+      return
+    }
+    const result = await register({
+      name,
+      email,
+      password,
+      role,
+      phone: phone.trim(),
+      city: city.trim(),
+    })
     if (!result.ok) {
       setError(result.error)
       setPending(false)
@@ -119,9 +134,16 @@ export default function RegisterPage() {
       setError("Pilih salah satu opsi di atas.")
       return
     }
+    if (role === "client" && (!phone.trim() || !city.trim())) {
+      setError("Nomor WhatsApp dan wilayah/daerah wajib diisi untuk akun Klien.")
+      return
+    }
     setPending(true)
     setError("")
-    const result = await chooseRole(role)
+    const result = await chooseRole(role, {
+      phone: phone.trim(),
+      city: city.trim(),
+    })
     if (!result.ok) {
       setError(result.error)
       setPending(false)
@@ -169,6 +191,33 @@ export default function RegisterPage() {
             setError("")
           }}
         />
+
+        {role === "client" ? (
+          <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+            <div className="grid gap-1.5">
+              <Label htmlFor="role-phone">Nomor WhatsApp</Label>
+              <Input
+                id="role-phone"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                className="h-10"
+                placeholder="08xxxxxxxxxx"
+                required
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="role-city">Wilayah / Daerah</Label>
+              <CitySearchPicker
+                id="role-city"
+                value={city}
+                onChange={setCity}
+                placeholder="Ketik atau pilih kota"
+                aria-label="Wilayah atau daerah"
+                required
+              />
+            </div>
+          </div>
+        ) : null}
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
@@ -287,6 +336,32 @@ export default function RegisterPage() {
               minLength={8}
             />
           </div>
+          {role === "client" ? (
+            <>
+              <div className="grid gap-1.5">
+                <Label htmlFor="phone">Nomor WhatsApp</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  className="h-10"
+                  placeholder="08xxxxxxxxxx"
+                  required
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="city">Wilayah / Daerah</Label>
+                <CitySearchPicker
+                  id="city"
+                  value={city}
+                  onChange={setCity}
+                  placeholder="Ketik atau pilih kota"
+                  aria-label="Wilayah atau daerah"
+                  required
+                />
+              </div>
+            </>
+          ) : null}
           <label className="flex items-start gap-2 text-sm leading-snug">
             <input
               type="checkbox"
