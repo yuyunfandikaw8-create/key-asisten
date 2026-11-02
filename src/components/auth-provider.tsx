@@ -28,6 +28,7 @@ import {
   isOnboardingMarkedDone,
   markOnboardingDone,
   normalizeOnboardingStep,
+  ONBOARDING_DONE_PREFIX,
   preferOnboardingStep,
   type BusinessFieldId,
   type BusinessService,
@@ -339,20 +340,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignore
     }
 
-    // Satu kali: hapus email terdaftar lokal; akun perbaikan (@riasaja.id) tetap.
+    // Satu kali: hapus email terdaftar lokal; akun perbaikan (@riasaja.id) tetap,
+    // dan sesi perbaikan direset ke step onboarding awal.
     try {
-      const purgeFlag = "riasaja.purged-registered.v2"
+      const purgeFlag = "riasaja.purged-registered.v3"
       if (localStorage.getItem(purgeFlag) !== "1") {
         localStorage.removeItem(ACCOUNTS_STORAGE_KEY)
         localStorage.removeItem("riasaja.purged-registered.v1")
+        localStorage.removeItem("riasaja.purged-registered.v2")
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith(ONBOARDING_DONE_PREFIX)) {
+            localStorage.removeItem(key)
+          }
+        }
+        for (const demo of DEMO_ACCOUNTS) {
+          clearOnboardingDone(demo.email)
+        }
         const rawSession = localStorage.getItem(AUTH_STORAGE_KEY)
         if (rawSession) {
           const parsed = JSON.parse(rawSession) as AuthUser
           const email = normalizeEmail(parsed?.email || "")
-          const isFixAccount = DEMO_ACCOUNTS.some(
-            (account) => account.email === email
-          )
-          if (email && !isFixAccount) {
+          const fixSeed = DEMO_ACCOUNTS.find((account) => account.email === email)
+          if (fixSeed) {
+            localStorage.setItem(
+              AUTH_STORAGE_KEY,
+              JSON.stringify(toPublicUser(fixSeed))
+            )
+          } else if (email) {
             localStorage.removeItem(AUTH_STORAGE_KEY)
           }
         }

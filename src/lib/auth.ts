@@ -157,7 +157,7 @@ export const ACCOUNTS_STORAGE_KEY = "riasaja.accounts.v3"
 
 /**
  * Akun lokal hanya untuk perbaikan fitur.
- * Owner mulai onboarding step 2; Klien mulai Data Saya kosong.
+ * Owner & Klien selalu mulai dari onboarding step awal.
  */
 export const DEMO_ACCOUNTS: StoredAccount[] = [
   {
@@ -188,7 +188,7 @@ export const DEMO_ACCOUNTS: StoredAccount[] = [
     provider: "password",
     role: "client",
     roleChosen: true,
-    onboardingStep: "done",
+    onboardingStep: 2,
   },
 ]
 
@@ -212,7 +212,7 @@ export const QUICK_TEST_LOGINS: {
     label: "Klien (perbaikan)",
     email: "klien@riasaja.id",
     password: "klien123",
-    hint: "Mulai dari Data Saya kosong",
+    hint: "Mulai dari isi biodata/profil",
   },
 ]
 

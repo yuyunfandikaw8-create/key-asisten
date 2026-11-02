@@ -20,7 +20,7 @@ Akun perbaikan di `/masuk` (hanya untuk uji/perbaiki fitur; selalu mulai dari st
 | Peran | Email | Kata sandi | Mulai dari |
 | --- | --- | --- | --- |
 | **Owner** | `owner@riasaja.id` | `owner123` | Onboarding step awal |
-| **Klien** | `klien@riasaja.id` | `klien123` | Data Saya kosong |
+| **Klien** | `klien@riasaja.id` | `klien123` | Isi biodata/profil |
 
 Di studio dan ruang klien ada toggle **Data Saya** / **Coba data contoh**. Data contoh tidak menimpa Data Saya (kosong sampai kamu isi).
 
