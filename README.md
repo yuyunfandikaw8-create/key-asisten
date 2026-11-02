@@ -60,6 +60,8 @@ Mengikuti panduan sistem langganan:
 - Setelah kedaluwarsa: data lama tetap bisa dilihat; buat/ubah operasional dibatasi.
 - Klien tidak berlangganan Key Assistant. Bayar jasa klien → vendor terpisah.
 - Harga & konfigurasi paket: `src/lib/trial.ts` (`MAIN_PLAN`).
+  Isi `priceMonthly` / `priceYearly` bila sudah final; selama `null`, UI
+  menampilkan “Belum ditetapkan” dan pembayaran ditutup.
 - Halaman hub: `/langganan`.
 
 ### Database Supabase (wajib untuk sinkron semua data)

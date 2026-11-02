@@ -16,12 +16,14 @@ import {
   TRIAL_DAYS,
   canUseOperationalFeatures,
   formatDateId,
+  formatPlanPrice,
   formatTrialEndsAt,
   getLanggananHeadline,
   getPlanOptions,
   getSubscriptionStatus,
   getTrialDaysRemaining,
   hasActiveSubscription,
+  isPricingPublished,
   isStudioReadOnly,
   isTrialExpired,
   nextInvoiceNumber,
@@ -68,6 +70,7 @@ export default function LanggananPage() {
   const readOnly = isStudioReadOnly(user)
   const payments = user?.subscription?.payments ?? []
   const headline = getLanggananHeadline(user)
+  const pricingReady = isPricingPublished()
 
   if (!ready || !user || user.role !== "owner") return <StudioLoading />
 
@@ -75,6 +78,12 @@ export default function LanggananPage() {
 
   async function submitPayment() {
     if (!selectedPlan) return
+    if (!pricingReady || typeof selectedPlan.price !== "number") {
+      setError(
+        "Harga paket belum ditetapkan. Pembayaran langganan akan dibuka setelah harga final."
+      )
+      return
+    }
     setPending(true)
     setError("")
     setNotice("")
@@ -153,11 +162,13 @@ export default function LanggananPage() {
     setNotice("Pembayaran diverifikasi. Status langganan sekarang active.")
   }
 
-  const ctaLabel = active
-    ? "Perpanjang Langganan"
-    : expired || status === "expired"
-      ? "Berlangganan"
-      : "Pilih Paket"
+  const ctaLabel = !pricingReady
+    ? "Lihat detail paket"
+    : active
+      ? "Perpanjang Langganan"
+      : expired || status === "expired"
+        ? "Berlangganan"
+        : "Pilih Paket"
 
   return (
     <div className="min-h-screen bg-background">
@@ -206,10 +217,11 @@ export default function LanggananPage() {
               </dd>
             </div>
             <div className="flex items-start justify-between gap-3">
-              <dt className="text-muted-foreground">Harga referensi</dt>
+              <dt className="text-muted-foreground">Harga</dt>
               <dd className="text-right font-medium">
-                {rupiah(MAIN_PLAN.priceMonthly)}/bln · {rupiah(MAIN_PLAN.priceYearly)}
-                /thn
+                {pricingReady
+                  ? `${formatPlanPrice(MAIN_PLAN.priceMonthly)}/bln · ${formatPlanPrice(MAIN_PLAN.priceYearly)}/thn`
+                  : "Belum ditetapkan"}
               </dd>
             </div>
             <div className="flex items-start justify-between gap-3">
@@ -271,6 +283,14 @@ export default function LanggananPage() {
             </p>
           ) : null}
 
+          {!pricingReady ? (
+            <p className="rounded-xl bg-muted/60 px-3 py-3 text-sm text-muted-foreground">
+              Harga bulanan dan tahunan belum ditetapkan. Menu ini tetap
+              menampilkan status trial/langganan; tombol bayar akan aktif setelah
+              harga final diisi di konfigurasi paket.
+            </p>
+          ) : null}
+
           {notice ? (
             <p className="rounded-xl bg-primary/8 px-3 py-3 text-sm text-primary">
               {notice}
@@ -318,8 +338,8 @@ export default function LanggananPage() {
               <div>
                 <h2 className="text-2xl">Pilih periode paket</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Satu paket {MAIN_PLAN.name}. Pilih pembayaran bulanan atau
-                  tahunan.
+                  Satu paket {MAIN_PLAN.name}. Periode bulanan atau tahunan —
+                  harga final belum ditetapkan.
                 </p>
               </div>
               <div className="grid gap-2">
@@ -346,10 +366,12 @@ export default function LanggananPage() {
                         <span className="flex flex-wrap items-baseline justify-between gap-2">
                           <span className="font-medium">{plan.name}</span>
                           <span className="text-sm font-semibold">
-                            {rupiah(plan.price)}
-                            <span className="font-normal text-muted-foreground">
-                              {plan.periodLabel}
-                            </span>
+                            {formatPlanPrice(plan.price)}
+                            {plan.price ? (
+                              <span className="font-normal text-muted-foreground">
+                                {plan.periodLabel}
+                              </span>
+                            ) : null}
                           </span>
                         </span>
                         <span className="mt-0.5 block text-sm text-muted-foreground">
@@ -365,66 +387,87 @@ export default function LanggananPage() {
               </div>
             </section>
 
-            <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-              <div>
-                <h2 className="text-2xl">Metode pembayaran langganan</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Transaksi Owner kepada Key Assistant
-                  {selectedPlan
-                    ? ` · ${selectedPlan.name} ${rupiah(selectedPlan.price)}`
-                    : null}
-                  .
+            {pricingReady ? (
+              <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+                <div>
+                  <h2 className="text-2xl">Metode pembayaran langganan</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Transaksi Owner kepada Key Assistant
+                    {selectedPlan
+                      ? ` · ${selectedPlan.name} ${formatPlanPrice(selectedPlan.price)}`
+                      : null}
+                    .
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  {SUBSCRIPTION_PAY_METHODS.map((method) => {
+                    const checked = payMethod === method.id
+                    return (
+                      <label
+                        key={method.id}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
+                          checked
+                            ? "bg-primary/8 ring-primary"
+                            : "bg-background ring-foreground/10 hover:bg-muted/50"
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="pay"
+                          checked={checked}
+                          onChange={() => setPayMethod(method.id)}
+                          className="size-4 accent-primary"
+                        />
+                        <span className="text-sm font-medium">{method.label}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+                <button
+                  type="button"
+                  className={cn(buttonVariants(), "h-11")}
+                  disabled={pending}
+                  onClick={() => void submitPayment()}
+                >
+                  {pending ? "Mencatat…" : "Bayar & ajukan langganan"}
+                </button>
+                <button
+                  type="button"
+                  className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
+                  onClick={() => setPicking(false)}
+                >
+                  Batal
+                </button>
+                <p className="text-xs text-muted-foreground">
+                  Status awal: pending. Active hanya setelah verifikasi (demo:
+                  tombol simulasi di kartu status).
                 </p>
-              </div>
-              <div className="grid gap-2">
-                {SUBSCRIPTION_PAY_METHODS.map((method) => {
-                  const checked = payMethod === method.id
-                  return (
-                    <label
-                      key={method.id}
-                      className={cn(
-                        "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 ring-1 transition",
-                        checked
-                          ? "bg-primary/8 ring-primary"
-                          : "bg-background ring-foreground/10 hover:bg-muted/50"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="pay"
-                        checked={checked}
-                        onChange={() => setPayMethod(method.id)}
-                        className="size-4 accent-primary"
-                      />
-                      <span className="text-sm font-medium">{method.label}</span>
-                    </label>
-                  )
-                })}
-              </div>
-
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-              <button
-                type="button"
-                className={cn(buttonVariants(), "h-11")}
-                disabled={pending}
-                onClick={() => void submitPayment()}
-              >
-                {pending ? "Mencatat…" : "Bayar & ajukan langganan"}
-              </button>
-              <button
-                type="button"
-                className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
-                onClick={() => setPicking(false)}
-              >
-                Batal
-              </button>
-              <p className="text-xs text-muted-foreground">
-                Status awal: pending. Active hanya setelah verifikasi (demo:
-                tombol simulasi di kartu status). Jangan aktifkan hanya karena
-                kembali ke halaman sukses.
-              </p>
-            </section>
+              </section>
+            ) : (
+              <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+                <div>
+                  <h2 className="text-2xl">Pembayaran belum dibuka</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Karena harga belum ditetapkan, Owner masih bisa memakai trial
+                    dan melihat status di halaman ini. Saat harga final siap,
+                    isi `priceMonthly` / `priceYearly` di konfigurasi paket —
+                    lalu tombol bayar akan muncul di sini.
+                  </p>
+                </div>
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <button
+                  type="button"
+                  className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
+                  onClick={() => setPicking(false)}
+                >
+                  Tutup
+                </button>
+              </section>
+            )}
           </>
         ) : null}
 

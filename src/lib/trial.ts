@@ -9,21 +9,46 @@ export const TRIAL_DAYS = 14
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-/** Satu paket utama; bulanan/tahunan = pilihan periode pembayaran. */
+/**
+ * Satu paket utama; bulanan/tahunan = pilihan periode pembayaran.
+ * Harga `null` = belum ditetapkan (jangan tampilkan angka palsu di UI).
+ * Isi angka rupiah di sini saja bila harga sudah final.
+ */
 export const MAIN_PLAN = {
   id: "key-assistant",
   name: "Key Assistant",
   trialDays: TRIAL_DAYS,
   isActive: true,
-  priceMonthly: 149_000,
-  priceYearly: 1_490_000,
+  /** null sampai harga bulanan diputuskan. Contoh: 149_000 */
+  priceMonthly: null as number | null,
+  /** null sampai harga tahunan diputuskan. Contoh: 1_490_000 */
+  priceYearly: null as number | null,
   blurbMonthly: "Fleksibel per bulan untuk mengelola bisnis di Key Assistant.",
   blurbYearly: "Bayar tahunan — hemat dibanding 12× bulanan.",
   featureConfig: {
     readAfterExpiry: true,
     writeRequiresActiveOrTrial: true,
   },
-} as const
+}
+
+/** True jika harga bulanan & tahunan sudah diisi di MAIN_PLAN. */
+export function isPricingPublished() {
+  return (
+    typeof MAIN_PLAN.priceMonthly === "number" &&
+    MAIN_PLAN.priceMonthly > 0 &&
+    typeof MAIN_PLAN.priceYearly === "number" &&
+    MAIN_PLAN.priceYearly > 0
+  )
+}
+
+export function formatPlanPrice(value: number | null | undefined) {
+  if (typeof value !== "number" || value <= 0) return "Belum ditetapkan"
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value)
+}
 
 export type SubscriptionPeriod = "monthly" | "yearly"
 
@@ -54,7 +79,7 @@ export type SubscriptionPaymentRecord = {
 export type SubscriptionPlanOption = {
   id: SubscriptionPeriod
   name: string
-  price: number
+  price: number | null
   periodLabel: string
   blurb: string
 }
@@ -82,7 +107,7 @@ export function getPlanOptions(): SubscriptionPlanOption[] {
 export const SUBSCRIPTION_PLANS = getPlanOptions().map((option) => ({
   id: option.id,
   name: option.name,
-  price: option.price,
+  price: option.price ?? 0,
   period: option.periodLabel,
   blurb: option.blurb,
 }))
