@@ -129,7 +129,7 @@ export function normalizeRole(role: unknown): AuthRole {
 export function homePathForUser(user: AuthUser | null | undefined) {
   // Pilihan peran ditampilkan di /daftar (satu alur, tanpa loncat halaman).
   if (user && user.roleChosen === false) return "/daftar"
-  if (user?.role === "client") return "/klien/cari"
+  if (user?.role === "client") return "/klien"
   if (needsOnboarding(user)) return "/onboarding"
   return "/studio"
 }

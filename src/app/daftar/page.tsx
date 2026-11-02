@@ -111,7 +111,7 @@ export default function RegisterPage() {
     }
     if (role === "client") {
       markOnboardingDone(result.user.email)
-      router.replace("/klien/cari")
+      router.replace("/klien")
       return
     }
     router.replace("/onboarding")

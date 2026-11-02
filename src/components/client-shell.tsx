@@ -10,6 +10,7 @@ import {
   ClipboardList,
   FlaskConical,
   Heart,
+  Home,
   LogOut,
   MessageCircle,
   Receipt,
@@ -23,7 +24,13 @@ import { useClientWorkspace } from "@/components/client-provider"
 import { canCloudSync } from "@/lib/cloud-sync"
 import { cn } from "@/lib/utils"
 
-const links = [
+const links: {
+  href: string
+  label: string
+  icon: typeof Home
+  exact?: boolean
+}[] = [
+  { href: "/klien", label: "Beranda", icon: Home, exact: true },
   { href: "/klien/cari", label: "Cari Vendor", icon: Search },
   { href: "/klien/pilihan", label: "Favorit", icon: Heart },
   { href: "/klien/acara", label: "Acara Saya", icon: CalendarHeart },
@@ -157,7 +164,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4">
-          <Link href="/klien/cari" className="font-display text-xl leading-none">
+          <Link href="/klien" className="font-display text-xl leading-none">
             Key Assistant
           </Link>
           <span className="hidden min-w-0 truncate text-sm text-muted-foreground sm:inline">
@@ -186,7 +193,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         <nav className="hidden md:flex md:flex-col md:gap-1">
           {links.map((link) => {
             const Icon = link.icon
-            const active = isActive(pathname, link.href)
+            const active = isActive(pathname, link.href, link.exact)
             const badge = link.href === "/klien/pilihan" ? shortlistCount : 0
             return (
               <Link
@@ -253,7 +260,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         <div className="flex overflow-x-auto">
           {links.slice(0, 5).map((link) => {
             const Icon = link.icon
-            const active = isActive(pathname, link.href)
+            const active = isActive(pathname, link.href, link.exact)
             return (
               <Link
                 key={link.href}
