@@ -14,8 +14,6 @@ import { homePathForUser, type AuthRole } from "@/lib/auth"
 import { markOnboardingDone, needsOnboarding } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
 
-type Step = "role" | "form"
-
 function RoleChoiceCards({
   role,
   onSelect,
@@ -35,9 +33,10 @@ function RoleChoiceCards({
             : "bg-card ring-foreground/10 hover:bg-muted/40"
         )}
       >
-        <p className="text-lg font-medium">💼 Saya mengelola bisnis</p>
+        <p className="text-lg font-medium">💼 Saya Mengelola Bisnis</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Kelola booking, jadwal, invoice, keuangan, layanan, dan partner.
+          Kelola booking, jadwal, invoice, keuangan, layanan, portofolio, dan
+          partner bisnis dalam satu tempat.
         </p>
       </button>
       <button
@@ -50,10 +49,10 @@ function RoleChoiceCards({
             : "bg-card ring-foreground/10 hover:bg-muted/40"
         )}
       >
-        <p className="text-lg font-medium">💍 Saya sedang mencari jasa</p>
+        <p className="text-lg font-medium">💍 Saya Mencari Jasa</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Cari dan pilih MUA, Hair Stylist, Decoration, Photographer, Videographer, dan
-          vendor lainnya.
+          Temukan dan pilih MUA, Hair & Hijab Stylist, dekorasi, fotografer,
+          videografer, serta vendor acara lainnya.
         </p>
       </button>
     </div>
@@ -63,7 +62,6 @@ function RoleChoiceCards({
 export default function RegisterPage() {
   const router = useRouter()
   const { ready, user, register, chooseRole, logout } = useAuth()
-  const [step, setStep] = useState<Step>("role")
   const [role, setRole] = useState<AuthRole | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -158,10 +156,10 @@ export default function RegisterPage() {
               Key Assistant
             </Link>
           </div>
-          <h1 className="mt-4 text-4xl">Selamat datang di Key Assistant</h1>
+          <h1 className="mt-4 text-4xl">Pilih cara kamu menggunakan Key Assistant</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Halo{user.name ? `, ${user.name}` : ""}. Kamu menggunakan Key Assistant
-            sebagai apa?
+            Halo{user.name ? `, ${user.name}` : ""}. Pilih apakah kamu mengelola
+            bisnis atau mencari jasa.
           </p>
         </div>
 
@@ -207,127 +205,67 @@ export default function RegisterPage() {
     )
   }
 
-  if (step === "role") {
-    return (
-      <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
-        <div>
-          <Link
-            href="/"
-            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Kembali ke beranda
-          </Link>
-          <div>
-            <Link href="/" className="font-display text-2xl">
-              Key Assistant
-            </Link>
-          </div>
-          <h1 className="mt-4 text-4xl">Buat akun Key Assistant</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Daftar gratis. Pilih dulu: Owner atau Klien, lalu isi data akun.
-          </p>
-        </div>
-
-        <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-          <GoogleAuthButton
-            mode="daftar"
-            nextPath="/pilih-peran"
-            onSuccess={(nextUser) => {
-              // Tetap di /daftar — halaman ini menampilkan pilihan peran untuk akun baru.
-              if (nextUser.roleChosen === false || needsOnboarding(nextUser)) {
-                router.replace("/daftar")
-                return
-              }
-              router.replace(homePathForUser(nextUser))
-            }}
-          />
-          <p className="text-center text-xs text-muted-foreground">
-            Setelah Google, pilih di halaman yang sama: bisnis atau mencari jasa.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          atau daftar dengan email
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <div>
-          <p className="text-sm font-medium">Kamu menggunakan Key Assistant sebagai apa?</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pilih dulu, lalu isi nama, email, dan kata sandi.
-          </p>
-        </div>
-
-        <RoleChoiceCards
-          role={role}
-          onSelect={(next) => {
-            setRole(next)
-            setError("")
-          }}
-        />
-
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-        <button
-          type="button"
-          className={cn(buttonVariants(), "h-11")}
-          disabled={!role}
-          onClick={() => {
-            if (!role) {
-              setError("Pilih salah satu opsi di atas.")
-              return
-            }
-            setError("")
-            setStep("form")
-          }}
-        >
-          Lanjutkan
-        </button>
-
-        <p className="text-sm text-muted-foreground">
-          Sudah punya akun?{" "}
-          <Link href="/masuk" className="font-medium text-primary hover:underline">
-            Masuk
-          </Link>
-        </p>
-      </div>
-    )
-  }
-
   return (
-    <div className="mx-auto grid min-h-screen max-w-md content-center gap-6 px-4 py-10">
+    <div className="mx-auto grid min-h-screen max-w-lg content-center gap-6 px-4 py-10">
       <div>
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="size-4" />
-            Kembali ke beranda
-          </Link>
-          <button
-            type="button"
-            className="text-sm text-muted-foreground hover:text-foreground"
-            onClick={() => setStep("role")}
-          >
-            Ganti pilihan
-          </button>
-        </div>
-        <Link href="/" className="font-display text-2xl">
-          Key Assistant
+        <Link
+          href="/"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Kembali ke beranda
         </Link>
-        <h1 className="mt-4 text-4xl">Buat akun kamu</h1>
+        <div>
+          <Link href="/" className="font-display text-2xl">
+            Key Assistant
+          </Link>
+        </div>
+        <h1 className="mt-4 text-4xl">Buat Akun Key Assistant</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {role === "client"
-            ? "Akun klien untuk mengatur acara dan memilih banyak vendor."
-            : "Akun owner untuk mengelola bisnis beauty, wedding & event."}
+          Satu akun untuk mengelola bisnis atau menemukan vendor yang sesuai
+          dengan kebutuhan acaramu.
+        </p>
+        <p className="mt-2 text-sm font-medium">
+          Daftar gratis dan mulai gunakan Key Assistant.
         </p>
       </div>
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <p className="text-center text-sm font-medium">Daftar dengan email</p>
+        <GoogleAuthButton
+          mode="daftar"
+          nextPath="/pilih-peran"
+          onSuccess={(nextUser) => {
+            // Tetap di /daftar — halaman ini menampilkan pilihan peran untuk akun baru.
+            if (nextUser.roleChosen === false || needsOnboarding(nextUser)) {
+              router.replace("/daftar")
+              return
+            }
+            router.replace(homePathForUser(nextUser))
+          }}
+        />
+      </div>
+
+      <div>
+        <p className="text-sm font-medium">
+          Pilih cara kamu menggunakan Key Assistant
+        </p>
+      </div>
+
+      <RoleChoiceCards
+        role={role}
+        onSelect={(next) => {
+          setRole(next)
+          setError("")
+        }}
+      />
+
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        atau daftar dengan email
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <form onSubmit={submit} className="grid gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="name">Nama lengkap</Label>
@@ -336,7 +274,7 @@ export default function RegisterPage() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               className="h-10"
-              placeholder="Nama kamu"
+              placeholder="Nama lengkap kamu"
               required
             />
           </div>
@@ -353,7 +291,7 @@ export default function RegisterPage() {
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Kata sandi</Label>
             <Input
               id="password"
               type="password"
@@ -391,11 +329,15 @@ export default function RegisterPage() {
           >
             {pending ? "Menyimpan…" : "Buat Akun"}
           </button>
-          <p className="text-center text-sm text-muted-foreground">
-            {role === "owner" ? "Coba gratis 14 hari" : "Gratis untuk mengatur acara"}
-          </p>
         </form>
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        Sudah punya akun?{" "}
+        <Link href="/masuk" className="font-medium text-primary hover:underline">
+          Masuk
+        </Link>
+      </p>
     </div>
   )
 }
