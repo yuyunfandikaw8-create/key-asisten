@@ -81,37 +81,81 @@ export default function AdminPaketPage() {
             onChange={(event) => patchPlan({ name: event.target.value })}
           />
         </div>
-        <div className="grid gap-1.5 sm:grid-cols-2">
-          <div className="grid gap-1.5">
-            <Label htmlFor="price-monthly">Harga bulanan (Rp)</Label>
-            <Input
-              id="price-monthly"
-              className="h-10"
-              inputMode="numeric"
-              placeholder="Contoh: 149000 — kosong = belum ditetapkan"
-              value={moneyInput(draft.plan.priceMonthly)}
-              onChange={(event) =>
-                patchPlan({ priceMonthly: parseMoney(event.target.value) })
-              }
-            />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 rounded-xl bg-background p-3 ring-1 ring-foreground/10">
+            <p className="text-sm font-medium">Bulanan</p>
+            <div className="grid gap-1.5">
+              <Label htmlFor="compare-monthly">Harga awal / coret (Rp)</Label>
+              <Input
+                id="compare-monthly"
+                className="h-10"
+                inputMode="numeric"
+                placeholder="49000"
+                value={moneyInput(draft.plan.compareAtMonthly)}
+                onChange={(event) =>
+                  patchPlan({ compareAtMonthly: parseMoney(event.target.value) })
+                }
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="price-monthly">Harga jual (Rp)</Label>
+              <Input
+                id="price-monthly"
+                className="h-10"
+                inputMode="numeric"
+                placeholder="20000"
+                value={moneyInput(draft.plan.priceMonthly)}
+                onChange={(event) =>
+                  patchPlan({ priceMonthly: parseMoney(event.target.value) })
+                }
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
-              Tampil: {formatPlanPrice(draft.plan.priceMonthly)}
+              Tampil:{" "}
+              {draft.plan.compareAtMonthly ? (
+                <span className="line-through">
+                  {formatPlanPrice(draft.plan.compareAtMonthly)}
+                </span>
+              ) : null}{" "}
+              {formatPlanPrice(draft.plan.priceMonthly)}
             </p>
           </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="price-yearly">Harga tahunan (Rp)</Label>
-            <Input
-              id="price-yearly"
-              className="h-10"
-              inputMode="numeric"
-              placeholder="Contoh: 1490000 — kosong = belum ditetapkan"
-              value={moneyInput(draft.plan.priceYearly)}
-              onChange={(event) =>
-                patchPlan({ priceYearly: parseMoney(event.target.value) })
-              }
-            />
+          <div className="grid gap-3 rounded-xl bg-background p-3 ring-1 ring-foreground/10">
+            <p className="text-sm font-medium">Tahunan</p>
+            <div className="grid gap-1.5">
+              <Label htmlFor="compare-yearly">Harga awal / coret (Rp)</Label>
+              <Input
+                id="compare-yearly"
+                className="h-10"
+                inputMode="numeric"
+                placeholder="539000"
+                value={moneyInput(draft.plan.compareAtYearly)}
+                onChange={(event) =>
+                  patchPlan({ compareAtYearly: parseMoney(event.target.value) })
+                }
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="price-yearly">Harga jual (Rp)</Label>
+              <Input
+                id="price-yearly"
+                className="h-10"
+                inputMode="numeric"
+                placeholder="220000"
+                value={moneyInput(draft.plan.priceYearly)}
+                onChange={(event) =>
+                  patchPlan({ priceYearly: parseMoney(event.target.value) })
+                }
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
-              Tampil: {formatPlanPrice(draft.plan.priceYearly)}
+              Tampil:{" "}
+              {draft.plan.compareAtYearly ? (
+                <span className="line-through">
+                  {formatPlanPrice(draft.plan.compareAtYearly)}
+                </span>
+              ) : null}{" "}
+              {formatPlanPrice(draft.plan.priceYearly)}
             </p>
           </div>
         </div>

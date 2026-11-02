@@ -92,6 +92,8 @@ export type SubscriptionPlanOption = {
   id: SubscriptionPeriod
   name: string
   price: number | null
+  /** Harga awal yang dicoret bila ada promo. */
+  compareAtPrice: number | null
   periodLabel: string
   blurb: string
 }
@@ -103,6 +105,7 @@ export function getPlanOptions(): SubscriptionPlanOption[] {
       id: "monthly",
       name: `${plan.name} Bulanan`,
       price: plan.priceMonthly,
+      compareAtPrice: plan.compareAtMonthly,
       periodLabel: "/ bulan",
       blurb: plan.blurbMonthly,
     },
@@ -110,10 +113,42 @@ export function getPlanOptions(): SubscriptionPlanOption[] {
       id: "yearly",
       name: `${plan.name} Tahunan`,
       price: plan.priceYearly,
+      compareAtPrice: plan.compareAtYearly,
       periodLabel: "/ tahun",
       blurb: plan.blurbYearly,
     },
   ]
+}
+
+/** True jika Owner belum berlangganan aktif — boleh lihat harga promo. */
+export function shouldShowOfferPricing(
+  user: SubscriptionUserSlice | null | undefined
+) {
+  return !hasActiveSubscription(user)
+}
+
+export function getPromoSummaryLabel() {
+  const plan = getMainPlan()
+  if (!isPricingPublished()) return null
+  const monthly = formatPlanPrice(plan.priceMonthly)
+  const yearly = formatPlanPrice(plan.priceYearly)
+  const monthlyWas =
+    plan.compareAtMonthly && plan.compareAtMonthly > (plan.priceMonthly || 0)
+      ? formatPlanPrice(plan.compareAtMonthly)
+      : null
+  const yearlyWas =
+    plan.compareAtYearly && plan.compareAtYearly > (plan.priceYearly || 0)
+      ? formatPlanPrice(plan.compareAtYearly)
+      : null
+  return {
+    monthly,
+    yearly,
+    monthlyWas,
+    yearlyWas,
+    line: monthlyWas
+      ? `Promo: ${monthly}/bln (dari ${monthlyWas}) · ${yearly}/thn${yearlyWas ? ` (dari ${yearlyWas})` : ""}`
+      : `Langganan: ${monthly}/bln · ${yearly}/thn`,
+  }
 }
 
 /** @deprecated pakai getPlanOptions() — tetap diekspor agar impor lama tidak pecah. */

@@ -86,13 +86,31 @@ export default function AdminHomePage() {
           <div className="flex justify-between gap-3 rounded-xl bg-background px-3 py-2 ring-1 ring-foreground/10">
             <dt className="text-muted-foreground">Harga bulanan</dt>
             <dd className="font-medium">
-              {formatPlanPrice(settings.plan.priceMonthly)}
+              {settings.plan.compareAtMonthly ? (
+                <>
+                  <span className="mr-1 text-muted-foreground line-through">
+                    {formatPlanPrice(settings.plan.compareAtMonthly)}
+                  </span>
+                  {formatPlanPrice(settings.plan.priceMonthly)}
+                </>
+              ) : (
+                formatPlanPrice(settings.plan.priceMonthly)
+              )}
             </dd>
           </div>
           <div className="flex justify-between gap-3 rounded-xl bg-background px-3 py-2 ring-1 ring-foreground/10">
             <dt className="text-muted-foreground">Harga tahunan</dt>
             <dd className="font-medium">
-              {formatPlanPrice(settings.plan.priceYearly)}
+              {settings.plan.compareAtYearly ? (
+                <>
+                  <span className="mr-1 text-muted-foreground line-through">
+                    {formatPlanPrice(settings.plan.compareAtYearly)}
+                  </span>
+                  {formatPlanPrice(settings.plan.priceYearly)}
+                </>
+              ) : (
+                formatPlanPrice(settings.plan.priceYearly)
+              )}
             </dd>
           </div>
           <div className="flex justify-between gap-3 rounded-xl bg-background px-3 py-2 ring-1 ring-foreground/10">

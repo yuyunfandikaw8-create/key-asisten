@@ -32,11 +32,13 @@ import {
   TRIAL_DAYS,
   currentPlanLabel,
   formatTrialEndsAt,
+  getPromoSummaryLabel,
   getSubscriptionStatus,
   getTrialDaysRemaining,
   getTrialReminderMessage,
   hasActiveSubscription,
   isStudioReadOnly,
+  shouldShowOfferPricing,
   subscriptionStatusLabel,
   trialStatusLabel,
 } from "@/lib/trial"
@@ -351,6 +353,8 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
     trialDaysLeft <= 7
   const reminder = user ? getTrialReminderMessage(user) : null
   const readOnly = user ? isStudioReadOnly(user) : false
+  const showOffer = user ? shouldShowOfferPricing(user) : false
+  const promo = showOffer ? getPromoSummaryLabel() : null
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return
@@ -425,6 +429,37 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           <SideNav />
         </Suspense>
         <div className="studio-main min-w-0 pb-20 md:pb-0">
+          {promo ? (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-primary/8 px-4 py-3 text-sm ring-1 ring-primary/20">
+              <p>
+                <span className="font-medium text-primary">Promo langganan: </span>
+                {promo.monthlyWas ? (
+                  <>
+                    bulanan{" "}
+                    <span className="text-muted-foreground line-through">
+                      {promo.monthlyWas}
+                    </span>{" "}
+                    <span className="font-semibold">{promo.monthly}</span>
+                    {" · "}tahunan{" "}
+                    {promo.yearlyWas ? (
+                      <span className="text-muted-foreground line-through">
+                        {promo.yearlyWas}
+                      </span>
+                    ) : null}{" "}
+                    <span className="font-semibold">{promo.yearly}</span>
+                  </>
+                ) : (
+                  promo.line
+                )}
+              </p>
+              <Link
+                href="/langganan"
+                className="shrink-0 font-semibold text-primary hover:underline"
+              >
+                Lihat paket
+              </Link>
+            </div>
+          ) : null}
           {reminder ? (
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[oklch(0.96_0.04_55)] px-4 py-3 text-sm text-[oklch(0.38_0.08_45)] ring-1 ring-[oklch(0.85_0.06_55)]">
               <p>

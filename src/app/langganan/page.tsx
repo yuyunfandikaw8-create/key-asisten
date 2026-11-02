@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Check } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
+import { PlanPrice } from "@/components/plan-price"
 import { StudioLoading } from "@/components/studio-bits"
 import { buttonVariants } from "@/components/ui/button"
 import { homePathForUser } from "@/lib/auth"
@@ -19,6 +20,7 @@ import {
   getMainPlan,
   getPaymentDetails,
   getPlanOptions,
+  getPromoSummaryLabel,
   getServerNotice,
   getSubscriptionPayMethods,
   getSubscriptionStatus,
@@ -32,6 +34,7 @@ import {
   nextInvoiceNumber,
   nowIso,
   periodEndsAt,
+  shouldShowOfferPricing,
   subscriptionStatusLabel,
   type SubscriptionPayMethod,
   type SubscriptionPaymentRecord,
@@ -89,6 +92,8 @@ export default function LanggananPage() {
   const payments = user?.subscription?.payments ?? []
   const headline = getLanggananHeadline(user)
   const pricingReady = isPricingPublished()
+  const showOffer = shouldShowOfferPricing(user)
+  const promo = useMemo(() => getPromoSummaryLabel(), [tick])
 
   if (!ready || !user || user.role !== "owner") return <StudioLoading />
 
@@ -238,13 +243,36 @@ export default function LanggananPage() {
                 {user.subscription?.planName || mainPlan.name}
               </dd>
             </div>
-            <div className="flex items-start justify-between gap-3">
+            <div className="grid gap-2">
               <dt className="text-muted-foreground">Harga</dt>
-              <dd className="text-right font-medium">
-                {pricingReady
-                  ? `${formatPlanPrice(mainPlan.priceMonthly)}/bln · ${formatPlanPrice(mainPlan.priceYearly)}/thn`
-                  : "Belum ditetapkan"}
-              </dd>
+              {pricingReady && showOffer ? (
+                <dd className="grid gap-2">
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-background px-3 py-2 ring-1 ring-foreground/10">
+                    <span className="text-sm">Bulanan</span>
+                    <PlanPrice
+                      price={mainPlan.priceMonthly}
+                      compareAt={mainPlan.compareAtMonthly}
+                      periodLabel="/bln"
+                      size="sm"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-background px-3 py-2 ring-1 ring-foreground/10">
+                    <span className="text-sm">Tahunan</span>
+                    <PlanPrice
+                      price={mainPlan.priceYearly}
+                      compareAt={mainPlan.compareAtYearly}
+                      periodLabel="/thn"
+                      size="sm"
+                    />
+                  </div>
+                </dd>
+              ) : (
+                <dd className="text-right font-medium">
+                  {pricingReady
+                    ? `${formatPlanPrice(mainPlan.priceMonthly)}/bln · ${formatPlanPrice(mainPlan.priceYearly)}/thn`
+                    : "Belum ditetapkan"}
+                </dd>
+              )}
             </div>
             <div className="flex items-start justify-between gap-3">
               <dt className="text-muted-foreground">Periode</dt>
@@ -387,14 +415,12 @@ export default function LanggananPage() {
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-baseline justify-between gap-2">
                           <span className="font-medium">{plan.name}</span>
-                          <span className="text-sm font-semibold">
-                            {formatPlanPrice(plan.price)}
-                            {plan.price ? (
-                              <span className="font-normal text-muted-foreground">
-                                {plan.periodLabel}
-                              </span>
-                            ) : null}
-                          </span>
+                          <PlanPrice
+                            price={plan.price}
+                            compareAt={showOffer ? plan.compareAtPrice : null}
+                            periodLabel={plan.periodLabel}
+                            size="sm"
+                          />
                         </span>
                         <span className="mt-0.5 block text-sm text-muted-foreground">
                           {plan.blurb}
@@ -415,11 +441,17 @@ export default function LanggananPage() {
                   <h2 className="text-2xl">Metode pembayaran langganan</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Transaksi Owner kepada Key Assistant
-                    {selectedPlan
-                      ? ` · ${selectedPlan.name} ${formatPlanPrice(selectedPlan.price)}`
-                      : null}
-                    .
+                    {selectedPlan ? ` · ${selectedPlan.name}` : null}.
                   </p>
+                  {selectedPlan ? (
+                    <div className="mt-2">
+                      <PlanPrice
+                        price={selectedPlan.price}
+                        compareAt={showOffer ? selectedPlan.compareAtPrice : null}
+                        periodLabel={selectedPlan.periodLabel}
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <div className="grid gap-2">
                   {payMethods.map((method) => {

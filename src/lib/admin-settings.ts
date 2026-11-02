@@ -5,8 +5,9 @@
 
 export type AdminPayMethod = "qris" | "va" | "ewallet" | "transfer" | "card"
 
-export const ADMIN_SETTINGS_KEY = "key-assistant.admin-settings.v2"
+export const ADMIN_SETTINGS_KEY = "key-assistant.admin-settings.v3"
 export const ADMIN_SETTINGS_LEGACY_KEYS = [
+  "key-assistant.admin-settings.v2",
   "key-assistant.admin-settings.v1",
 ] as const
 
@@ -18,8 +19,12 @@ export type AdminPlanConfig = {
   name: string
   trialDays: number
   isActive: boolean
+  /** Harga jual (yang dibayar). */
   priceMonthly: number | null
   priceYearly: number | null
+  /** Harga awal / coret (opsional). */
+  compareAtMonthly: number | null
+  compareAtYearly: number | null
   blurbMonthly: string
   blurbYearly: string
   featureConfig: {
@@ -117,10 +122,13 @@ export const DEFAULT_ADMIN_SETTINGS: AdminSettings = {
     name: "Key Assistant",
     trialDays: 14,
     isActive: true,
-    priceMonthly: null,
-    priceYearly: null,
-    blurbMonthly: "Fleksibel per bulan untuk mengelola bisnis di Key Assistant.",
-    blurbYearly: "Bayar tahunan — hemat dibanding 12× bulanan.",
+    // Promo awal: 49rb → 20rb /bln, 539rb → 220rb /thn
+    priceMonthly: 20_000,
+    priceYearly: 220_000,
+    compareAtMonthly: 49_000,
+    compareAtYearly: 539_000,
+    blurbMonthly: "Harga promo — dari Rp49.000 jadi Rp20.000 / bulan.",
+    blurbYearly: "Harga promo — dari Rp539.000 jadi Rp220.000 / tahun.",
     featureConfig: {
       readAfterExpiry: true,
       writeRequiresActiveOrTrial: true,
@@ -129,7 +137,7 @@ export const DEFAULT_ADMIN_SETTINGS: AdminSettings = {
   enabledPayMethods: ["qris", "transfer", "va", "ewallet"],
   paymentDetails: DEFAULT_PAYMENT_DETAILS,
   serverNotice:
-    "Pembayaran langganan adalah Owner → Key Assistant (terpisah dari bayar jasa klien ke vendor).",
+    "Promo langganan: bulanan Rp20.000 (dari Rp49.000) · tahunan Rp220.000 (dari Rp539.000). Pembayaran Owner → Key Assistant.",
   adminNotes: "",
   supportWhatsapp: "",
   supportEmail: "",
@@ -217,8 +225,18 @@ export function normalizeAdminSettings(
           ? Math.min(90, Math.round(plan.trialDays))
           : DEFAULT_ADMIN_SETTINGS.plan.trialDays,
       isActive: plan?.isActive !== false,
-      priceMonthly: asNumberOrNull(plan?.priceMonthly),
-      priceYearly: asNumberOrNull(plan?.priceYearly),
+      priceMonthly:
+        asNumberOrNull(plan?.priceMonthly) ??
+        DEFAULT_ADMIN_SETTINGS.plan.priceMonthly,
+      priceYearly:
+        asNumberOrNull(plan?.priceYearly) ??
+        DEFAULT_ADMIN_SETTINGS.plan.priceYearly,
+      compareAtMonthly:
+        asNumberOrNull(plan?.compareAtMonthly) ??
+        DEFAULT_ADMIN_SETTINGS.plan.compareAtMonthly,
+      compareAtYearly:
+        asNumberOrNull(plan?.compareAtYearly) ??
+        DEFAULT_ADMIN_SETTINGS.plan.compareAtYearly,
       blurbMonthly:
         plan?.blurbMonthly?.trim() || DEFAULT_ADMIN_SETTINGS.plan.blurbMonthly,
       blurbYearly:
@@ -260,9 +278,27 @@ export function readAdminSettings(): AdminSettings {
     for (const legacy of ADMIN_SETTINGS_LEGACY_KEYS) {
       const old = localStorage.getItem(legacy)
       if (!old) continue
-      const merged = normalizeAdminSettings(
-        JSON.parse(old) as Partial<AdminSettings>
-      )
+      const parsed = JSON.parse(old) as Partial<AdminSettings>
+      // v1/v2 belum punya harga coret — terapkan promo default saat naik ke v3.
+      const hadCompareAt =
+        asNumberOrNull(parsed.plan?.compareAtMonthly) != null ||
+        asNumberOrNull(parsed.plan?.compareAtYearly) != null
+      const seeded: Partial<AdminSettings> = hadCompareAt
+        ? parsed
+        : {
+            ...parsed,
+            plan: {
+              ...parsed.plan,
+              priceMonthly: DEFAULT_ADMIN_SETTINGS.plan.priceMonthly,
+              priceYearly: DEFAULT_ADMIN_SETTINGS.plan.priceYearly,
+              compareAtMonthly: DEFAULT_ADMIN_SETTINGS.plan.compareAtMonthly,
+              compareAtYearly: DEFAULT_ADMIN_SETTINGS.plan.compareAtYearly,
+              blurbMonthly: DEFAULT_ADMIN_SETTINGS.plan.blurbMonthly,
+              blurbYearly: DEFAULT_ADMIN_SETTINGS.plan.blurbYearly,
+            } as AdminPlanConfig,
+            serverNotice: DEFAULT_ADMIN_SETTINGS.serverNotice,
+          }
+      const merged = normalizeAdminSettings(seeded)
       writeAdminSettings(merged)
       localStorage.removeItem(legacy)
       return merged
