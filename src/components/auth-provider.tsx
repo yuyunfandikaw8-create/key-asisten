@@ -334,6 +334,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignore
     }
 
+    // Satu kali: hapus email terdaftar lokal; akun perbaikan (@riasaja.id) tetap.
+    try {
+      const purgeFlag = "riasaja.purged-registered.v1"
+      if (localStorage.getItem(purgeFlag) !== "1") {
+        localStorage.removeItem(ACCOUNTS_STORAGE_KEY)
+        const rawSession = localStorage.getItem(AUTH_STORAGE_KEY)
+        if (rawSession) {
+          const parsed = JSON.parse(rawSession) as AuthUser
+          const email = normalizeEmail(parsed?.email || "")
+          const isFixAccount = DEMO_ACCOUNTS.some(
+            (account) => account.email === email
+          )
+          if (email && !isFixAccount) {
+            localStorage.removeItem(AUTH_STORAGE_KEY)
+          }
+        }
+        localStorage.setItem(purgeFlag, "1")
+      }
+    } catch {
+      // ignore
+    }
+
     // Sesi lokal dulu supaya tombol Masuk tidak menunggu jaringan Supabase.
     restoreLocalUser()
     setReady(true)
