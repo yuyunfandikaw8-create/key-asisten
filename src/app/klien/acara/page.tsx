@@ -81,7 +81,7 @@ export default function ClientEventsPage() {
             id="event-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Make up artist, Hijab & Hair Stylist, Decoration, Attire, DLL"
+            placeholder="Weding, Prewedding, Lamaran, Wisuda, Dll"
             className="h-11 bg-background"
           />
         </div>
