@@ -186,7 +186,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         <nav className="hidden md:flex md:flex-col md:gap-1">
           {links.map((link) => {
             const Icon = link.icon
-            const active = isActive(pathname, link.href, link.exact)
+            const active = isActive(pathname, link.href)
             const badge = link.href === "/klien/pilihan" ? shortlistCount : 0
             return (
               <Link
@@ -253,7 +253,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         <div className="flex overflow-x-auto">
           {links.slice(0, 5).map((link) => {
             const Icon = link.icon
-            const active = isActive(pathname, link.href, link.exact)
+            const active = isActive(pathname, link.href)
             return (
               <Link
                 key={link.href}
