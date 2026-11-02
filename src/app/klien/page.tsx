@@ -28,7 +28,7 @@ export default function ClientHomePage() {
       <div>
         <h1 className="text-4xl">Halo, selamat datang</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Atur kebutuhan acara kamu dan temukan vendor yang sesuai dalam satu
+          Atur kebutuhan acara kamu dan temukan vendor yang sesuai dalam 1
           tempat.
         </p>
       </div>
