@@ -131,7 +131,8 @@ export default function ClientSearchPage() {
       <div>
         <h1 className="text-4xl">Cari Vendor</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Temukan vendor untuk acara kamu berdasarkan layanan, lokasi, dan portofolio.
+          Temukan vendor yang sesuai untuk acara kamu berdasarkan layanan,
+          lokasi, harga, dan portofolio.
         </p>
       </div>
 
@@ -169,9 +170,7 @@ export default function ClientSearchPage() {
         <div>
           <h2 className="text-lg font-medium">Temukan Vendor</h2>
           <p className="text-sm text-muted-foreground">
-            Temukan vendor terbaik untuk kebutuhan acara Anda. Lihat layanan,
-            telusuri portofolio, dan bandingkan pilihan sebelum melakukan
-            pemesanan.
+            Cari vendor berdasarkan nama, lokasi, atau jenis layanan.
           </p>
         </div>
 
@@ -180,7 +179,7 @@ export default function ClientSearchPage() {
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Cari nama, area, atau jenis jasa…"
+            placeholder="Cari nama, lokasi, atau layanan…"
             className="h-11 bg-card pl-10"
           />
         </div>
