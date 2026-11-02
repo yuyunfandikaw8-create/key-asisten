@@ -372,7 +372,8 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl">Apa saja layanan yang kamu sediakan?</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Pilih semua yang sesuai. Kamu bisa menambahkan layanan lainnya kapan saja.
+              Pilih semua layanan yang sesuai dengan bisnismu. Kamu bisa
+              menambahkan atau mengubah layanan kapan saja.
             </p>
           </div>
           <div className="grid gap-2">
