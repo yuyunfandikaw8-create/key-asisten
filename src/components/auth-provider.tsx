@@ -341,9 +341,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Satu kali: hapus email terdaftar lokal; akun perbaikan (@riasaja.id) tetap.
     try {
-      const purgeFlag = "riasaja.purged-registered.v1"
+      const purgeFlag = "riasaja.purged-registered.v2"
       if (localStorage.getItem(purgeFlag) !== "1") {
         localStorage.removeItem(ACCOUNTS_STORAGE_KEY)
+        localStorage.removeItem("riasaja.purged-registered.v1")
         const rawSession = localStorage.getItem(AUTH_STORAGE_KEY)
         if (rawSession) {
           const parsed = JSON.parse(rawSession) as AuthUser
