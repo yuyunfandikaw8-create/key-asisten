@@ -253,7 +253,12 @@ export default function OnboardingPage() {
     markOnboardingDone(user?.email)
     try {
       if (city.trim()) setCity(city.trim())
-      const updated = await updateProfile({ onboardingStep: "done" })
+      // Panduan: trial 14 hari dimulai setelah Owner selesai siapkan bisnis.
+      const trialStartedAt = user?.trialStartedAt || new Date().toISOString()
+      const updated = await updateProfile({
+        onboardingStep: "done",
+        trialStartedAt,
+      })
       if (!updated) {
         // Flag sudah terpasang; tetap coba masuk studio.
         window.location.href = "/studio"

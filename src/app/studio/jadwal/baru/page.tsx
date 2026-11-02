@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ImagePlus, LoaderCircle, X } from "lucide-react"
 
+import { OperationalGate } from "@/components/operational-gate"
 import { ScheduleFields } from "@/components/schedule-fields"
 import { SuggestInput, type SuggestOption } from "@/components/suggest-input"
 import { useAuth } from "@/components/auth-provider"
@@ -329,6 +330,7 @@ export default function NewBookingPage() {
   }
 
   return (
+    <OperationalGate actionLabel="membuat booking atau jadwal baru">
     <div className="grid gap-6">
       <div>
         <h1 className="text-4xl">Booking baru</h1>
@@ -636,5 +638,6 @@ export default function NewBookingPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </OperationalGate>
   )
 }

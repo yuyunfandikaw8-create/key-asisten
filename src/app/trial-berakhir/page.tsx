@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
-import { isStudioLocked } from "@/lib/trial"
+import { hasActiveSubscription, isStudioReadOnly } from "@/lib/trial"
 
-/** Alias lama — arahkan ke Paket & Langganan. */
+/** Alias lama — arahkan ke Paket & Langganan atau Studio (data tetap bisa dilihat). */
 export default function TrialEndedRedirectPage() {
   const router = useRouter()
   const { ready, user } = useAuth()
@@ -18,7 +18,11 @@ export default function TrialEndedRedirectPage() {
       router.replace("/masuk?next=%2Flangganan")
       return
     }
-    if (isStudioLocked(user)) {
+    if (hasActiveSubscription(user)) {
+      router.replace("/studio")
+      return
+    }
+    if (isStudioReadOnly(user)) {
       router.replace("/langganan")
       return
     }

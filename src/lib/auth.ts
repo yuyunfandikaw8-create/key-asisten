@@ -112,13 +112,31 @@ export type AuthUser = {
   customBusinessFields?: CustomBusinessField[]
   services?: BusinessService[]
   paymentSettings?: PaymentSettings
-  /** Langganan Key Assistant setelah trial. */
+  /**
+   * Langganan Key Assistant (Owner → Key Assistant).
+   * Terpisah dari pembayaran jasa klien → vendor.
+   * status `active` hanya setelah pembayaran diverifikasi.
+   */
   subscription?: {
     planId: string
     planName: string
-    status: "active"
-    paymentMethod: "qris" | "va" | "ewallet" | "card"
+    status: "active" | "pending" | "cancelled" | "suspended"
+    period?: "monthly" | "yearly"
+    paymentMethod: "qris" | "va" | "ewallet" | "transfer" | "card"
     startedAt: string
+    endsAt?: string
+    payments?: {
+      id: string
+      invoiceNumber: string
+      amount: number
+      period: "monthly" | "yearly"
+      paymentMethod: "qris" | "va" | "ewallet" | "transfer" | "card"
+      status: "pending" | "paid" | "failed" | "cancelled"
+      createdAt: string
+      paidAt?: string
+      proofUrl?: string
+      gatewayReference?: string
+    }[]
   }
 }
 

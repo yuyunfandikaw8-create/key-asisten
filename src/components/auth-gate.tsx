@@ -7,7 +7,6 @@ import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { homePathForUser } from "@/lib/auth"
 import { needsOnboarding, onboardingPathForUser } from "@/lib/onboarding"
-import { isStudioLocked } from "@/lib/trial"
 
 export function AuthGate({
   children,
@@ -50,9 +49,8 @@ export function AuthGate({
       router.replace(homePathForUser(user))
       return
     }
-    if (user.role === "owner" && isStudioLocked(user)) {
-      router.replace("/langganan")
-    }
+    // Panduan langganan: setelah trial/langganan berakhir data tetap bisa dilihat
+    // (read-only). Jangan redirect paksa ke /langganan.
   }, [allowRole, pathname, ready, router, skipOnboardingRedirect, user])
 
   // Keep children mounted so Next.js instant-nav validation does not drop
@@ -77,10 +75,6 @@ export function AuthGate({
   }
 
   if (!skipOnboardingRedirect && needsOnboarding(user)) {
-    return <StudioLoading />
-  }
-
-  if (user.role === "owner" && isStudioLocked(user)) {
     return <StudioLoading />
   }
 

@@ -11,16 +11,26 @@ import { buttonVariants } from "@/components/ui/button"
 import { homePathForUser } from "@/lib/auth"
 import { rupiah } from "@/lib/format"
 import {
+  MAIN_PLAN,
   SUBSCRIPTION_PAY_METHODS,
-  SUBSCRIPTION_PLANS,
   TRIAL_DAYS,
-  currentPlanLabel,
+  canUseOperationalFeatures,
+  formatDateId,
   formatTrialEndsAt,
+  getLanggananHeadline,
+  getPlanOptions,
+  getSubscriptionStatus,
   getTrialDaysRemaining,
   hasActiveSubscription,
+  isStudioReadOnly,
   isTrialExpired,
+  nextInvoiceNumber,
   nowIso,
+  periodEndsAt,
+  subscriptionStatusLabel,
   type SubscriptionPayMethod,
+  type SubscriptionPaymentRecord,
+  type SubscriptionPeriod,
 } from "@/lib/trial"
 import { cn } from "@/lib/utils"
 
@@ -28,11 +38,11 @@ export default function LanggananPage() {
   const router = useRouter()
   const { ready, user, updateProfile, logout } = useAuth()
   const [picking, setPicking] = useState(false)
-  const [planId, setPlanId] = useState(SUBSCRIPTION_PLANS[0]?.id ?? "bulanan")
+  const [period, setPeriod] = useState<SubscriptionPeriod>("monthly")
   const [payMethod, setPayMethod] = useState<SubscriptionPayMethod>("qris")
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
-  const [done, setDone] = useState(false)
+  const [notice, setNotice] = useState("")
 
   useEffect(() => {
     if (!ready) return
@@ -45,57 +55,124 @@ export default function LanggananPage() {
     }
   }, [ready, router, user])
 
+  const planOptions = useMemo(() => getPlanOptions(), [])
+  const selectedPlan = useMemo(
+    () => planOptions.find((plan) => plan.id === period) ?? planOptions[0],
+    [period, planOptions]
+  )
+  const status = getSubscriptionStatus(user)
   const daysLeft = getTrialDaysRemaining(user?.trialStartedAt)
-  const endsLabel = formatTrialEndsAt(user?.trialStartedAt)
+  const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
   const expired = isTrialExpired(user?.trialStartedAt)
   const active = hasActiveSubscription(user)
-  const selectedPlan = useMemo(
-    () => SUBSCRIPTION_PLANS.find((plan) => plan.id === planId) ?? SUBSCRIPTION_PLANS[0],
-    [planId]
-  )
+  const readOnly = isStudioReadOnly(user)
+  const payments = user?.subscription?.payments ?? []
+  const headline = getLanggananHeadline(user)
 
   if (!ready || !user || user.role !== "owner") return <StudioLoading />
 
-  async function subscribe() {
+  const owner = user
+
+  async function submitPayment() {
     if (!selectedPlan) return
     setPending(true)
     setError("")
+    setNotice("")
+    const createdAt = nowIso()
+    const payment: SubscriptionPaymentRecord = {
+      id: crypto.randomUUID(),
+      invoiceNumber: nextInvoiceNumber(payments.length),
+      amount: selectedPlan.price,
+      period,
+      paymentMethod: payMethod,
+      status: "pending",
+      createdAt,
+    }
     const updated = await updateProfile({
       subscription: {
-        planId: selectedPlan.id,
+        planId: MAIN_PLAN.id,
         planName: selectedPlan.name,
-        status: "active",
+        status: "pending",
+        period,
         paymentMethod: payMethod,
-        startedAt: nowIso(),
+        startedAt: owner.subscription?.startedAt || createdAt,
+        endsAt: owner.subscription?.endsAt,
+        payments: [...payments, payment],
       },
     })
     setPending(false)
     if (!updated) {
-      setError("Gagal mengaktifkan langganan. Coba lagi.")
+      setError("Gagal mencatat pembayaran. Coba lagi.")
       return
     }
-    setDone(true)
-    window.setTimeout(() => router.replace("/studio"), 900)
+    setPicking(false)
+    setNotice(
+      "Pembayaran tercatat berstatus pending. Paket aktif hanya setelah verifikasi — redirect sukses bukan bukti cukup."
+    )
   }
+
+  async function verifyPaymentDemo() {
+    const latestPending = [...payments]
+      .reverse()
+      .find((item) => item.status === "pending")
+    if (!latestPending) {
+      setError("Tidak ada pembayaran pending untuk diverifikasi.")
+      return
+    }
+    setPending(true)
+    setError("")
+    const paidAt = nowIso()
+    const periodValue = latestPending.period
+    const endsAt = periodEndsAt(paidAt, periodValue)
+    const nextPayments = payments.map((item) =>
+      item.id === latestPending.id
+        ? { ...item, status: "paid" as const, paidAt }
+        : item
+    )
+    const planName =
+      planOptions.find((plan) => plan.id === periodValue)?.name ||
+      owner.subscription?.planName ||
+      MAIN_PLAN.name
+    const updated = await updateProfile({
+      subscription: {
+        planId: MAIN_PLAN.id,
+        planName,
+        status: "active",
+        period: periodValue,
+        paymentMethod: latestPending.paymentMethod,
+        startedAt: paidAt,
+        endsAt,
+        payments: nextPayments,
+      },
+    })
+    setPending(false)
+    if (!updated) {
+      setError("Gagal memverifikasi pembayaran.")
+      return
+    }
+    setNotice("Pembayaran diverifikasi. Status langganan sekarang active.")
+  }
+
+  const ctaLabel = active
+    ? "Perpanjang Langganan"
+    : expired || status === "expired"
+      ? "Berlangganan"
+      : "Pilih Paket"
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
-          {!expired || active ? (
-            <Link
-              href="/studio"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              Studio
-            </Link>
-          ) : (
-            <Link href="/" className="font-display text-xl leading-none text-primary">
-              Key Assistant
-            </Link>
-          )}
-          <span className="ml-auto text-sm text-muted-foreground">{user.studioName || user.name}</span>
+          <Link
+            href="/studio"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Studio
+          </Link>
+          <span className="ml-auto text-sm text-muted-foreground">
+            {user.studioName || user.name}
+          </span>
         </div>
       </header>
 
@@ -103,85 +180,151 @@ export default function LanggananPage() {
         <div>
           <h1 className="text-4xl">Paket & Langganan</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Kelola trial dan langganan akun Key Assistant.
+            Pusat status langganan Owner ke Key Assistant. Pembayaran jasa klien
+            ke vendor tetap terpisah di invoice bisnis.
           </p>
         </div>
 
         <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <div>
             <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-              Trial kamu
+              Status
             </p>
             <p className="mt-1 font-display text-3xl">
-              {active
-                ? "Sudah berlangganan"
-                : expired
-                  ? "Sudah berakhir"
-                  : daysLeft === 1
-                    ? "1 hari tersisa"
-                    : `${Math.max(daysLeft, 0)} hari tersisa`}
+              {subscriptionStatusLabel(status)}
             </p>
-            {!active && endsLabel ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {expired ? `Berakhir ${endsLabel}` : `Sampai ${endsLabel}`} · Trial {TRIAL_DAYS}{" "}
-                hari
-              </p>
-            ) : null}
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{headline}</p>
           </div>
 
           <div className="h-px bg-foreground/10" />
 
-          <div>
-            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-              Paket saat ini
-            </p>
-            <p className="mt-1 text-xl font-semibold">{currentPlanLabel(user)}</p>
-            {active && user.subscription ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Aktif via{" "}
-                {SUBSCRIPTION_PAY_METHODS.find(
-                  (item) => item.id === user.subscription?.paymentMethod
-                )?.label ?? "pembayaran"}
-              </p>
+          <dl className="grid gap-3 text-sm">
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-muted-foreground">Paket</dt>
+              <dd className="text-right font-medium">
+                {user.subscription?.planName || MAIN_PLAN.name}
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-muted-foreground">Harga referensi</dt>
+              <dd className="text-right font-medium">
+                {rupiah(MAIN_PLAN.priceMonthly)}/bln · {rupiah(MAIN_PLAN.priceYearly)}
+                /thn
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-muted-foreground">Periode</dt>
+              <dd className="text-right font-medium">
+                {user.subscription?.period === "yearly"
+                  ? "Tahunan"
+                  : user.subscription?.period === "monthly"
+                    ? "Bulanan"
+                    : status === "trial"
+                      ? `Trial ${TRIAL_DAYS} hari`
+                      : "—"}
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-muted-foreground">Mulai trial</dt>
+              <dd className="text-right font-medium">
+                {formatDateId(user.trialStartedAt) || "—"}
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <dt className="text-muted-foreground">Berakhir trial</dt>
+              <dd className="text-right font-medium">{trialEndsLabel || "—"}</dd>
+            </div>
+            {!active && status === "trial" ? (
+              <div className="flex items-start justify-between gap-3">
+                <dt className="text-muted-foreground">Sisa trial</dt>
+                <dd className="text-right font-medium">
+                  {daysLeft <= 0
+                    ? "Berakhir"
+                    : daysLeft === 1
+                      ? "Berakhir hari ini"
+                      : `${daysLeft} hari`}
+                </dd>
+              </div>
             ) : null}
-          </div>
+            {user.subscription?.startedAt ? (
+              <div className="flex items-start justify-between gap-3">
+                <dt className="text-muted-foreground">Mulai langganan</dt>
+                <dd className="text-right font-medium">
+                  {formatDateId(user.subscription.startedAt)}
+                </dd>
+              </div>
+            ) : null}
+            {user.subscription?.endsAt ? (
+              <div className="flex items-start justify-between gap-3">
+                <dt className="text-muted-foreground">Berakhir langganan</dt>
+                <dd className="text-right font-medium">
+                  {formatDateId(user.subscription.endsAt)}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
 
-          {!active ? (
-            <p className="text-sm leading-6 text-muted-foreground">
-              {expired
-                ? "Masa trial sudah berakhir. Pilih paket untuk terus menggunakan Key Assistant."
-                : "Setelah trial berakhir, pilih paket untuk terus menggunakan Key Assistant."}
+          {readOnly ? (
+            <p className="rounded-xl bg-muted/60 px-3 py-3 text-sm text-muted-foreground">
+              Akses operasional dibatasi. Data lama (booking, jadwal, invoice,
+              klien, layanan, portofolio) tetap bisa dilihat — tidak dihapus.
             </p>
-          ) : (
+          ) : null}
+
+          {notice ? (
             <p className="rounded-xl bg-primary/8 px-3 py-3 text-sm text-primary">
-              Langganan aktif. Semua fitur studio terbuka.
+              {notice}
             </p>
-          )}
+          ) : null}
 
-          {!active && !picking ? (
+          {!picking ? (
             <button
               type="button"
               className={cn(buttonVariants(), "h-11")}
-              onClick={() => setPicking(true)}
+              onClick={() => {
+                setPicking(true)
+                setError("")
+                setNotice("")
+              }}
             >
-              Pilih Paket
+              {ctaLabel}
             </button>
           ) : null}
 
-          {active ? (
-            <Link href="/studio" className={cn(buttonVariants(), "h-11")}>
-              Kembali ke Studio
-            </Link>
+          {status === "pending" ? (
+            <button
+              type="button"
+              className={cn(buttonVariants({ variant: "outline" }), "h-11")}
+              disabled={pending}
+              onClick={() => void verifyPaymentDemo()}
+            >
+              {pending ? "Memverifikasi…" : "Simulasikan verifikasi pembayaran"}
+            </button>
           ) : null}
+
+          <Link
+            href="/studio"
+            className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
+          >
+            {canUseOperationalFeatures(user)
+              ? "Kembali ke Studio"
+              : "Lihat Data Saya (read-only)"}
+          </Link>
         </section>
 
-        {picking && !active ? (
+        {picking ? (
           <>
             <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-              <h2 className="text-2xl">Pilih paket</h2>
+              <div>
+                <h2 className="text-2xl">Pilih periode paket</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Satu paket {MAIN_PLAN.name}. Pilih pembayaran bulanan atau
+                  tahunan.
+                </p>
+              </div>
               <div className="grid gap-2">
-                {SUBSCRIPTION_PLANS.map((plan) => {
-                  const checked = planId === plan.id
+                {planOptions.map((plan) => {
+                  const checked = period === plan.id
                   return (
                     <label
                       key={plan.id}
@@ -194,9 +337,9 @@ export default function LanggananPage() {
                     >
                       <input
                         type="radio"
-                        name="plan"
+                        name="period"
                         checked={checked}
-                        onChange={() => setPlanId(plan.id)}
+                        onChange={() => setPeriod(plan.id)}
                         className="mt-1 size-4 accent-primary"
                       />
                       <span className="min-w-0 flex-1">
@@ -205,7 +348,7 @@ export default function LanggananPage() {
                           <span className="text-sm font-semibold">
                             {rupiah(plan.price)}
                             <span className="font-normal text-muted-foreground">
-                              {plan.period}
+                              {plan.periodLabel}
                             </span>
                           </span>
                         </span>
@@ -213,7 +356,9 @@ export default function LanggananPage() {
                           {plan.blurb}
                         </span>
                       </span>
-                      {checked ? <Check className="mt-0.5 size-4 shrink-0 text-primary" /> : null}
+                      {checked ? (
+                        <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                      ) : null}
                     </label>
                   )
                 })}
@@ -222,10 +367,13 @@ export default function LanggananPage() {
 
             <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
               <div>
-                <h2 className="text-2xl">Metode Pembayaran Langganan</h2>
+                <h2 className="text-2xl">Metode pembayaran langganan</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Pilih cara bayar untuk {selectedPlan?.name.toLowerCase()}{" "}
-                  {selectedPlan ? rupiah(selectedPlan.price) : null}.
+                  Transaksi Owner kepada Key Assistant
+                  {selectedPlan
+                    ? ` · ${selectedPlan.name} ${rupiah(selectedPlan.price)}`
+                    : null}
+                  .
                 </p>
               </div>
               <div className="grid gap-2">
@@ -255,39 +403,79 @@ export default function LanggananPage() {
               </div>
 
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              {done ? (
-                <p className="flex items-center gap-2 text-sm text-primary">
-                  <Check className="size-4" />
-                  Langganan aktif — membuka studio…
-                </p>
-              ) : null}
 
               <button
                 type="button"
                 className={cn(buttonVariants(), "h-11")}
-                disabled={pending || done}
-                onClick={() => void subscribe()}
+                disabled={pending}
+                onClick={() => void submitPayment()}
               >
-                {pending ? "Memproses…" : "Bayar & Berlangganan"}
+                {pending ? "Mencatat…" : "Bayar & ajukan langganan"}
+              </button>
+              <button
+                type="button"
+                className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
+                onClick={() => setPicking(false)}
+              >
+                Batal
               </button>
               <p className="text-xs text-muted-foreground">
-                Demo lokal: pembayaran disimulasikan dan langsung mengaktifkan paket di akun ini.
+                Status awal: pending. Active hanya setelah verifikasi (demo:
+                tombol simulasi di kartu status). Jangan aktifkan hanya karena
+                kembali ke halaman sukses.
               </p>
             </section>
           </>
         ) : null}
 
-        {expired && !active ? (
-          <button
-            type="button"
-            className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
-            onClick={() => {
-              void logout().then(() => router.replace("/masuk"))
-            }}
-          >
-            Keluar
-          </button>
-        ) : null}
+        <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+          <div>
+            <h2 className="text-2xl">Riwayat pembayaran</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Catatan pembayaran langganan ke Key Assistant.
+            </p>
+          </div>
+          {payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Belum ada pembayaran.</p>
+          ) : (
+            <ul className="grid gap-2">
+              {[...payments].reverse().map((payment) => (
+                <li
+                  key={payment.id}
+                  className="rounded-xl bg-background px-3 py-3 text-sm ring-1 ring-foreground/10"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="font-medium">{payment.invoiceNumber}</span>
+                    <span className="font-semibold">{rupiah(payment.amount)}</span>
+                  </div>
+                  <p className="mt-1 text-muted-foreground">
+                    {payment.period === "yearly" ? "Tahunan" : "Bulanan"} ·{" "}
+                    {SUBSCRIPTION_PAY_METHODS.find(
+                      (item) => item.id === payment.paymentMethod
+                    )?.label || payment.paymentMethod}{" "}
+                    · {payment.status}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Dibuat {formatDateId(payment.createdAt)}
+                    {payment.paidAt
+                      ? ` · Dibayar ${formatDateId(payment.paidAt)}`
+                      : null}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <button
+          type="button"
+          className={cn(buttonVariants({ variant: "ghost" }), "h-10")}
+          onClick={() => {
+            void logout().then(() => router.replace("/masuk"))
+          }}
+        >
+          Keluar
+        </button>
       </main>
     </div>
   )

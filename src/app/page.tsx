@@ -169,7 +169,7 @@ const faqs: {
   },
   {
     q: "⏱️ Apa yang terjadi setelah masa trial 14 hari berakhir?",
-    a: "Setelah masa trial berakhir, akses penuh Key Assistant akan dinonaktifkan sementara sampai kamu melanjutkan berlangganan. Kamu bisa memilih paket yang sesuai; data dan ketentuan akses mengikuti paket yang dipilih.",
+    a: "Setelah trial berakhir, fitur operasional dibatasi tetapi data lama tetap bisa dilihat (tidak dihapus). Owner berlangganan ke Key Assistant untuk lanjut mengelola bisnis; pembayaran jasa klien ke vendor tetap terpisah.",
   },
   {
     q: "🔐 Apakah data klien dan bisnis saya aman?",

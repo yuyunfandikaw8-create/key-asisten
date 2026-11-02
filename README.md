@@ -49,6 +49,19 @@ Opsional di Supabase Dashboard → Authentication → Providers → Email: matik
 
 Tanpa Supabase (atau akun demo), data tetap hanya di `localStorage` perangkat itu.
 
+### Paket & langganan (Owner)
+
+Mengikuti panduan sistem langganan:
+
+- Satu paket utama Key Assistant; pilih periode bulanan atau tahunan.
+- Trial 14 hari setelah Owner selesai siapkan bisnis.
+- Status: `trial` · `pending` · `active` · `expired` (+ cancelled/suspended).
+- `active` hanya setelah pembayaran diverifikasi (bukan sekadar redirect sukses).
+- Setelah kedaluwarsa: data lama tetap bisa dilihat; buat/ubah operasional dibatasi.
+- Klien tidak berlangganan Key Assistant. Bayar jasa klien → vendor terpisah.
+- Harga & konfigurasi paket: `src/lib/trial.ts` (`MAIN_PLAN`).
+- Halaman hub: `/langganan`.
+
 ### Database Supabase (wajib untuk sinkron semua data)
 
 Project: `iukerqusjdlkkoyxvgjs`. Anon key saja **tidak** bisa membuat tabel.

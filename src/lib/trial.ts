@@ -1,33 +1,91 @@
+/**
+ * Konfigurasi paket & helper langganan Key Assistant.
+ * Harga/periode hanya di sini — jangan hardcode di banyak halaman.
+ *
+ * Pembayaran langganan = Owner → Key Assistant (terpisah dari bayar jasa klien → vendor).
+ */
+
 export const TRIAL_DAYS = 14
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-export type SubscriptionPlan = {
+/** Satu paket utama; bulanan/tahunan = pilihan periode pembayaran. */
+export const MAIN_PLAN = {
+  id: "key-assistant",
+  name: "Key Assistant",
+  trialDays: TRIAL_DAYS,
+  isActive: true,
+  priceMonthly: 149_000,
+  priceYearly: 1_490_000,
+  blurbMonthly: "Fleksibel per bulan untuk mengelola bisnis di Key Assistant.",
+  blurbYearly: "Bayar tahunan — hemat dibanding 12× bulanan.",
+  featureConfig: {
+    readAfterExpiry: true,
+    writeRequiresActiveOrTrial: true,
+  },
+} as const
+
+export type SubscriptionPeriod = "monthly" | "yearly"
+
+export type SubscriptionStatus =
+  | "trial"
+  | "active"
+  | "pending"
+  | "expired"
+  | "cancelled"
+  | "suspended"
+
+export type SubscriptionPayMethod = "qris" | "va" | "ewallet" | "transfer" | "card"
+
+export type SubscriptionPaymentRecord = {
   id: string
+  invoiceNumber: string
+  amount: number
+  period: SubscriptionPeriod
+  paymentMethod: SubscriptionPayMethod
+  status: "pending" | "paid" | "failed" | "cancelled"
+  createdAt: string
+  paidAt?: string
+  proofUrl?: string
+  gatewayReference?: string
+}
+
+/** Pilihan periode di UI — harga diambil dari MAIN_PLAN. */
+export type SubscriptionPlanOption = {
+  id: SubscriptionPeriod
   name: string
   price: number
-  period: string
+  periodLabel: string
   blurb: string
 }
 
-export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  {
-    id: "bulanan",
-    name: "Bulanan",
-    price: 149_000,
-    period: "/ bulan",
-    blurb: "Fleksibel, bisa dibatalkan kapan saja.",
-  },
-  {
-    id: "tahunan",
-    name: "Tahunan",
-    price: 1_490_000,
-    period: "/ tahun",
-    blurb: "Hemat 2 bulan — cocok untuk studio yang sudah jalan.",
-  },
-]
+export function getPlanOptions(): SubscriptionPlanOption[] {
+  return [
+    {
+      id: "monthly",
+      name: `${MAIN_PLAN.name} Bulanan`,
+      price: MAIN_PLAN.priceMonthly,
+      periodLabel: "/ bulan",
+      blurb: MAIN_PLAN.blurbMonthly,
+    },
+    {
+      id: "yearly",
+      name: `${MAIN_PLAN.name} Tahunan`,
+      price: MAIN_PLAN.priceYearly,
+      periodLabel: "/ tahun",
+      blurb: MAIN_PLAN.blurbYearly,
+    },
+  ]
+}
 
-export type SubscriptionPayMethod = "qris" | "va" | "ewallet" | "card"
+/** @deprecated pakai getPlanOptions() — tetap diekspor agar impor lama tidak pecah. */
+export const SUBSCRIPTION_PLANS = getPlanOptions().map((option) => ({
+  id: option.id,
+  name: option.name,
+  price: option.price,
+  period: option.periodLabel,
+  blurb: option.blurb,
+}))
 
 export const SUBSCRIPTION_PAY_METHODS: {
   id: SubscriptionPayMethod
@@ -36,17 +94,45 @@ export const SUBSCRIPTION_PAY_METHODS: {
   { id: "qris", label: "QRIS" },
   { id: "va", label: "Virtual Account" },
   { id: "ewallet", label: "E-Wallet" },
-  { id: "card", label: "Kartu" },
+  { id: "transfer", label: "Transfer manual" },
 ]
+
+export type SubscriptionUserSlice = {
+  trialStartedAt?: string
+  subscription?: {
+    planId?: string
+    planName?: string
+    status?: string
+    period?: SubscriptionPeriod
+    paymentMethod?: SubscriptionPayMethod | string
+    startedAt?: string
+    endsAt?: string
+    payments?: SubscriptionPaymentRecord[]
+  } | null
+}
 
 export function nowIso() {
   return new Date().toISOString()
 }
 
-export function hasActiveSubscription(
-  user: { subscription?: { status?: string } | null } | null | undefined
-) {
+export function formatDateId(value: string | Date | null | undefined) {
+  if (!value) return null
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  })
+}
+
+export function hasActiveSubscription(user: SubscriptionUserSlice | null | undefined) {
   return user?.subscription?.status === "active"
+}
+
+export function hasPendingSubscription(user: SubscriptionUserSlice | null | undefined) {
+  return user?.subscription?.status === "pending"
 }
 
 export function getTrialEndsAt(trialStartedAt: string | undefined | null) {
@@ -64,52 +150,151 @@ export function getTrialDaysRemaining(trialStartedAt: string | undefined | null)
 }
 
 export function isTrialExpired(trialStartedAt: string | undefined | null) {
+  if (!trialStartedAt) return false
   return getTrialDaysRemaining(trialStartedAt) <= 0
 }
 
-/** Studio terkunci bila trial habis dan belum berlangganan. */
-export function isStudioLocked(
-  user:
-    | {
-        trialStartedAt?: string
-        subscription?: { status?: string } | null
-      }
-    | null
-    | undefined
-) {
-  if (!user) return false
-  if (hasActiveSubscription(user)) return false
-  return isTrialExpired(user.trialStartedAt)
+/**
+ * Status efektif untuk Owner.
+ * `active` hanya setelah pembayaran diverifikasi — bukan sekadar redirect sukses.
+ */
+export function getSubscriptionStatus(
+  user: SubscriptionUserSlice | null | undefined
+): SubscriptionStatus {
+  if (!user) return "expired"
+  const raw = user.subscription?.status
+  if (raw === "active") return "active"
+  if (raw === "pending") return "pending"
+  if (raw === "cancelled") return "cancelled"
+  if (raw === "suspended") return "suspended"
+  if (!user.trialStartedAt) return "trial"
+  if (isTrialExpired(user.trialStartedAt)) return "expired"
+  return "trial"
 }
 
-export function currentPlanLabel(
-  user:
-    | {
-        trialStartedAt?: string
-        subscription?: { planName?: string; status?: string } | null
-      }
-    | null
-    | undefined
-) {
-  if (hasActiveSubscription(user)) {
-    return user?.subscription?.planName || "Berlangganan"
+export function subscriptionStatusLabel(status: SubscriptionStatus) {
+  switch (status) {
+    case "trial":
+      return "Trial"
+    case "active":
+      return "Aktif"
+    case "pending":
+      return "Menunggu verifikasi"
+    case "expired":
+      return "Berakhir"
+    case "cancelled":
+      return "Dibatalkan"
+    case "suspended":
+      return "Ditangguhkan"
   }
-  return "Trial"
+}
+
+/**
+ * Fitur operasional (buat/ubah booking, jadwal, invoice, layanan, transaksi).
+ * Data lama tetap bisa dilihat setelah trial/langganan berakhir.
+ */
+export function canUseOperationalFeatures(
+  user: SubscriptionUserSlice | null | undefined
+) {
+  const status = getSubscriptionStatus(user)
+  if (status === "active") return true
+  if (status === "trial") return true
+  // Pending: tetap boleh operasi jika trial belum habis.
+  if (status === "pending" && !isTrialExpired(user?.trialStartedAt)) return true
+  return false
+}
+
+/**
+ * Sebelumnya: redirect paksa ke /langganan.
+ * Panduan: data tetap bisa diakses (read-only) — jangan kunci studio penuh.
+ */
+export function isStudioLocked(user: SubscriptionUserSlice | null | undefined) {
+  return false
+}
+
+/** True jika Owner sudah lewat trial/langganan dan hanya boleh baca data lama. */
+export function isStudioReadOnly(user: SubscriptionUserSlice | null | undefined) {
+  return !canUseOperationalFeatures(user)
+}
+
+export function periodEndsAt(
+  startedAt: string,
+  period: SubscriptionPeriod
+): string {
+  const start = new Date(startedAt)
+  const end = new Date(start)
+  if (period === "yearly") end.setFullYear(end.getFullYear() + 1)
+  else end.setMonth(end.getMonth() + 1)
+  return end.toISOString()
+}
+
+export function currentPlanLabel(user: SubscriptionUserSlice | null | undefined) {
+  const status = getSubscriptionStatus(user)
+  if (status === "active" || status === "pending") {
+    return user?.subscription?.planName || MAIN_PLAN.name
+  }
+  return MAIN_PLAN.name
 }
 
 export function formatTrialEndsAt(trialStartedAt: string | undefined | null) {
-  const endsAt = getTrialEndsAt(trialStartedAt)
-  if (!endsAt) return null
-  return endsAt.toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
+  return formatDateId(getTrialEndsAt(trialStartedAt))
 }
 
+/** Chip singkat di header studio. */
 export function trialStatusLabel(trialStartedAt: string | undefined | null) {
   const days = getTrialDaysRemaining(trialStartedAt)
+  if (!trialStartedAt) return `Trial ${TRIAL_DAYS} hari`
   if (days <= 0) return "Masa trial berakhir"
-  if (days === 1) return "Sisa 1 hari trial"
+  if (days === 1) return "Trial berakhir hari ini"
   return `Sisa ${days} hari trial`
+}
+
+/**
+ * Pengingat Owner saja — zona waktu Asia/Jakarta untuk label tanggal.
+ * null = tidak perlu banner.
+ */
+export function getTrialReminderMessage(
+  user: SubscriptionUserSlice | null | undefined
+): string | null {
+  if (hasActiveSubscription(user)) return null
+  const status = getSubscriptionStatus(user)
+  if (status === "pending") {
+    return "Pembayaran langganan menunggu verifikasi. Status active hanya setelah pembayaran dikonfirmasi."
+  }
+  if (status === "expired" || status === "cancelled" || status === "suspended") {
+    return "Masa trial telah berakhir. Pilih paket untuk melanjutkan penggunaan."
+  }
+  const days = getTrialDaysRemaining(user?.trialStartedAt)
+  if (days <= 0) {
+    return "Masa trial telah berakhir. Pilih paket untuk melanjutkan penggunaan."
+  }
+  if (days === 1) return "Trial berakhir hari ini"
+  if (days <= 3) return `Trial kamu tersisa ${days} hari`
+  if (days <= 7) return `Trial kamu tersisa ${days} hari`
+  return null
+}
+
+export function getLanggananHeadline(
+  user: SubscriptionUserSlice | null | undefined
+) {
+  const status = getSubscriptionStatus(user)
+  if (status === "active") {
+    return "Langganan aktif. Semua fitur pengelolaan bisnis terbuka."
+  }
+  if (status === "pending") {
+    return "Pembayaran diterima dan menunggu verifikasi. Paket belum diaktifkan sampai dikonfirmasi."
+  }
+  if (status === "expired" || isTrialExpired(user?.trialStartedAt)) {
+    return "Masa trial telah berakhir. Berlangganan untuk melanjutkan pengelolaan bisnis di Key Assistant."
+  }
+  const days = getTrialDaysRemaining(user?.trialStartedAt)
+  return `Trial kamu tersisa ${Math.max(days, 0)} hari. Nikmati fitur Key Assistant selama masa percobaan.`
+}
+
+export function nextInvoiceNumber(existingCount = 0) {
+  const stamp = new Date()
+    .toISOString()
+    .slice(0, 10)
+    .replace(/-/g, "")
+  return `KA-${stamp}-${String(existingCount + 1).padStart(3, "0")}`
 }

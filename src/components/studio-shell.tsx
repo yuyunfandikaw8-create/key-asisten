@@ -30,9 +30,14 @@ import { useStudio } from "@/components/studio-provider"
 import { Button } from "@/components/ui/button"
 import {
   TRIAL_DAYS,
+  currentPlanLabel,
   formatTrialEndsAt,
+  getSubscriptionStatus,
   getTrialDaysRemaining,
+  getTrialReminderMessage,
   hasActiveSubscription,
+  isStudioReadOnly,
+  subscriptionStatusLabel,
   trialStatusLabel,
 } from "@/lib/trial"
 import { cn } from "@/lib/utils"
@@ -339,7 +344,13 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
   const brand = studioBrand(user, { demo: viewMode === "demo" })
   const trialDaysLeft = getTrialDaysRemaining(user?.trialStartedAt)
   const trialEndsLabel = formatTrialEndsAt(user?.trialStartedAt)
-  const trialUrgent = trialDaysLeft > 0 && trialDaysLeft <= 3
+  const subStatus = getSubscriptionStatus(user)
+  const trialUrgent =
+    !hasActiveSubscription(user) &&
+    trialDaysLeft > 0 &&
+    trialDaysLeft <= 7
+  const reminder = user ? getTrialReminderMessage(user) : null
+  const readOnly = user ? isStudioReadOnly(user) : false
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return
@@ -365,7 +376,7 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
                 "hidden shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide transition sm:inline",
                 hasActiveSubscription(user)
                   ? "bg-accent text-primary hover:brightness-95"
-                  : trialUrgent
+                  : trialUrgent || readOnly
                     ? "bg-[oklch(0.94_0.05_55)] text-[oklch(0.42_0.1_45)] hover:brightness-95"
                     : "bg-accent text-primary hover:brightness-95"
               )}
@@ -378,8 +389,10 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
               }
             >
               {hasActiveSubscription(user)
-                ? user.subscription?.planName || "Berlangganan"
-                : trialStatusLabel(user.trialStartedAt)}
+                ? user.subscription?.planName || currentPlanLabel(user)
+                : subStatus === "pending"
+                  ? subscriptionStatusLabel("pending")
+                  : trialStatusLabel(user.trialStartedAt)}
             </Link>
           ) : null}
           <HeaderPeopleSearch className="mx-1 hidden max-w-xs min-w-[10rem] flex-1 md:block lg:max-w-sm" />
@@ -412,21 +425,22 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
           <SideNav />
         </Suspense>
         <div className="studio-main min-w-0 pb-20 md:pb-0">
-          {user &&
-          !hasActiveSubscription(user) &&
-          trialDaysLeft > 0 &&
-          trialDaysLeft <= 3 ? (
+          {reminder ? (
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[oklch(0.96_0.04_55)] px-4 py-3 text-sm text-[oklch(0.38_0.08_45)] ring-1 ring-[oklch(0.85_0.06_55)]">
               <p>
-                Masa trial kamu tinggal {trialDaysLeft} hari
-                {trialEndsLabel ? ` (sampai ${trialEndsLabel})` : null}. Pilih paket sebelum
-                akses studio dinonaktifkan.
+                {reminder}
+                {trialEndsLabel && !readOnly && trialDaysLeft > 0
+                  ? ` (sampai ${trialEndsLabel})`
+                  : null}
+                {readOnly
+                  ? " Data lama tetap tersedia; fitur operasional dibatasi."
+                  : null}
               </p>
               <Link
                 href="/langganan"
                 className="shrink-0 font-semibold text-primary hover:underline"
               >
-                Paket & Langganan
+                {readOnly ? "Berlangganan" : "Paket & Langganan"}
               </Link>
             </div>
           ) : null}
@@ -446,8 +460,10 @@ export function StudioShell({ children }: { children: React.ReactNode }) {
                 {" · "}
                 <Link href="/langganan" className="font-medium text-primary hover:underline">
                   {hasActiveSubscription(user)
-                    ? user.subscription?.planName || "Berlangganan"
-                    : trialStatusLabel(user.trialStartedAt)}
+                    ? user.subscription?.planName || currentPlanLabel(user)
+                    : subStatus === "pending"
+                      ? subscriptionStatusLabel("pending")
+                      : trialStatusLabel(user.trialStartedAt)}
                 </Link>
               </>
             ) : null}
