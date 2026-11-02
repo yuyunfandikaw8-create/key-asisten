@@ -75,7 +75,12 @@ export default function OnboardingPage() {
   }, [user])
 
   useEffect(() => {
-    if (ready && user && !needsOnboarding(user)) {
+    if (!ready || !user) return
+    if (user.role === "client") {
+      router.replace(needsOnboarding(user) ? "/onboarding/klien" : "/klien")
+      return
+    }
+    if (!needsOnboarding(user)) {
       router.replace("/studio")
     }
   }, [ready, router, user])
@@ -101,7 +106,7 @@ export default function OnboardingPage() {
   }, [draftField, draftName])
 
   if (!ready || !user) return <StudioLoading />
-  if (!needsOnboarding(user)) return <StudioLoading />
+  if (user.role !== "owner" || !needsOnboarding(user)) return <StudioLoading />
 
   async function goTo(next: OnboardingStep, patch: Parameters<typeof updateProfile>[0] = {}) {
     setPending(true)

@@ -11,7 +11,6 @@ import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { homePathForUser, type AuthRole } from "@/lib/auth"
-import { markOnboardingDone, needsOnboarding } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
 
 function RoleChoiceCards({
@@ -72,13 +71,11 @@ export default function RegisterPage() {
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
 
-  const needsRole =
-    Boolean(user) && (user!.roleChosen === false || needsOnboarding(user))
+  const needsRole = Boolean(user) && user!.roleChosen === false
 
   useEffect(() => {
     if (!ready || !user) return
-    // Akun sudah lengkap → masuk ke rumah masing-masing. Jangan redirect saat masih
-    // perlu pilih peran (tampilkan pilihan di halaman ini supaya tidak “mental”).
+    // Belum pilih peran → tetap di sini. Selain itu arahkan ke rumah / onboarding.
     if (needsRole) return
     router.replace(homePathForUser(user))
   }, [needsRole, ready, router, user])
@@ -122,8 +119,7 @@ export default function RegisterPage() {
       }
     }
     if (role === "client") {
-      markOnboardingDone(result.user.email)
-      router.replace("/klien")
+      router.replace("/onboarding/klien")
       return
     }
     router.replace("/onboarding")

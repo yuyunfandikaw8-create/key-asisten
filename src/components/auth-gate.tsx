@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { StudioLoading } from "@/components/studio-bits"
 import { homePathForUser } from "@/lib/auth"
-import { needsOnboarding } from "@/lib/onboarding"
+import { needsOnboarding, onboardingPathForUser } from "@/lib/onboarding"
 import { isStudioLocked } from "@/lib/trial"
 
 export function AuthGate({
@@ -16,7 +16,7 @@ export function AuthGate({
 }: {
   children: React.ReactNode
   allowRole?: "owner" | "client" | "any"
-  /** Set true on /onboarding so incomplete owners are not bounced in a loop. */
+  /** Set true on /onboarding* so incomplete accounts are not bounced in a loop. */
   skipOnboardingRedirect?: boolean
 }) {
   const { ready, user } = useAuth()
@@ -39,7 +39,7 @@ export function AuthGate({
       return
     }
     if (!skipOnboardingRedirect && needsOnboarding(user)) {
-      router.replace("/onboarding")
+      router.replace(onboardingPathForUser(user))
       return
     }
     if (
@@ -47,7 +47,7 @@ export function AuthGate({
       !needsOnboarding(user) &&
       pathname.startsWith("/onboarding")
     ) {
-      router.replace("/studio")
+      router.replace(homePathForUser(user))
       return
     }
     if (user.role === "owner" && isStudioLocked(user)) {

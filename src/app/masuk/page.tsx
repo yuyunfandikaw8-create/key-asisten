@@ -10,11 +10,13 @@ import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { homePathForUser, QUICK_TEST_LOGINS, type AuthUser } from "@/lib/auth"
+import { needsOnboarding } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
 
 function resolveNextPath(requested: string, user: AuthUser) {
   const home = homePathForUser(user)
   if (user.roleChosen === false) return home
+  if (needsOnboarding(user)) return home
   if (!requested.startsWith("/")) return home
   if (requested.startsWith("/pilih-peran")) return home
   if (user.role === "client" && requested.startsWith("/studio")) return home

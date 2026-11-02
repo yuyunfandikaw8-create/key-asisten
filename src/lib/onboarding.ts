@@ -122,10 +122,18 @@ export function isOnboardingMarkedDone(email: string | undefined | null) {
 export function needsOnboarding(
   user: { email?: string; role?: string; onboardingStep?: OnboardingStep } | null | undefined
 ) {
-  if (!user || user.role !== "owner") return false
+  if (!user) return false
+  if (user.role !== "owner" && user.role !== "client") return false
   if (user.onboardingStep === "done") return false
   if (isOnboardingMarkedDone(user.email)) return false
   return typeof user.onboardingStep === "number"
+}
+
+/** Owner → /onboarding (biodata + layanan). Klien → /onboarding/klien (profil saja). */
+export function onboardingPathForUser(
+  user: { role?: string } | null | undefined
+) {
+  return user?.role === "client" ? "/onboarding/klien" : "/onboarding"
 }
 
 export function normalizeOnboardingStep(value: unknown): OnboardingStep | undefined {

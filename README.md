@@ -13,7 +13,7 @@ Buka [http://127.0.0.1:43123](http://127.0.0.1:43123) (server listen di `0.0.0.0
 
 ## Login & onboarding
 
-Studio dilindungi login. Daftar di `/daftar` (pilih peran Owner atau Klien), lalu lanjut onboarding bila perlu.
+Studio dilindungi login. Daftar di `/daftar` (pilih peran Owner atau Klien), lalu lanjut onboarding: Owner mengisi biodata + layanan; Klien mengisi biodata/profil saja sebelum Beranda.
 
 Akun perbaikan di `/masuk` (hanya untuk uji/perbaiki fitur; selalu mulai dari step awal):
 

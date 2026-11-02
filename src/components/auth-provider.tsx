@@ -662,7 +662,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   role,
                   phone,
                   city,
-                  onboarding_step: isClient ? "done" : 2,
+                  onboarding_step: 2,
                   trial_started_at: trialStartedAt,
                 },
                 emailRedirectTo:
@@ -726,7 +726,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           provider: "password",
           role,
           roleChosen: true,
-          onboardingStep: isClient ? "done" : 2,
+          onboardingStep: 2,
           businessEmail: email,
           trialStartedAt,
         }
@@ -838,9 +838,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             error: "Untuk akun Klien, nomor WhatsApp dan wilayah/daerah wajib diisi.",
           }
         }
-        if (isClient) {
-          markOnboardingDone(user.email)
-        } else if (user.onboardingStep !== "done") {
+        if (user.onboardingStep !== "done") {
           clearOnboardingDone(user.email)
         }
         const nextUser: AuthUser = {
@@ -849,11 +847,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           roleChosen: true,
           phone: isClient ? phone : user.phone,
           city: isClient ? city : user.city,
-          onboardingStep: isClient
-            ? "done"
-            : user.onboardingStep === "done"
-              ? "done"
-              : 2,
+          onboardingStep:
+            user.onboardingStep === "done" && !isClient ? "done" : 2,
         }
         setUser(nextUser)
         persistAuthUser(nextUser)

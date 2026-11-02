@@ -8,13 +8,13 @@ import { StudioLoading } from "@/components/studio-bits"
 export const instant = false
 
 export const metadata: Metadata = {
-  title: "Siapkan bisnis",
+  title: "Lengkapi profil",
 }
 
 export default function OnboardingLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<StudioLoading />}>
-      <AuthGate allowRole="owner" skipOnboardingRedirect>
+      <AuthGate allowRole="any" skipOnboardingRedirect>
         {children}
       </AuthGate>
     </Suspense>
