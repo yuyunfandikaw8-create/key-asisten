@@ -9,7 +9,9 @@ import {
   DEFAULT_ADMIN_SETTINGS,
   getLiveEnabledPayMethods,
   getLiveMainPlan,
+  getLivePaymentDetails,
   getLiveServerNotice,
+  getLiveSupportContact,
 } from "@/lib/admin-settings"
 
 /** Fallback default (nilai hidup pakai getMainPlan() / getTrialDays()). */
@@ -30,6 +32,14 @@ export function getTrialDays() {
 
 export function getServerNotice() {
   return getLiveServerNotice()
+}
+
+export function getPaymentDetails() {
+  return getLivePaymentDetails()
+}
+
+export function getSupportContact() {
+  return getLiveSupportContact()
 }
 
 /** True jika harga bulanan & tahunan sudah diisi di menu server. */

@@ -17,10 +17,12 @@ import {
   formatTrialEndsAt,
   getLanggananHeadline,
   getMainPlan,
+  getPaymentDetails,
   getPlanOptions,
   getServerNotice,
   getSubscriptionPayMethods,
   getSubscriptionStatus,
+  getSupportContact,
   getTrialDays,
   getTrialDaysRemaining,
   hasActiveSubscription,
@@ -42,7 +44,7 @@ export default function LanggananPage() {
   const { ready, user, updateProfile, logout } = useAuth()
   const [picking, setPicking] = useState(false)
   const [period, setPeriod] = useState<SubscriptionPeriod>("monthly")
-  const [payMethod, setPayMethod] = useState<SubscriptionPayMethod>("qris")
+  const [payMethod, setPayMethod] = useState<SubscriptionPayMethod>("qris") // default QRIS Key Assistant
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
@@ -65,6 +67,8 @@ export default function LanggananPage() {
   const mainPlan = useMemo(() => getMainPlan(), [tick])
   const planOptions = useMemo(() => getPlanOptions(), [tick])
   const payMethods = useMemo(() => getSubscriptionPayMethods(), [tick])
+  const paymentDetails = useMemo(() => getPaymentDetails(), [tick])
+  const support = useMemo(() => getSupportContact(), [tick])
   const serverNotice = useMemo(() => getServerNotice(), [tick])
   const trialDays = useMemo(() => getTrialDays(), [tick])
   useEffect(() => {
@@ -443,6 +447,123 @@ export default function LanggananPage() {
                   })}
                 </div>
 
+                {payMethod === "qris" ? (
+                  <div className="grid gap-3 rounded-xl bg-background p-3 ring-1 ring-foreground/10">
+                    <div className="overflow-hidden rounded-xl bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={paymentDetails.qris.imageUrl}
+                        alt={`QRIS ${paymentDetails.qris.merchantName}`}
+                        className="mx-auto max-h-[360px] w-full object-contain"
+                      />
+                    </div>
+                    <dl className="grid gap-1 text-sm">
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-muted-foreground">Merchant</dt>
+                        <dd className="font-medium">
+                          {paymentDetails.qris.merchantName}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-muted-foreground">NMID</dt>
+                        <dd className="font-mono text-xs">
+                          {paymentDetails.qris.nmid}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-muted-foreground">Terminal</dt>
+                        <dd className="font-medium">
+                          {paymentDetails.qris.terminalId}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p className="whitespace-pre-line text-sm text-muted-foreground">
+                      {paymentDetails.qris.instructions}
+                    </p>
+                  </div>
+                ) : null}
+
+                {payMethod === "transfer" ? (
+                  <div className="grid gap-2 rounded-xl bg-background p-3 text-sm ring-1 ring-foreground/10">
+                    <p>
+                      <span className="text-muted-foreground">Bank: </span>
+                      <span className="font-medium">
+                        {paymentDetails.transfer.bankName || "Belum diisi admin"}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Rekening: </span>
+                      <span className="font-medium">
+                        {paymentDetails.transfer.accountNumber || "—"}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Atas nama: </span>
+                      <span className="font-medium">
+                        {paymentDetails.transfer.accountHolder}
+                      </span>
+                    </p>
+                    <p className="whitespace-pre-line text-muted-foreground">
+                      {paymentDetails.transfer.instructions}
+                    </p>
+                  </div>
+                ) : null}
+
+                {payMethod === "va" ? (
+                  <div className="grid gap-2 rounded-xl bg-background p-3 text-sm ring-1 ring-foreground/10">
+                    <p>
+                      <span className="text-muted-foreground">Bank VA: </span>
+                      <span className="font-medium">
+                        {paymentDetails.va.bankName || "Belum diisi admin"}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Nomor VA: </span>
+                      <span className="font-medium">
+                        {paymentDetails.va.vaNumber || "—"}
+                      </span>
+                    </p>
+                    <p className="whitespace-pre-line text-muted-foreground">
+                      {paymentDetails.va.instructions}
+                    </p>
+                  </div>
+                ) : null}
+
+                {payMethod === "ewallet" ? (
+                  <div className="grid gap-2 rounded-xl bg-background p-3 text-sm ring-1 ring-foreground/10">
+                    <p>
+                      <span className="text-muted-foreground">Provider: </span>
+                      <span className="font-medium">
+                        {paymentDetails.ewallet.provider}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Nomor: </span>
+                      <span className="font-medium">
+                        {paymentDetails.ewallet.accountNumber || "—"}
+                      </span>
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Nama: </span>
+                      <span className="font-medium">
+                        {paymentDetails.ewallet.accountName}
+                      </span>
+                    </p>
+                    <p className="whitespace-pre-line text-muted-foreground">
+                      {paymentDetails.ewallet.instructions}
+                    </p>
+                  </div>
+                ) : null}
+
+                {support.whatsapp || support.email ? (
+                  <p className="text-xs text-muted-foreground">
+                    Butuh bantuan?{" "}
+                    {[support.whatsapp && `WA ${support.whatsapp}`, support.email]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
+
                 {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
                 <button
@@ -451,7 +572,7 @@ export default function LanggananPage() {
                   disabled={pending}
                   onClick={() => void submitPayment()}
                 >
-                  {pending ? "Mencatat…" : "Bayar & ajukan langganan"}
+                  {pending ? "Mencatat…" : "Saya sudah bayar — ajukan verifikasi"}
                 </button>
                 <button
                   type="button"
@@ -461,8 +582,8 @@ export default function LanggananPage() {
                   Batal
                 </button>
                 <p className="text-xs text-muted-foreground">
-                  Status awal: pending. Active hanya setelah verifikasi (demo:
-                  tombol simulasi di kartu status).
+                  Status awal: pending. Active hanya setelah admin memverifikasi
+                  pembayaran — bukan sekadar kembali ke halaman ini.
                 </p>
               </section>
             ) : (

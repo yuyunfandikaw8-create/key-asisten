@@ -63,8 +63,10 @@ Mengikuti panduan sistem langganan:
 - Harga & konfigurasi paket diatur di **menu server** `/admin` (akun
   `admin@riasaja.id`). Selama harga kosong, UI Owner menampilkan
   “Belum ditetapkan” dan pembayaran ditutup.
-- Halaman Owner: `/langganan`. Admin: `/admin`, `/admin/paket`,
-  `/admin/pembayaran`, `/admin/akun`.
+- QRIS resmi Key Assistant (NMID `ID1026629614458`) ada di
+  `/admin/metode-bayar` dan tampil saat Owner bayar di `/langganan`.
+- Admin: `/admin`, `/admin/paket`, `/admin/metode-bayar`,
+  `/admin/pembayaran`, `/admin/akun`. Owner: `/langganan`.
 
 ### Database Supabase (wajib untuk sinkron semua data)
 

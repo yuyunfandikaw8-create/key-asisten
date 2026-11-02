@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { useAdminSettings } from "@/components/admin-provider"
@@ -10,18 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
   DEFAULT_ADMIN_SETTINGS,
-  type AdminPayMethod,
   type AdminSettings,
 } from "@/lib/admin-settings"
 import { formatPlanPrice } from "@/lib/trial"
 import { cn } from "@/lib/utils"
-
-const PAY_OPTIONS: { id: AdminPayMethod; label: string }[] = [
-  { id: "qris", label: "QRIS" },
-  { id: "va", label: "Virtual Account" },
-  { id: "ewallet", label: "E-Wallet" },
-  { id: "transfer", label: "Transfer manual" },
-]
 
 function moneyInput(value: number | null) {
   return value == null ? "" : String(value)
@@ -54,17 +47,6 @@ export default function AdminPaketPage() {
     setSaved(false)
   }
 
-  function toggleMethod(id: AdminPayMethod) {
-    setDraft((current) => {
-      const has = current.enabledPayMethods.includes(id)
-      const enabledPayMethods = has
-        ? current.enabledPayMethods.filter((item) => item !== id)
-        : [...current.enabledPayMethods, id]
-      return { ...current, enabledPayMethods }
-    })
-    setSaved(false)
-  }
-
   function save() {
     setError("")
     if (!draft.plan.name.trim()) {
@@ -73,10 +55,6 @@ export default function AdminPaketPage() {
     }
     if (draft.plan.trialDays < 1) {
       setError("Durasi trial minimal 1 hari.")
-      return
-    }
-    if (!draft.enabledPayMethods.length) {
-      setError("Pilih minimal satu metode pembayaran.")
       return
     }
     saveSettings(draft)
@@ -182,47 +160,18 @@ export default function AdminPaketPage() {
 
       <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
         <div>
-          <h2 className="text-2xl">Metode pembayaran langganan</h2>
+          <h2 className="text-2xl">Metode bayar & QRIS</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Hanya metode yang dicentang yang muncul di /langganan.
+            Detail QRIS merchant, transfer, VA, e-wallet, dan kontak support
+            diatur di halaman khusus agar lebih lengkap.
           </p>
         </div>
-        <div className="grid gap-2">
-          {PAY_OPTIONS.map((method) => (
-            <label
-              key={method.id}
-              className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm ring-1 ring-foreground/10"
-            >
-              <input
-                type="checkbox"
-                className="size-4 accent-primary"
-                checked={draft.enabledPayMethods.includes(method.id)}
-                onChange={() => toggleMethod(method.id)}
-              />
-              {method.label}
-            </label>
-          ))}
-        </div>
-      </section>
-
-      <section className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <div>
-          <h2 className="text-2xl">Pengumuman di /langganan</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Opsional — tampil di halaman Owner.
-          </p>
-        </div>
-        <Textarea
-          value={draft.serverNotice}
-          onChange={(event) => {
-            setDraft((current) => ({
-              ...current,
-              serverNotice: event.target.value,
-            }))
-            setSaved(false)
-          }}
-          placeholder="Contoh: Harga promo berlaku sampai akhir bulan."
-        />
+        <Link
+          href="/admin/metode-bayar"
+          className={cn(buttonVariants({ variant: "outline" }), "h-10 w-fit")}
+        >
+          Buka Metode Bayar
+        </Link>
       </section>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

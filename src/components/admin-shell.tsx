@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  QrCode,
   Users,
 } from "lucide-react"
 
@@ -17,7 +18,8 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/admin", label: "Ringkasan", icon: LayoutDashboard, exact: true },
   { href: "/admin/paket", label: "Paket & Harga", icon: Package },
-  { href: "/admin/pembayaran", label: "Pembayaran", icon: CreditCard },
+  { href: "/admin/metode-bayar", label: "Metode Bayar", icon: QrCode },
+  { href: "/admin/pembayaran", label: "Verifikasi", icon: CreditCard },
   { href: "/admin/akun", label: "Akun", icon: Users },
 ]
 
@@ -81,7 +83,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-5xl grid-cols-4 gap-1 px-2 py-2">
+        <div className="mx-auto grid max-w-5xl grid-cols-5 gap-1 px-1 py-2">
           {links.map((link) => {
             const active = link.exact
               ? pathname === link.href
@@ -92,7 +94,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px]",
+                  "flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px]",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
