@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 
 export default function ClientHomePage() {
   const { ready: authReady, user } = useAuth()
-  const { ready, activeEvent, workspace } = useClientWorkspace()
+  const { ready, activeEvent } = useClientWorkspace()
 
   if (!authReady || !ready || !user) return <StudioLoading />
 
@@ -26,10 +26,10 @@ export default function ClientHomePage() {
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="text-4xl">Halo, {user.name || "Selamat datang"}</h1>
+        <h1 className="text-4xl">Halo, selamat datang</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Atur kebutuhan acara dan pilih beberapa vendor sekaligus — MUA, dekor,
-          fotografer, dan lainnya dalam 1 tempat.
+          Atur kebutuhan acara kamu dan temukan vendor yang sesuai dalam satu
+          tempat.
         </p>
       </div>
 
@@ -104,10 +104,11 @@ export default function ClientHomePage() {
           <>
             <h2 className="font-display text-2xl">Mulai dari acara</h2>
             <p className="text-sm text-muted-foreground">
-              Buat acara dulu — misalnya Pernikahan — lalu isi vendor per kebutuhan.
+              Buat acara terlebih dahulu, lalu tambahkan vendor sesuai
+              kebutuhanmu.
             </p>
             <Link href="/klien/acara" className={cn(buttonVariants(), "h-10 w-fit")}>
-              Buat acara pertama
+              Buat Acara
             </Link>
           </>
         )}
@@ -121,20 +122,22 @@ export default function ClientHomePage() {
           <Search className="size-5 text-primary" />
           <p className="font-medium">Cari Vendor</p>
           <p className="text-sm text-muted-foreground">
-            MUA, Hair & Hijab, Decoration, Attire, Photo, Video, Content Creator.
+            Temukan MUA, Hair & Hijab, Decoration, Attire, Photographer,
+            Videographer, dan Content Creator sesuai kebutuhan acaramu.
           </p>
+          <span className="text-sm font-medium text-primary">Cari Vendor →</span>
         </Link>
         <Link
           href="/klien/pilihan"
           className="grid gap-2 rounded-2xl bg-card p-5 ring-1 ring-foreground/10 transition hover:bg-muted/30"
         >
           <Heart className="size-5 text-primary" />
-          <p className="font-medium">Favorit</p>
+          <p className="font-medium">Pilihan Saya</p>
           <p className="text-sm text-muted-foreground">
-            {workspace.shortlist.length
-              ? `${workspace.shortlist.length} vendor tersimpan untuk dibandingkan.`
-              : "Simpan beberapa kandidat vendor sebelum booking."}
+            Simpan beberapa vendor yang kamu suka dan bandingkan sebelum
+            menentukan pilihan.
           </p>
+          <span className="text-sm font-medium text-primary">Lihat Pilihan →</span>
         </Link>
       </div>
     </div>
