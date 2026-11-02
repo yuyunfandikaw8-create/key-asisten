@@ -485,7 +485,8 @@ export default function OnboardingPage() {
           <div>
             <h1 className="text-3xl">Lengkapi profil bisnis</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Detail ini muncul di pricelist dan komunikasi dengan klien.
+              Informasi ini akan ditampilkan di pricelist dan profil bisnis
+              kamu untuk dilihat calon klien.
             </p>
           </div>
           <div className="grid gap-1.5">
