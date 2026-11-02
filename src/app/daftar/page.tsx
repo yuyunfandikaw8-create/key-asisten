@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { GoogleAuthButton } from "@/components/google-auth-button"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -230,21 +229,6 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <GoogleAuthButton
-          mode="daftar"
-          nextPath="/pilih-peran"
-          onSuccess={(nextUser) => {
-            // Tetap di /daftar — halaman ini menampilkan pilihan peran untuk akun baru.
-            if (nextUser.roleChosen === false || needsOnboarding(nextUser)) {
-              router.replace("/daftar")
-              return
-            }
-            router.replace(homePathForUser(nextUser))
-          }}
-        />
-      </div>
-
       <div>
         <p className="text-sm font-medium">
           Pilih cara kamu menggunakan Key Assistant
@@ -261,7 +245,7 @@ export default function RegisterPage() {
 
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
-        atau daftar dengan email
+        daftar dengan email
         <span className="h-px flex-1 bg-border" />
       </div>
 

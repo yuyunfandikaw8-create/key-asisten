@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
 import { useAuth } from "@/components/auth-provider"
-import { GoogleAuthButton } from "@/components/google-auth-button"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -118,24 +117,6 @@ function LoginForm() {
       ) : null}
 
       <div className="grid gap-3 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-        <GoogleAuthButton
-          mode="masuk"
-          nextPath={
-            requestedNext && !requestedNext.startsWith("/pilih-peran")
-              ? requestedNext
-              : "/daftar"
-          }
-          onSuccess={(nextUser) => {
-            router.replace(
-              resolveNextPath(requestedNext || homePathForUser(nextUser), nextUser)
-            )
-          }}
-        />
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          atau masuk dengan email
-          <span className="h-px flex-1 bg-border" />
-        </div>
         <form onSubmit={submit} className="grid gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="email">Email</Label>
