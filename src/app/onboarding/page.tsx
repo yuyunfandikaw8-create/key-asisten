@@ -298,10 +298,10 @@ export default function OnboardingPage() {
       {step === 2 ? (
         <section className="grid gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
           <div>
-            <h1 className="text-3xl">Sekarang, buat ruang kerja bisnis kamu</h1>
+            <h1 className="text-3xl">Buat ruang kerja bisnis kamu</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Data bisnis kamu akan tersimpan secara aman di ruang kerja ini. Pembuat
-              workspace otomatis menjadi Owner.
+              Kelola bisnis, booking, jadwal, invoice, dan keuangan kamu dalam
+              satu tempat.
             </p>
           </div>
           <div className="grid gap-1.5">
@@ -310,7 +310,7 @@ export default function OnboardingPage() {
               id="studio"
               value={studioName}
               onChange={(event) => setStudioName(event.target.value)}
-              placeholder="Contoh: Nadila Wedding"
+              placeholder="Nama usaha/brand yang dikenal klien"
               className="h-10"
             />
           </div>
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
               id="owner"
               value={ownerName}
               onChange={(event) => setOwnerName(event.target.value)}
-              placeholder="Nadila Putri"
+              placeholder="Nama lengkap pemilik bisnis"
               className="h-10"
             />
           </div>
