@@ -50,7 +50,7 @@ import { supabase, supabaseConfigured } from "@/lib/supabase"
 import { nowIso } from "@/lib/trial"
 
 type AuthResult =
-  | { ok: true; user: AuthUser; notice?: string }
+  | { ok: true; user: AuthUser; notice?: string; existing?: boolean }
   | { ok: false; error: string }
 
 type AuthContextValue = {
@@ -639,16 +639,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const email = normalizeEmail(input.email)
         const phone = (input.phone || "").trim()
         const city = (input.city || "").trim()
-        if (!input.name.trim() || !email || !input.password.trim()) {
+        const password = input.password.trim()
+        if (!input.name.trim() || !email || !password) {
           return { ok: false, error: "Nama, email, dan kata sandi wajib diisi." }
         }
-        if (input.password.trim().length < 8) {
+        if (password.length < 8) {
           return { ok: false, error: "Kata sandi minimal 8 karakter." }
         }
 
         const accounts = readAccounts()
-        if (accounts.some((item) => item.email === email)) {
-          return { ok: false, error: "Email ini sudah terdaftar. Silakan masuk." }
+        const existingLocal = accounts.find((item) => item.email === email)
+
+        async function signInExisting(): Promise<AuthResult> {
+          if (existingLocal) {
+            if (existingLocal.password !== password) {
+              return {
+                ok: false,
+                error:
+                  "Email sudah terdaftar. Masukkan kata sandi yang sama untuk masuk ke akunmu.",
+              }
+            }
+            const fixSeed = DEMO_ACCOUNTS.find((item) => item.email === email)
+            if (fixSeed) clearOnboardingDone(email)
+            const source = fixSeed ?? existingLocal
+            const publicUser = withTrial(toPublicUser(source))
+            if (!source.trialStartedAt && publicUser.trialStartedAt) {
+              persistAccountTrial(publicUser.email, publicUser.trialStartedAt)
+            }
+            setUser(publicUser)
+            persistAuthUser(publicUser)
+            return { ok: true, user: publicUser, existing: true }
+          }
+
+          if (supabase && !isDemoEmail(email)) {
+            try {
+              const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              })
+              if (error || !data.user) {
+                return {
+                  ok: false,
+                  error:
+                    "Email sudah terdaftar. Masukkan kata sandi yang sama untuk masuk ke akunmu.",
+                }
+              }
+              let publicUser = withTrial(
+                userFromMetadata(
+                  data.user.id,
+                  data.user.email || email,
+                  data.user.user_metadata as Record<string, unknown>,
+                  "password"
+                )
+              )
+              const sessionCloud = cloudFromSessionUser(data.user)
+              if (sessionCloud?.profile) {
+                publicUser = applyCloudProfile(publicUser, sessionCloud.profile)
+              }
+              if (canCloudSync(publicUser.email)) {
+                const cloud = await pullOwnerCloud(data.user.id)
+                if (cloud?.profile) {
+                  publicUser = applyCloudProfile(publicUser, cloud.profile)
+                }
+                void pushOwnerProfile(publicUser)
+              }
+              const nextAccounts = [...readAccounts()]
+              const idx = nextAccounts.findIndex((item) => item.email === email)
+              const stored: StoredAccount = {
+                ...(idx >= 0 ? nextAccounts[idx] : { password }),
+                ...publicUser,
+                password,
+              }
+              if (idx >= 0) nextAccounts[idx] = stored
+              else nextAccounts.push(stored)
+              writeAccounts(nextAccounts)
+              setUser(publicUser)
+              persistAuthUser(publicUser)
+              return { ok: true, user: publicUser, existing: true }
+            } catch {
+              return {
+                ok: false,
+                error:
+                  "Email sudah terdaftar, tapi gagal masuk. Cek koneksi atau buka /masuk.",
+              }
+            }
+          }
+
+          return {
+            ok: false,
+            error: "Email sudah terdaftar. Silakan masuk di /masuk.",
+          }
+        }
+
+        if (existingLocal) {
+          return signInExisting()
         }
 
         const role = normalizeRole(input.role)
@@ -669,7 +753,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             const { data, error } = await supabase.auth.signUp({
               email,
-              password: input.password.trim(),
+              password,
               options: {
                 data: {
                   name: input.name.trim(),
@@ -690,11 +774,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 msg.includes("registered") ||
                 msg.includes("exists")
               ) {
-                return {
-                  ok: false,
-                  error:
-                    "Email ini sudah terdaftar. Silakan masuk di /masuk dengan kata sandi yang sama.",
-                }
+                return signInExisting()
               }
               return {
                 ok: false,
@@ -702,6 +782,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   error.message ||
                   "Gagal mendaftar ke cloud. Cek koneksi, lalu coba lagi.",
               }
+            }
+            // Supabase kadang mengembalikan user tanpa error untuk email yang sudah ada.
+            if (data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+              return signInExisting()
             }
             if (data.user?.id) {
               accountId = data.user.id
@@ -736,7 +820,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone,
           city,
           studioName: "",
-          password: input.password.trim(),
+          password,
           provider: "password",
           role,
           roleChosen: true,

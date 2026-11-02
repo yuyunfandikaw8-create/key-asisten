@@ -118,11 +118,9 @@ export default function RegisterPage() {
         // ignore
       }
     }
-    if (role === "client") {
-      router.replace("/onboarding/klien")
-      return
-    }
-    router.replace("/onboarding")
+    // Email sudah terdaftar → masuk ke rumah (Beranda / Data Saya / onboarding bila belum selesai).
+    // Akun baru → onboarding lewat homePathForUser.
+    router.replace(homePathForUser(result.user))
   }
 
   async function continueExistingAccount() {
